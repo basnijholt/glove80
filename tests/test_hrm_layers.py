@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.hrm import build_hrm_layers
+from tailorkey_builder.tailorkey.layers.hrm import build_hrm_layers
 from tests.utils import load_variant_json
 
 

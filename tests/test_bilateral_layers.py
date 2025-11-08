@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.bilateral import build_bilateral_training_layers
+from tailorkey_builder.tailorkey.layers.bilateral import build_bilateral_training_layers
 from tests.utils import load_variant_json
 
 

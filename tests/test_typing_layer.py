@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.typing import build_typing_layer
+from tailorkey_builder.tailorkey.layers.typing import build_typing_layer
 from tests.utils import load_variant_json
 
 

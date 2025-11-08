@@ -13,7 +13,7 @@ from .mouse import build_mouse_layers
 from .symbol import build_symbol_layer
 from .typing import build_typing_layer
 
-from .base import Layer, LayerMap
+from ...base import Layer, LayerMap
 
 LayerProvider = Callable[[str], LayerMap]
 

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from tailorkey_builder.layouts import build_layout
+from tailorkey_builder.tailorkey.layouts import build_layout
 
 import scripts.generate_tailorkey_layouts as generator
 

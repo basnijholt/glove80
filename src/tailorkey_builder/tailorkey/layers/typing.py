@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .base import KeySpec, Layer, LayerSpec, build_layer_from_spec, copy_layer
+from ...base import KeySpec, Layer, LayerSpec, build_layer_from_spec, copy_layer
 
 
 TYPING_LAYER_SPEC = LayerSpec(

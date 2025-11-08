@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.gaming import build_gaming_layer
+from tailorkey_builder.tailorkey.layers.gaming import build_gaming_layer
 from tests.utils import load_variant_json
 
 

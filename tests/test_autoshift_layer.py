@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.autoshift import build_autoshift_layer
+from tailorkey_builder.tailorkey.layers.autoshift import build_autoshift_layer
 from tests.utils import load_variant_json
 
 

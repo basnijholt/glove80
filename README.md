@@ -18,8 +18,9 @@ auditable history of every change.
 ├─ sources/
 │  └─ variant_metadata.json    # release filenames + UUIDs + notes
 ├─ src/
-│  ├─ tailorkey_builder/layers # per-layer generators + shared helpers
-│  └─ tailorkey_builder/layouts.py
+│  ├─ tailorkey_builder/base.py        # shared KeySpec/layer helpers
+│  ├─ tailorkey_builder/metadata.py    # typed metadata loader
+│  └─ tailorkey_builder/tailorkey/     # TailorKey-specific code
 ├─ scripts/
 │  └─ generate_tailorkey_layouts.py
 ├─ tests/                      # pytest suites (layers + full layouts)
@@ -30,14 +31,11 @@ auditable history of every change.
   the source of truth; regeneration must leave them unchanged.
 - **sources/variant_metadata.json** stores the metadata we need to keep intact
   (titles, UUIDs, notes, tags, release filenames).
-- **src/tailorkey_builder/layers/** defines every layer declaratively using
-  `LayerSpec`/`KeySpec`. Each module encodes the canonical bindings, applies
-  any OS- or feature-specific tweaks in code, and returns the finished layer.
-  `layers/base.py` houses the shared helpers for building, cloning, and
-  patching layers.
-- **src/tailorkey_builder/layouts.py** composes all layers for a variant and
-  merges them with the preserved metadata. This is the single entry point the
-  generator and tests call.
+- **src/tailorkey_builder/base.py** defines the shared `LayerSpec`/`KeySpec`
+  helpers used by all layouts, regardless of brand.
+- **src/tailorkey_builder/tailorkey/** contains the TailorKey implementation:
+  declarative layer modules under `layers/`, the `layouts.py` composer, and the
+  layer registry used by tests/CI.
 - **src/tailorkey_builder/metadata.py** loads the release metadata (UUIDs,
   titles, etc.) once with type checking so scripts and tests share it safely.
 - **scripts/generate_tailorkey_layouts.py** simply runs `build_layout()` for
@@ -72,9 +70,9 @@ auditable history of every change.
 
 ## Extending the Layout
 
-- When adding a new layer, implement it in `src/tailorkey_builder/layers/…`
-  using `LayerSpec`/`KeySpec`, then register its builder in
-  `tailorkey_builder.layers.LAYER_PROVIDERS`.
+- When adding a new TailorKey layer, implement it in
+  `src/tailorkey_builder/tailorkey/layers/…` using `LayerSpec`/`KeySpec`, then
+  register its builder in `tailorkey_builder.tailorkey.layers.LAYER_PROVIDERS`.
 - To introduce a new release variant, add its entry to
   `sources/variant_metadata.json`; the typed loader (`metadata.py`) keeps the
   rest of the tooling in sync automatically.

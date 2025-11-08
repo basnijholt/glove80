@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.lower import build_lower_layer
+from tailorkey_builder.tailorkey.layers.lower import build_lower_layer
 from tests.utils import load_variant_json
 
 

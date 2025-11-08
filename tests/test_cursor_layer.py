@@ -1,6 +1,6 @@
 import pytest
 
-from tailorkey_builder.layers.cursor import build_cursor_layer
+from tailorkey_builder.tailorkey.layers.cursor import build_cursor_layer
 from tests.utils import load_variant_json
 
 

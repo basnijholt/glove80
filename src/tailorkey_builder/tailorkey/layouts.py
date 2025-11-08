@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Dict
 
 from .layers import build_all_layers
-from .metadata import get_variant_metadata
+from ..metadata import get_variant_metadata
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_canonical_variant(variant: str) -> Dict:
