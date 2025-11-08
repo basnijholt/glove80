@@ -36,11 +36,11 @@ checked into `src/glove80`.
 ## Repository Layout
 ```
 .
-├─ layouts/                     # checked-in release JSON
-│  ├─ default/                  # MoErgo factory/examples
-│  ├─ tailorkey/releases/
-│  └─ quantum_touch/releases/
-├─ docs/                        # architecture + per-layout guides
+├─ layouts/                     # checked-in release JSON + layout-specific README.md files
+│  ├─ default/
+│  ├─ tailorkey/
+│  └─ quantum_touch/
+├─ docs/                        # architecture overview
 ├─ src/glove80/
 │  ├─ cli/                      # Typer CLI
 │  ├─ layouts/                  # packaged metadata + generator helpers
@@ -50,8 +50,7 @@ checked into `src/glove80`.
 ```
 
 - Read `docs/architecture.md` for a walkthrough of the data flow and regeneration pipeline.
-- `docs/default.md`, `docs/tailorkey.md`, and `docs/quantum_touch.md` explain how each layout family is structured, the
-  available layers, and the steps for adding new variants.
+- `layouts/default/README.md`, `layouts/tailorkey/README.md`, and `layouts/quantum_touch/README.md` explain how each layout family is structured, the available layers, and the steps for adding new variants.
 
 ## CI Contract
 `.github/workflows/ci.yml` runs the same steps you do locally:
@@ -63,4 +62,4 @@ checked into `src/glove80`.
 ## Contributing
 1. Edit specs or metadata, re-run `just regen`, and inspect the resulting diffs under `layouts/`.
 2. Extend/adjust the targeted per-layer tests under `tests/<layout>/` when you change behavior.
-3. Document intentional changes in the relevant guide under `docs/` so future contributors understand the rationale.
+3. Document intentional changes in the relevant `layouts/<family>/README.md` (and `docs/architecture.md` if the pipeline changes) so future contributors understand the rationale.
