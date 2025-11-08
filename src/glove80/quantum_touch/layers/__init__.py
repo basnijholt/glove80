@@ -5,6 +5,7 @@ from typing import Callable, Dict
 from ...base import Layer, LayerMap
 from .base_layer import build_base_layer
 from .hrm import build_hrm_layer
+from .left_index_layer import build_left_index_layer
 from .lower_layer import build_lower_layer
 from .magic_layer import build_magic_layer
 from .mouse_fast_layer import build_mouse_fast_layer
@@ -25,6 +26,7 @@ LAYER_BUILDERS: Dict[str, LayerBuilder] = {
     "MouseSlow": build_mouse_slow_layer,
     "MouseWarp": build_mouse_warp_layer,
     "Magic": build_magic_layer,
+    "LeftIndex": build_left_index_layer,
     "Original": build_original_layer,
 }
 
