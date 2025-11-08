@@ -5,7 +5,7 @@ lives in `src/glove80/quantum_touch` and mirrors the TailorKey structure so new 
 
 ## Structure
 - `specs/` contains macros, hold-taps, combos, and listener definitions tailored for the QuantumTouch training flow.
-- `layers/` builds the base layer, HRM, finger-training layers, mouse variants, and legacy compatibility layers.
+- `layers/` builds the base layer, HRM, finger-training layers, mouse variants, and the remaining supporting layers needed for the training workflow.
 - `layouts.py` composes the ordered layer list, resolves references via `glove80.layouts.common`, and injects metadata
   from `src/glove80/layouts/quantum_touch/metadata.json`.
 
