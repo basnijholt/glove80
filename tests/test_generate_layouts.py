@@ -5,7 +5,7 @@ import pytest
 
 from glove80.tailorkey.layouts import build_layout
 
-import scripts.generate_tailorkey_layouts as generator
+import scripts.generate_layouts as generator
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent

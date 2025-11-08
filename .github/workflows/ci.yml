@@ -29,7 +29,7 @@ jobs:
 
       - name: Regenerate layouts and ensure no diff
         run: |
-          python3 scripts/generate_tailorkey_layouts.py
+          python3 scripts/generate_layouts.py
           git status --short -- original || true
           git diff --exit-code -- original
         shell: bash

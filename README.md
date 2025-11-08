@@ -22,7 +22,7 @@ auditable history of every change.
 │  ├─ glove80/metadata.py    # typed metadata loader
 │  └─ glove80/tailorkey/     # TailorKey-specific code
 ├─ scripts/
-│  └─ generate_tailorkey_layouts.py
+│  └─ generate_layouts.py
 ├─ tests/                      # pytest suites (layers + full layouts)
 └─ README.md
 ```
@@ -36,10 +36,12 @@ auditable history of every change.
 - **src/glove80/tailorkey/** contains the TailorKey implementation:
   declarative layer modules under `layers/`, the `layouts.py` composer, and the
   layer registry used by tests/CI.
+- **src/glove80/quantum_touch/** currently replays the canonical QuantumTouch
+  layout; its layers can be codified the same way as TailorKey over time.
 - **src/glove80/metadata.py** loads the release metadata (UUIDs,
   titles, etc.) once with type checking so scripts and tests share it safely.
-- **scripts/generate_tailorkey_layouts.py** simply runs `build_layout()` for
-  each variant listed in `variant_metadata.json` and overwrites the file in
+- **scripts/generate_layouts.py** regenerates every supported layout (TailorKey,
+  QuantumTouch, …) from their source code/metadata and overwrites the files in
   `original/`.
 - **tests/** contains per-layer tests (ensuring every module reproduces its
   canonical layer) plus a top-level test that compares `build_layout()` against
@@ -53,7 +55,7 @@ auditable history of every change.
 2. Run the generator:
 
    ```bash
-   python3 scripts/generate_tailorkey_layouts.py
+   python3 scripts/generate_layouts.py
    ```
 
    The script rebuilds each JSON under `original/`. A clean `git diff` confirms
