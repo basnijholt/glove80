@@ -1,8 +1,6 @@
 # TailorKey Layout Sources
 
-This repository captures the released TailorKey ZMK layouts for the Glove80
-keyboard and provides tooling to regenerate the published JSON files from a
-single source of truth.
+TailorKey is a zero-code Glove80 layout created by [@moosy](https://sites.google.com/view/keyboards/glove80_tailorkey) and inspired by Sunaku’s Glorious Engrammer. This repository captures the published TailorKey variants and provides tooling to regenerate the release JSON files deterministically from a single source of truth.
 
 ## Goals
 
