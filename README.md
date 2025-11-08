@@ -20,10 +20,11 @@ This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …
 │  ├─ variant_metadata.json    # TailorKey release metadata
 │  └─ quantum_touch_metadata.json
 ├─ src/
-│  ├─ glove80/base.py           # shared KeySpec/layer helpers
+│  ├─ glove80/base.py           # shared LayerSpec/KeySpec primitives
+│  ├─ glove80/specs/            # reusable spec dataclasses & helpers
 │  ├─ glove80/metadata.py       # typed metadata loader
-│  ├─ glove80/tailorkey/        # TailorKey implementation
-│  └─ glove80/quantum_touch/    # QuantumTouch implementation
+│  ├─ glove80/tailorkey/        # TailorKey implementation (layers + specs)
+│  └─ glove80/quantum_touch/    # QuantumTouch implementation (layers + specs)
 ├─ scripts/
 │  └─ generate_layouts.py
 ├─ tests/                      # pytest suites (layers + full layouts)
@@ -35,12 +36,15 @@ This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …
 - **sources/…_metadata.json** store the metadata we need to keep intact
   (titles, UUIDs, notes, tags, release filenames) per layout family.
 - **src/glove80/base.py** defines the shared `LayerSpec`/`KeySpec`
-  helpers used by all layouts, regardless of brand.
-- **src/glove80/tailorkey/** contains the TailorKey implementation:
-  declarative layer modules under `layers/`, the `layouts.py` composer, and the
-  layer registry used by tests/CI.
-- **src/glove80/quantum_touch/** mirrors the same structure for the
-  QuantumTouch layout—all layers are generated via `LayerSpec`/`KeySpec`.
+  helpers used by every layout. `src/glove80/specs/` builds on top of that with
+  declarative macro/hold-tap/combo/input-listener data classes.
+- **src/glove80/tailorkey/** contains TailorKey’s generated layers (styled with
+  helpers such as `layers/mouse.py` and `layers/hrm.py`), the `specs/`
+  describing macros/combos/etc., and the `layouts.py` composer that stitches
+  everything together.
+- **src/glove80/quantum_touch/** mirrors the same structure for QuantumTouch;
+  mouse layers and finger-training layers are driven by shared factories so new
+  variants only require spec changes.
 - **src/glove80/metadata.py** loads the release metadata (UUIDs,
   titles, etc.) once with type checking so scripts and tests share it safely.
 - **scripts/generate_layouts.py** regenerates every supported layout (TailorKey,
@@ -53,8 +57,10 @@ This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …
 
 ## Workflow
 
-1. Modify the generator code under `src/glove80/` (or adjust the appropriate
-   metadata file in `sources/` if the release notes/UUIDs change).
+1. Modify the declarative specs under `src/glove80/<layout>/specs/` or the
+   supporting layer helpers in `src/glove80/<layout>/layers/`. If the release
+   metadata (UUID, title, notes, output path) changes, edit the JSON file under
+   `sources/`.
 2. Run the generator:
 
    ```bash
@@ -75,11 +81,13 @@ This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …
 
 ## Extending the Layout
 
-- When adding a new TailorKey layer, implement it in
-  `src/glove80/tailorkey/layers/…` using `LayerSpec`/`KeySpec`, then
-  register its builder in `glove80.tailorkey.layers.LAYER_PROVIDERS`. Follow
-  the same pattern under `glove80/quantum_touch/…` (or a new layout folder) for
-  other families.
+- When adding a new TailorKey layer, extend the appropriate factory (for
+  example `tailorkey/layers/mouse.py` or `tailorkey/layers/hrm.py`) or create a
+  new `LayerSpec`-driven module and register it in
+  `glove80.tailorkey.layers.LAYER_PROVIDERS`. QuantumTouch already generates
+  mouse/finger-training layers from shared helpers
+  (`quantum_touch/layers/mouse_layers.py` and `finger_layers.py`); update those
+  factories instead of copying JSON.
 - To introduce a new release variant, add its entry to the appropriate metadata
   file under `sources/`; the typed loader (`metadata.py`) keeps the rest of the
   tooling in sync automatically.
