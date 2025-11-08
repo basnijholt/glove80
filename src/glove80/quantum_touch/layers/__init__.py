@@ -5,24 +5,10 @@ from typing import Callable, Dict
 from ...base import Layer, LayerMap
 from .base_layer import build_base_layer
 from .hrm import build_hrm_layer
-from .finger_layers import (
-    build_left_index_layer,
-    build_left_middle_layer,
-    build_left_pinky_layer,
-    build_left_ring_layer,
-    build_right_index_layer,
-    build_right_middle_layer,
-    build_right_pinky_layer,
-    build_right_ring_layer,
-)
+from .finger_layers import FINGER_LAYER_BUILDERS
 from .lower_layer import build_lower_layer
 from .magic_layer import build_magic_layer
-from .mouse_layers import (
-    build_mouse_fast_layer,
-    build_mouse_layer,
-    build_mouse_slow_layer,
-    build_mouse_warp_layer,
-)
+from .mouse_layers import MOUSE_LAYER_BUILDERS
 from .original_layer import build_original_layer
 
 LayerBuilder = Callable[[str], Layer]
@@ -32,21 +18,12 @@ LAYER_BUILDERS: Dict[str, LayerBuilder] = {
     "Base": build_base_layer,
     "HRM": build_hrm_layer,
     "Lower": build_lower_layer,
-    "Mouse": build_mouse_layer,
-    "MouseFast": build_mouse_fast_layer,
-    "MouseSlow": build_mouse_slow_layer,
-    "MouseWarp": build_mouse_warp_layer,
     "Magic": build_magic_layer,
-    "LeftIndex": build_left_index_layer,
-    "LeftMiddle": build_left_middle_layer,
-    "LeftRing": build_left_ring_layer,
-    "LeftPinky": build_left_pinky_layer,
-    "RightIndex": build_right_index_layer,
-    "RightMiddle": build_right_middle_layer,
-    "RightRing": build_right_ring_layer,
-    "RightPinky": build_right_pinky_layer,
     "Original": build_original_layer,
 }
+
+LAYER_BUILDERS.update(MOUSE_LAYER_BUILDERS)
+LAYER_BUILDERS.update(FINGER_LAYER_BUILDERS)
 
 
 def build_all_layers(variant: str) -> LayerMap:

@@ -78,4 +78,13 @@ __all__ = [
     "build_mouse_slow_layer",
     "build_mouse_fast_layer",
     "build_mouse_warp_layer",
+    "MOUSE_LAYER_BUILDERS",
 ]
+
+
+MOUSE_LAYER_BUILDERS = {
+    "Mouse": build_mouse_layer,
+    "MouseSlow": build_mouse_slow_layer,
+    "MouseFast": build_mouse_fast_layer,
+    "MouseWarp": build_mouse_warp_layer,
+}

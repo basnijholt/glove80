@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 from ...base import KeySpec, Layer, LayerSpec, build_layer_from_spec
 from ..specs.finger_data import FINGER_BY_LABEL, FingerMeta
@@ -178,6 +178,18 @@ def build_right_pinky_layer(_variant: str) -> Layer:
     return _build_finger_layer("RightPinky")
 
 
+FINGER_LAYER_BUILDERS: Dict[str, Callable[[str], Layer]] = {
+    "LeftIndex": build_left_index_layer,
+    "LeftMiddle": build_left_middle_layer,
+    "LeftRing": build_left_ring_layer,
+    "LeftPinky": build_left_pinky_layer,
+    "RightIndex": build_right_index_layer,
+    "RightMiddle": build_right_middle_layer,
+    "RightRing": build_right_ring_layer,
+    "RightPinky": build_right_pinky_layer,
+}
+
+
 __all__ = [
     "build_left_index_layer",
     "build_left_middle_layer",
@@ -187,4 +199,5 @@ __all__ = [
     "build_right_middle_layer",
     "build_right_ring_layer",
     "build_right_pinky_layer",
+    "FINGER_LAYER_BUILDERS",
 ]
