@@ -1,0 +1,724 @@
+{
+  "Cursor": [
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "ESC",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "INS",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LS",
+          "params": [
+            {
+              "value": "TAB",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "DEL",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "RET",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "SPACE",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "TAB",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "BSPC",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "X",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "X",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LS",
+          "params": [
+            {
+              "value": "TAB",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "Z",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "Y",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "TAB",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&sk",
+      "params": [
+        {
+          "value": "LSHFT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LGUI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LALT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LCTRL",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LSHFT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "C",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "C",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LEFT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "UP",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "DOWN",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "RIGHT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&sk",
+      "params": [
+        {
+          "value": "RSHFT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "L",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "A",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&cur_SELECT_LINE_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&cur_SELECT_WORD_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "F",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "V",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&mod_tab_v2_TKZ",
+      "params": [
+        {
+          "value": "LALT",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&mod_tab_v2_TKZ",
+      "params": [
+        {
+          "value": "LGUI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "PSCRN",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&cur_SELECT_NONE_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&cur_EXTEND_LINE_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&cur_EXTEND_WORD_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "V",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "HOME",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "PG_UP",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "PG_DN",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "END",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "L",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "K",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "Z",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "Y",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "LS",
+              "params": [
+                {
+                  "value": "G",
+                  "params": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "G",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&mod_tab_v2_TKZ",
+      "params": [
+        {
+          "value": "LCTRL",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LG",
+          "params": [
+            {
+              "value": "D",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "A",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&cur_SELECT_LINE_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&cur_SELECT_WORD_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "F",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "LS",
+              "params": [
+                {
+                  "value": "G",
+                  "params": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "G",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "H",
+              "params": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "&kp",
+      "params": [
+        {
+          "value": "LC",
+          "params": [
+            {
+              "value": "K",
+              "params": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
