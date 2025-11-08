@@ -6,6 +6,7 @@ from ...base import Layer, LayerMap
 from .base_layer import build_base_layer
 from .hrm import build_hrm_layer
 from .lower_layer import build_lower_layer
+from .mouse_layer import build_mouse_layer
 from .original_layer import build_original_layer
 
 LayerBuilder = Callable[[str], Layer]
@@ -14,8 +15,9 @@ LayerBuilder = Callable[[str], Layer]
 LAYER_BUILDERS: Dict[str, LayerBuilder] = {
     "Base": build_base_layer,
     "HRM": build_hrm_layer,
-    "Original": build_original_layer,
     "Lower": build_lower_layer,
+    "Mouse": build_mouse_layer,
+    "Original": build_original_layer,
 }
 
 
