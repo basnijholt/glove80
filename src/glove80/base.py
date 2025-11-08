@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from copy import deepcopy
 from dataclasses import dataclass
-from importlib import resources
 from typing import Any, Dict, List, Sequence
 
 Layer = List[Dict[str, Any]]
@@ -46,24 +44,6 @@ class LayerSpec:
         for index, spec in self.overrides.items():
             layer[index] = spec.to_dict()
         return layer
-
-
-def load_layer_from_data(layer_name: str, *, filename: str | None = None) -> Layer:
-    """Load a single layer definition from the data bundle."""
-
-    file = filename or f"{layer_name.lower()}_layer.json"
-    data_path = resources.files("glove80.data").joinpath(file)
-    with data_path.open(encoding="utf-8") as handle:
-        data = json.load(handle)
-    return data[layer_name]
-
-
-def load_layers_map(filename: str) -> LayerMap:
-    """Load a dict of layer_name -> layer data from the given JSON file."""
-
-    data_path = resources.files("glove80.data").joinpath(filename)
-    with data_path.open(encoding="utf-8") as handle:
-        return json.load(handle)
 
 
 def copy_layer(layer: Layer) -> Layer:

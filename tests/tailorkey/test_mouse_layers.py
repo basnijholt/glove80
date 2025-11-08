@@ -1,7 +1,6 @@
 import pytest
 
 from glove80.tailorkey.layers.mouse import build_mouse_layers
-from tests.utils import load_variant_json
 
 
 VARIANTS = [
@@ -15,8 +14,8 @@ VARIANTS = [
 LAYER_NAMES = ["Mouse", "MouseSlow", "MouseFast", "MouseWarp"]
 
 
-def _load_canonical_layers(variant: str):
-    data = load_variant_json(variant)
+def _load_canonical_layers(variant: str, loader):
+    data = loader(variant)
     layers = {}
     for layer_name in LAYER_NAMES:
         idx = data["layer_names"].index(layer_name)
@@ -25,7 +24,7 @@ def _load_canonical_layers(variant: str):
 
 
 @pytest.mark.parametrize("variant", VARIANTS)
-def test_mouse_layers_match_canonical(variant):
-    expected = _load_canonical_layers(variant)
+def test_mouse_layers_match_canonical(variant, load_tailorkey_variant):
+    expected = _load_canonical_layers(variant, load_tailorkey_variant)
     generated = build_mouse_layers(variant)
     assert generated == expected

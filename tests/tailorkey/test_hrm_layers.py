@@ -1,7 +1,6 @@
 import pytest
 
 from glove80.tailorkey.layers.hrm import build_hrm_layers
-from tests.utils import load_variant_json
 
 
 VARIANTS = [
@@ -13,8 +12,8 @@ VARIANTS = [
 ]
 
 
-def _canonical_layers(variant: str):
-    data = load_variant_json(variant)
+def _canonical_layers(variant: str, loader):
+    data = loader(variant)
     layer_map = {}
     for idx, name in enumerate(data["layer_names"]):
         if name.startswith("HRM"):
@@ -23,8 +22,8 @@ def _canonical_layers(variant: str):
 
 
 @pytest.mark.parametrize("variant", VARIANTS)
-def test_hrm_layers(variant):
-    expected = _canonical_layers(variant)
+def test_hrm_layers(variant, load_tailorkey_variant):
+    expected = _canonical_layers(variant, load_tailorkey_variant)
     actual = build_hrm_layers(variant)
     assert actual.keys() == expected.keys()
     for name, layer in expected.items():

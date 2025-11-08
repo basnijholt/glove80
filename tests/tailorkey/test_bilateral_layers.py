@@ -1,7 +1,6 @@
 import pytest
 
 from glove80.tailorkey.layers.bilateral import build_bilateral_training_layers
-from tests.utils import load_variant_json
 
 
 @pytest.mark.parametrize("variant", ["windows", "mac", "dual"])
@@ -10,9 +9,9 @@ def test_bilateral_layers_absent(variant):
 
 
 @pytest.mark.parametrize("variant", ["bilateral_windows", "bilateral_mac"])
-def test_bilateral_layers_match_canonical(variant):
+def test_bilateral_layers_match_canonical(variant, load_tailorkey_variant):
     layers = build_bilateral_training_layers(variant)
-    data = load_variant_json(variant)
+    data = load_tailorkey_variant(variant)
     expected_names = [
         name
         for name in data["layer_names"]

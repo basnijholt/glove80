@@ -5,8 +5,11 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Sequence, cast
 
-from ..base import resolve_layer_refs
-from ..metadata import get_variant_metadata
+from ..layouts.common import (
+    assemble_layers,
+    attach_variant_metadata,
+    resolve_referenced_fields,
+)
 from .layers import build_all_layers
 from .specs import (
     COMBO_DATA,
@@ -19,8 +22,6 @@ from .specs import (
     MACRO_ORDER,
     MACRO_OVERRIDES,
 )
-
-META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 
 
 def _build_macros(variant: str) -> List[Dict[str, Any]]:
@@ -82,22 +83,9 @@ def build_layout(variant: str) -> Dict:
 
     layout = _base_layout_payload(variant)
     layer_names = layout["layer_names"]
-    layer_indices = {name: idx for idx, name in enumerate(layer_names)}
-
-    # Resolve any LayerRef placeholders (macros/combos/input listeners/etc).
-    for field in ("macros", "holdTaps", "combos", "inputListeners"):
-        layout[field] = resolve_layer_refs(layout[field], layer_indices)
-
+    resolve_referenced_fields(layout, layer_names=layer_names)
     generated_layers = build_all_layers(variant)
-    ordered_layers = []
-    for name in layer_names:
-        if name not in generated_layers:
-            raise KeyError(f"No generated layer data for '{name}' in variant '{variant}'")
-        ordered_layers.append(generated_layers[name])
-    layout["layers"] = ordered_layers
-
-    meta = get_variant_metadata(variant)
-    for field in META_FIELDS:
-        layout[field] = meta.get(field)
+    layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
+    attach_variant_metadata(layout, variant=variant, layout_key="tailorkey")
 
     return layout

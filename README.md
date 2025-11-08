@@ -1,60 +1,65 @@
-# Glove80 Layout Sources
+# Glove80 Layout Toolkit
 
-This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …) and provides tooling to regenerate their release JSON files deterministically from a single source of truth.
-TailorKey is the zero-code layout created by [@moosy](https://sites.google.com/view/keyboards/glove80_tailorkey) and inspired by Sunaku’s Glorious Engrammer.
-QuantumTouch builds on similar ideas with bilateral HRM training layers.
+This repository is the canonical, code-first source of the TailorKey and QuantumTouch Glove80 layouts.  Every
+release JSON under `layouts/*/releases` can be regenerated deterministically from the declarative specs and metadata
+checked into `src/glove80`.
 
-## Goals
+## Highlights
+- TailorKey and QuantumTouch live in Python packages with typed specs, factories, and regression tests (see `docs/`).
+- Metadata travels with the package (`src/glove80/layouts/*/metadata.json`), so the CLI and library always agree on
+  UUIDs, release notes, and output paths.
+- A Typer-powered CLI (`python -m glove80 generate …`) replaces ad-hoc scripts and keeps the regeneration workflow
+  uniform across layouts.
+- Release artifacts are grouped under `layouts/<layout>/releases`, keeping the repo root clean while preserving the
+  published JSON verbatim.
 
-- Preserve every supported Glove80 layout exactly as it was shared upstream.
-- Regenerate the release JSON files from canonical sources deterministically.
-- Run CI that guarantees the generated artifacts stay in lockstep with the checked-in JSON.
-- Provide a clean place to continue evolving these layouts while maintaining an auditable history of every change.
+## Quick Start
+1. Install dependencies (the repo uses [uv](https://github.com/astral-sh/uv)):
+   ```bash
+   uv sync
+   ```
+2. Regenerate every release JSON:
+   ```bash
+   just regen
+   ```
+3. Run the full regression suite (per-layer tests + layout parity checks):
+   ```bash
+   just ci
+   ```
+4. Need a single variant? Use the CLI directly:
+   ```bash
+   python -m glove80 generate --layout tailorkey --variant mac
+   ```
+
+`just --list` shows the available helper tasks.
 
 ## Repository Layout
-
 ```
 .
-├─ original/                   # canonical Glove80 layouts (JSON)
-├─ sources/
-│  ├─ variant_metadata.json    # TailorKey release metadata
-│  └─ quantum_touch_metadata.json
-├─ src/
-│  ├─ glove80/base.py           # shared LayerSpec/KeySpec primitives
-│  ├─ glove80/specs/            # reusable spec dataclasses & helpers
-│  ├─ glove80/metadata.py       # typed metadata loader
-│  ├─ glove80/tailorkey/        # TailorKey implementation (layers + specs)
-│  └─ glove80/quantum_touch/    # QuantumTouch implementation (layers + specs)
-├─ scripts/
-│  └─ generate_layouts.py
-├─ tests/                      # pytest suites (layers + full layouts)
-└─ README.md
+├─ layouts/                     # checked-in release JSON
+│  ├─ tailorkey/releases/
+│  └─ quantum_touch/releases/
+├─ docs/                        # architecture + per-layout guides
+├─ src/glove80/
+│  ├─ cli/                      # Typer CLI
+│  ├─ layouts/                  # packaged metadata + generator helpers
+│  ├─ tailorkey/                # TailorKey specs, layers, layout builder
+│  └─ quantum_touch/            # QuantumTouch specs, layers, layout builder
+└─ tests/                       # split by layout family
 ```
 
-- **original/** contains the exact artifacts Moosy published, and regeneration must leave them unchanged.
-- **sources/…_metadata.json** store the metadata we need to keep intact (titles, UUIDs, notes, tags, release filenames) per layout family.
-- **src/glove80/base.py** defines the shared `LayerSpec`/`KeySpec` helpers used by every layout and `src/glove80/specs/` builds declarative macro/hold-tap/combo/input-listener data classes on top.
-- **src/glove80/tailorkey/** contains TailorKey’s generated layers (e.g. `layers/mouse.py`, `layers/hrm.py`), the `specs/`, and the `layouts.py` composer that stitches everything together.
-- **src/glove80/quantum_touch/** mirrors the same structure for QuantumTouch, and mouse layers plus finger-training layers are driven by shared factories so new variants only require spec changes.
-- **src/glove80/metadata.py** loads the release metadata (UUIDs, titles, etc.) once with type checking so scripts and tests share it safely.
-- **scripts/generate_layouts.py** regenerates every supported layout (TailorKey, QuantumTouch, …) from their source code/metadata and overwrites the files in `original/`.
-- **tests/** contains per-layer tests plus a top-level test that compares `build_layout()` against the checked-in `original/*.json`, guaranteeing we never drift from the historical layouts.
+- Read `docs/architecture.md` for a walkthrough of the data flow and regeneration pipeline.
+- `docs/tailorkey.md` and `docs/quantum_touch.md` explain how each layout family is structured, the available layers,
+  and the steps for adding new variants.
 
-## Workflow
+## CI Contract
+`.github/workflows/ci.yml` runs the same steps you do locally:
+- `just regen` must leave `layouts/*/releases` unchanged or the build fails, proving the checked-in JSON matches the
+  current code.
+- `just ci` (`uv run pytest`) covers every layer factory plus whole-layout comparisons.
+- Pull requests are required to keep both commands clean, so regeneration + tests are the only gatekeepers.
 
-1. Modify the declarative specs under `src/glove80/<layout>/specs/` or the supporting layer helpers in `src/glove80/<layout>/layers/`.
-2. If the release metadata (UUID, title, notes, output path) changes, edit the JSON file under `sources/`.
-3. Run the generator with `python3 scripts/generate_layouts.py`.
-4. The script rebuilds each JSON under `original/`, and a clean `git diff` confirms the new code still matches the published layouts.
-5. Run the tests with `uv run pytest`.
-6. The suite re-checks every layer module plus the full-layout comparison to ensure nothing regressed.
-
-## Extending the Layout
-
-- When adding a new TailorKey layer, extend the appropriate factory (for example `tailorkey/layers/mouse.py` or `tailorkey/layers/hrm.py`) or create a new `LayerSpec`-driven module and register it in `glove80.tailorkey.layers.LAYER_PROVIDERS`.
-- QuantumTouch already generates mouse/finger-training layers from shared helpers (`quantum_touch/layers/mouse_layers.py` and `finger_layers.py`), so update those factories instead of copying JSON.
-- To introduce a new release variant, add its entry to the appropriate metadata file under `sources/`; the typed loader (`metadata.py`) keeps the rest of the tooling in sync automatically.
-
-## Continuous Integration
-
-GitHub Actions already runs `uv run pytest` plus `python3 scripts/generate_layouts.py` on every push/PR and fails the build if `original/` changes. This ensures the checked-in JSON artifacts always match the code-generated layouts.
+## Contributing
+1. Edit specs or metadata, re-run `just regen`, and inspect the resulting diffs under `layouts/`.
+2. Extend/adjust the targeted per-layer tests under `tests/<layout>/` when you change behavior.
+3. Document intentional changes in the relevant guide under `docs/` so future contributors understand the rationale.

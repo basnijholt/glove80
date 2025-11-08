@@ -5,8 +5,11 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, Sequence
 
-from ..base import resolve_layer_refs
-from ..metadata import get_variant_metadata
+from ..layouts.common import (
+    assemble_layers,
+    attach_variant_metadata,
+    resolve_referenced_fields,
+)
 from .layers import build_all_layers
 from .specs import (
     COMBO_DATA,
@@ -18,8 +21,6 @@ from .specs import (
     MACRO_DEFS,
     MACRO_ORDER,
 )
-
-META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 
 
 def _materialize_named_sequence(defs: Dict[str, Any], order: Sequence[str]) -> list[Dict[str, Any]]:
@@ -41,22 +42,9 @@ def build_layout(variant: str = "default") -> Dict:
 
     layout = _base_layout_payload()
     layer_names = layout["layer_names"]
-    layer_indices = {name: idx for idx, name in enumerate(layer_names)}
-
-    for field in ("macros", "holdTaps", "combos", "inputListeners"):
-        layout[field] = resolve_layer_refs(layout[field], layer_indices)
-
+    resolve_referenced_fields(layout, layer_names=layer_names)
     generated_layers = build_all_layers(variant)
-    ordered_layers = []
-    for name in layer_names:
-        try:
-            ordered_layers.append(generated_layers[name])
-        except KeyError as exc:
-            raise KeyError(f"No generated layer named '{name}' for variant '{variant}'") from exc
-
-    layout["layers"] = ordered_layers
-    meta = get_variant_metadata(variant, layout="quantum_touch")
-    for field in META_FIELDS:
-        layout[field] = meta.get(field)
+    layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
+    attach_variant_metadata(layout, variant=variant, layout_key="quantum_touch")
 
     return layout
