@@ -18,6 +18,7 @@ from .mouse_warp_layer import build_mouse_warp_layer
 from .original_layer import build_original_layer
 from .right_index_layer import build_right_index_layer
 from .right_middle_layer import build_right_middle_layer
+from .right_pinky_layer import build_right_pinky_layer
 from .right_ring_layer import build_right_ring_layer
 
 LayerBuilder = Callable[[str], Layer]
@@ -39,6 +40,7 @@ LAYER_BUILDERS: Dict[str, LayerBuilder] = {
     "RightIndex": build_right_index_layer,
     "RightMiddle": build_right_middle_layer,
     "RightRing": build_right_ring_layer,
+    "RightPinky": build_right_pinky_layer,
     "Original": build_original_layer,
 }
 
