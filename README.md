@@ -30,10 +30,11 @@ auditable history of every change.
   the source of truth; regeneration must leave them unchanged.
 - **sources/variant_metadata.json** stores the metadata we need to keep intact
   (titles, UUIDs, notes, tags, release filenames).
-- **src/tailorkey_builder/layers/** defines every layer as code: each module
-  loads the Windows baseline, applies variant-specific patches, and returns the
-  final layer. `layers/base.py` houses shared helpers (data loading, cloning,
-  patching).
+- **src/tailorkey_builder/layers/** defines every layer declaratively using
+  `LayerSpec`/`KeySpec`. Each module encodes the canonical bindings, applies
+  any OS- or feature-specific tweaks in code, and returns the finished layer.
+  `layers/base.py` houses the shared helpers for building, cloning, and
+  patching layers.
 - **src/tailorkey_builder/layouts.py** composes all layers for a variant and
   merges them with the preserved metadata. This is the single entry point the
   generator and tests call.
