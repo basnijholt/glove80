@@ -11,10 +11,12 @@ from .left_pinky_layer import build_left_pinky_layer
 from .left_ring_layer import build_left_ring_layer
 from .lower_layer import build_lower_layer
 from .magic_layer import build_magic_layer
-from .mouse_fast_layer import build_mouse_fast_layer
-from .mouse_layer import build_mouse_layer
-from .mouse_slow_layer import build_mouse_slow_layer
-from .mouse_warp_layer import build_mouse_warp_layer
+from .mouse_layers import (
+    build_mouse_fast_layer,
+    build_mouse_layer,
+    build_mouse_slow_layer,
+    build_mouse_warp_layer,
+)
 from .original_layer import build_original_layer
 from .right_index_layer import build_right_index_layer
 from .right_middle_layer import build_right_middle_layer
