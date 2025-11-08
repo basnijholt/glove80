@@ -29,7 +29,7 @@ jobs:
 
       - name: Regenerate layouts and ensure no diff
         run: |
-          python3 scripts/generate_layouts.py
-          git status --short -- original || true
-          git diff --exit-code -- original
+          uv run python -m glove80 generate
+          git status --short -- layouts || true
+          git diff --exit-code -- layouts
         shell: bash
