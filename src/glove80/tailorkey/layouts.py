@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Mapping, cast
+from typing import Any, Dict, List, Mapping, Sequence, cast
 
 from ..base import resolve_layer_refs
 from ..metadata import get_variant_metadata
@@ -26,7 +26,7 @@ META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 def _build_macros(variant: str) -> List[Dict[str, Any]]:
     order = _get_variant_section(MACRO_ORDER, variant, "macro order")
     overrides = MACRO_OVERRIDES.get(variant, {})
-    macro_defs = cast(Mapping[str, Dict[str, Any]], MACRO_DEFS)
+    macro_defs = cast(Mapping[str, Any], MACRO_DEFS)
     macros: List[Dict[str, Any]] = []
     for macro_name in order:
         macros.append(_materialize_named_entry(macro_defs, macro_name, overrides.get(macro_name)))
@@ -35,29 +35,34 @@ def _build_macros(variant: str) -> List[Dict[str, Any]]:
 
 def _build_hold_taps(variant: str) -> List[Dict[str, Any]]:
     order = _get_variant_section(HOLD_TAP_ORDER, variant, "hold-tap order")
-    hold_tap_defs = cast(Mapping[str, Dict[str, Any]], HOLD_TAP_DEFS)
+    hold_tap_defs = cast(Mapping[str, Any], HOLD_TAP_DEFS)
     return [_materialize_named_entry(hold_tap_defs, name) for name in order]
 
 
-def _materialize_named_entry(
-    definitions: Mapping[str, Dict[str, Any]],
-    name: str,
-    override: Dict[str, Any] | None = None,
-) -> Dict[str, Any]:
-    if override is not None:
-        return deepcopy(override)
-    try:
-        base = definitions[name]
-    except KeyError as exc:
-        raise KeyError(f"Unknown definition '{name}'") from exc
-    return deepcopy(base)
+def _materialize_named_entry(definitions: Mapping[str, Any], name: str, override: Any | None = None) -> Dict[str, Any]:
+    data = override or definitions.get(name)
+    if data is None:
+        raise KeyError(f"Unknown definition '{name}'")
+    if hasattr(data, "to_dict"):
+        return data.to_dict()
+    return deepcopy(data)
 
 
-def _get_variant_section(sections: Mapping[str, List[Any]], variant: str, label: str) -> List[Any]:
+def _get_variant_section(sections: Mapping[str, Sequence[Any]], variant: str, label: str) -> List[Any]:
     try:
-        return sections[variant]
+        return list(sections[variant])
     except KeyError as exc:
         raise KeyError(f"No {label} for variant '{variant}'") from exc
+
+
+def _materialize_sequence(items: Sequence[Any]) -> List[Any]:
+    result: List[Any] = []
+    for item in items:
+        if hasattr(item, "to_dict"):
+            result.append(item.to_dict())
+        else:
+            result.append(deepcopy(item))
+    return result
 
 
 def _base_layout_payload(variant: str) -> Dict[str, Any]:
@@ -65,8 +70,10 @@ def _base_layout_payload(variant: str) -> Dict[str, Any]:
     layout["layer_names"] = deepcopy(_get_variant_section(LAYER_NAME_MAP, variant, "layer names"))
     layout["macros"] = _build_macros(variant)
     layout["holdTaps"] = _build_hold_taps(variant)
-    layout["combos"] = deepcopy(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
-    layout["inputListeners"] = deepcopy(_get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners"))
+    layout["combos"] = _materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
+    layout["inputListeners"] = _materialize_sequence(
+        _get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners")
+    )
     return layout
 
 
