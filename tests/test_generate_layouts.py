@@ -3,19 +3,18 @@ from pathlib import Path
 
 import pytest
 
+from glove80.metadata import load_metadata
 from glove80.tailorkey.layouts import build_layout
-
-import scripts.generate_layouts as generator
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
-@pytest.mark.parametrize("variant", sorted(generator.load_metadata().keys()))
+@pytest.mark.parametrize("variant", sorted(load_metadata(layout="tailorkey").keys()))
 def test_generated_files_match_canonical_source(tmp_path, variant):
     """Each release JSON must match its canonical source exactly."""
 
-    metadata = generator.load_metadata()
+    metadata = load_metadata(layout="tailorkey")
     meta = metadata[variant]
 
     source_path = REPO_ROOT / meta["output"]

@@ -1,0 +1,115 @@
+"""Helpers for regenerating release JSON artifacts."""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Iterator, List, cast
+
+from ..metadata import MetadataByVariant, VariantMetadata, load_metadata
+from ..quantum_touch.layouts import build_layout as build_quantum_touch_layout
+from ..tailorkey.layouts import build_layout as build_tailorkey_layout
+
+LayoutBuilder = Callable[[str], dict]
+
+LAYOUT_BUILDERS: Dict[str, LayoutBuilder] = {
+    "tailorkey": build_tailorkey_layout,
+    "quantum_touch": build_quantum_touch_layout,
+}
+
+META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
+
+
+@dataclass(frozen=True)
+class GenerationResult:
+    """Summary of a generated layout variant."""
+
+    layout: str
+    variant: str
+    destination: Path
+    changed: bool
+
+
+def available_layouts() -> List[str]:
+    """Return the sorted list of known layout families."""
+
+    return sorted(LAYOUT_BUILDERS)
+
+
+def _normalize_layout_name(layout: str | None) -> Iterable[tuple[str, LayoutBuilder]]:
+    if layout is None:
+        return [(name, builder) for name, builder in LAYOUT_BUILDERS.items()]
+    try:
+        return [(layout, LAYOUT_BUILDERS[layout])]
+    except KeyError as exc:
+        raise KeyError(f"Unknown layout '{layout}'. Available: {sorted(LAYOUT_BUILDERS)}") from exc
+
+
+def _iter_variants(
+    layout: str,
+    metadata: MetadataByVariant,
+    variant: str | None = None,
+) -> Iterator[tuple[str, VariantMetadata]]:
+    if variant is None:
+        yield from metadata.items()
+        return
+    try:
+        yield variant, metadata[variant]
+    except KeyError as exc:
+        raise KeyError(f"Unknown variant '{variant}' for layout '{layout}'. Available: {sorted(metadata)}") from exc
+
+
+def _write_layout(data: dict, destination: Path) -> bool:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        current = json.loads(destination.read_text(encoding="utf-8"))
+        if current == data:
+            return False
+    destination.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    return True
+
+
+def _augment_layout_with_metadata(layout: dict, meta: VariantMetadata) -> None:
+    meta_dict = cast(Dict[str, Any], meta)
+    for field in META_FIELDS:
+        if field in meta_dict:
+            layout[field] = meta_dict[field]
+
+
+def generate_layouts(
+    *,
+    layout: str | None = None,
+    variant: str | None = None,
+    metadata_path: Path | None = None,
+    dry_run: bool = False,
+) -> List[GenerationResult]:
+    """Generate layouts and write (or check) their release artifacts."""
+
+    results: List[GenerationResult] = []
+    for layout_name, builder in _normalize_layout_name(layout):
+        metadata = load_metadata(layout=layout_name, path=metadata_path)
+        for variant_name, meta in _iter_variants(layout_name, metadata, variant):
+            destination = Path(meta["output"])
+            layout_payload = builder(variant_name)
+            _augment_layout_with_metadata(layout_payload, meta)
+
+            changed = False
+            if dry_run:
+                if destination.exists():
+                    current = json.loads(destination.read_text(encoding="utf-8"))
+                    changed = current != layout_payload
+                else:
+                    changed = True
+            else:
+                changed = _write_layout(layout_payload, destination)
+
+            results.append(
+                GenerationResult(
+                    layout=layout_name,
+                    variant=variant_name,
+                    destination=destination,
+                    changed=changed,
+                )
+            )
+    return results
