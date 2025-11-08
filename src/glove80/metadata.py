@@ -16,8 +16,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_LAYOUT = "tailorkey"
 LAYOUT_METADATA_PATHS: Dict[str, Path] = {
-    "tailorkey": REPO_ROOT / "sources" / "variant_metadata.json",
-    "quantum_touch": REPO_ROOT / "sources" / "quantum_touch_metadata.json",
+    "tailorkey": REPO_ROOT / "layouts" / "tailorkey" / "metadata" / "metadata.json",
+    "quantum_touch": REPO_ROOT / "layouts" / "quantum_touch" / "metadata" / "metadata.json",
 }
 
 
