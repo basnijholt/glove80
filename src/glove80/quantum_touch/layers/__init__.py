@@ -6,6 +6,7 @@ from ...base import Layer, LayerMap
 from .base_layer import build_base_layer
 from .hrm import build_hrm_layer
 from .lower_layer import build_lower_layer
+from .magic_layer import build_magic_layer
 from .mouse_fast_layer import build_mouse_fast_layer
 from .mouse_layer import build_mouse_layer
 from .mouse_slow_layer import build_mouse_slow_layer
@@ -23,6 +24,7 @@ LAYER_BUILDERS: Dict[str, LayerBuilder] = {
     "MouseFast": build_mouse_fast_layer,
     "MouseSlow": build_mouse_slow_layer,
     "MouseWarp": build_mouse_warp_layer,
+    "Magic": build_magic_layer,
     "Original": build_original_layer,
 }
 
