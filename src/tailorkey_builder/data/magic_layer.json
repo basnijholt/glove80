@@ -1,0 +1,404 @@
+{
+  "Magic": [
+    {
+      "value": "&mstr1_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&mstr2_v1_TKZ",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&bt",
+      "params": [
+        {
+          "value": "BT_CLR",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&bt",
+      "params": [
+        {
+          "value": "BT_CLR_ALL",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&to",
+      "params": [
+        {
+          "value": 0,
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&to",
+      "params": [
+        {
+          "value": 1,
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&to",
+      "params": [
+        {
+          "value": 2,
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_SPI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_SAI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_HUI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_BRI",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_TOG",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&bootloader",
+      "params": []
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_SPD",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_SAD",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_HUD",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_BRD",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&rgb_ug",
+      "params": [
+        {
+          "value": "RGB_EFF",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&bootloader",
+      "params": []
+    },
+    {
+      "value": "&reset",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&bt_2",
+      "params": []
+    },
+    {
+      "value": "&bt_3",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&reset",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&bt_0",
+      "params": []
+    },
+    {
+      "value": "&bt_1",
+      "params": []
+    },
+    {
+      "value": "&out",
+      "params": [
+        {
+          "value": "OUT_USB",
+          "params": []
+        }
+      ]
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    },
+    {
+      "value": "&none",
+      "params": []
+    }
+  ]
+}
