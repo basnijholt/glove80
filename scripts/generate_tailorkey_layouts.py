@@ -17,7 +17,9 @@ def load_metadata() -> dict[str, dict]:
 
 def write_layout(data: dict, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    destination.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
 
 
 def generate_variant(name: str, meta: dict) -> None:

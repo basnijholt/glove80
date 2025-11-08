@@ -18,7 +18,17 @@ def test_bilateral_layers_match_canonical(variant):
     expected_names = [
         name
         for name in data["layer_names"]
-        if name in {"LeftIndex", "LeftMiddy", "LeftRingy", "LeftPinky", "RightIndex", "RightMiddy", "RightRingy", "RightPinky"}
+        if name
+        in {
+            "LeftIndex",
+            "LeftMiddy",
+            "LeftRingy",
+            "LeftPinky",
+            "RightIndex",
+            "RightMiddy",
+            "RightRingy",
+            "RightPinky",
+        }
     ]
     assert set(layers.keys()) == set(expected_names)
     for name in expected_names:

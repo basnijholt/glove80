@@ -23,5 +23,8 @@ def test_generated_files_match_canonical_source(tmp_path, variant):
     # Ensure the generator rewrites the files before comparing.
     generator.generate_variant(variant, meta)
 
-    with source_path.open(encoding="utf-8") as src, output_path.open(encoding="utf-8") as dst:
+    with (
+        source_path.open(encoding="utf-8") as src,
+        output_path.open(encoding="utf-8") as dst,
+    ):
         assert json.load(src) == json.load(dst)

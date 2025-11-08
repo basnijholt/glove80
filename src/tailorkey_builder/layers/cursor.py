@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from .base import Layer, apply_patch_if, copy_layer, load_layer_from_data
 
 
 _BASE_CURSOR_LAYER: Layer = load_layer_from_data("Cursor", filename="cursor_layer.json")
 
-_MAC_PATCH = {
+Patch = Dict[int, Dict[str, Any]]
+
+_MAC_PATCH: Patch = {
     27: {
         "params": [{"params": [{"params": [], "value": "X"}], "value": "LG"}],
         "value": "&kp",

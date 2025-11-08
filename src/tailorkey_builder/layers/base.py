@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 from importlib import resources
-from typing import Dict, List
+from typing import Any, Dict, List
 
-Layer = List[Dict]
+Layer = List[Dict[str, Any]]
 LayerMap = Dict[str, Layer]
 
 
@@ -37,11 +37,13 @@ def copy_layers_map(layers: LayerMap) -> LayerMap:
     return {name: deepcopy(layer) for name, layer in layers.items()}
 
 
-def apply_patch(layer: Layer, patch: Dict[int, Dict]) -> None:
+def apply_patch(layer: Layer, patch: Dict[int, Dict[str, Any]]) -> None:
     for index, replacement in patch.items():
         layer[index] = deepcopy(replacement)
 
 
-def apply_patch_if(layer: Layer, condition: bool, patch: Dict[int, Dict]) -> None:
+def apply_patch_if(
+    layer: Layer, condition: bool, patch: Dict[int, Dict[str, Any]]
+) -> None:
     if condition:
         apply_patch(layer, patch)

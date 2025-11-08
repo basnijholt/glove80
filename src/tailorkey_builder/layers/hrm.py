@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from .base import Layer, LayerMap, apply_patch, copy_layer, load_layer_from_data
 
 
 _BASE_HRM_LAYER: Layer = load_layer_from_data("HRM_WinLinx", filename="hrm_layer.json")
 
-_MAC_PATCH = {
+Patch = Dict[int, Dict[str, Any]]
+
+_MAC_PATCH: Patch = {
     35: {
         "value": "&HRM_left_pinky_v1_TKZ",
         "params": [{"value": "LCTRL", "params": []}, {"value": "A", "params": []}],
@@ -29,7 +33,7 @@ _MAC_PATCH = {
     56: {"value": "&kp", "params": [{"value": "RGUI", "params": []}]},
 }
 
-_DUAL_PATCH = {
+_DUAL_PATCH: Patch = {
     69: {
         "value": "&thumb_v2_TKZ",
         "params": [{"value": 5, "params": []}, {"value": "BSPC", "params": []}],
@@ -40,7 +44,7 @@ _DUAL_PATCH = {
     },
 }
 
-_DUAL_MAC_PATCH = {
+_DUAL_MAC_PATCH: Patch = {
     69: {
         "value": "&thumb_v2_TKZ",
         "params": [{"value": 4, "params": []}, {"value": "BSPC", "params": []}],
@@ -51,7 +55,7 @@ _DUAL_MAC_PATCH = {
     },
 }
 
-_BILATERAL_WIN_PATCH = {
+_BILATERAL_WIN_PATCH: Patch = {
     35: {
         "value": "&HRM_left_pinky_v1B_TKZ",
         "params": [{"value": "LGUI", "params": []}, {"value": "A", "params": []}],
@@ -90,7 +94,7 @@ _BILATERAL_WIN_PATCH = {
     },
 }
 
-_BILATERAL_MAC_PATCH = {
+_BILATERAL_MAC_PATCH: Patch = {
     35: {
         "value": "&HRM_left_pinky_v1B_TKZ",
         "params": [{"value": "LCTRL", "params": []}, {"value": "A", "params": []}],
