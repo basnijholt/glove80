@@ -1,26 +1,29 @@
-# TailorKey Layout Sources
+# Glove80 Layout Sources
 
-TailorKey is a zero-code Glove80 layout created by [@moosy](https://sites.google.com/view/keyboards/glove80_tailorkey) and inspired by Sunaku’s Glorious Engrammer. This repository captures the published TailorKey variants and provides tooling to regenerate the release JSON files deterministically from a single source of truth.
+This repository captures canonical Glove80 layouts (TailorKey, QuantumTouch, …) and provides tooling to regenerate their release JSON files deterministically from a single source of truth. TailorKey is the zero-code layout created by [@moosy](https://sites.google.com/view/keyboards/glove80_tailorkey) and inspired by Sunaku’s Glorious Engrammer; QuantumTouch builds on similar ideas with Bilateral HRM training layers.
 
 ## Goals
 
-- Preserve each TailorKey variant exactly as it was shared upstream.
+- Preserve every supported Glove80 layout exactly as it was shared upstream.
 - Regenerate the release JSON files from canonical sources deterministically.
-- Enable CI workflows that publish the generated layout files as artifacts.
-- Provide a clean place to continue evolving TailorKey while maintaining a
-auditable history of every change.
+- Run CI that guarantees the generated artifacts stay in lockstep with the
+  checked-in JSON.
+- Provide a clean place to continue evolving these layouts while maintaining an
+  auditable history of every change.
 
 ## Repository Layout
 
 ```
 .
-├─ original/                   # canonical TailorKey variants (JSON)
+├─ original/                   # canonical Glove80 layouts (JSON)
 ├─ sources/
-│  └─ variant_metadata.json    # release filenames + UUIDs + notes
+│  ├─ variant_metadata.json    # TailorKey release metadata
+│  └─ quantum_touch_metadata.json
 ├─ src/
-│  ├─ glove80/base.py        # shared KeySpec/layer helpers
-│  ├─ glove80/metadata.py    # typed metadata loader
-│  └─ glove80/tailorkey/     # TailorKey-specific code
+│  ├─ glove80/base.py           # shared KeySpec/layer helpers
+│  ├─ glove80/metadata.py       # typed metadata loader
+│  ├─ glove80/tailorkey/        # TailorKey implementation
+│  └─ glove80/quantum_touch/    # QuantumTouch implementation
 ├─ scripts/
 │  └─ generate_layouts.py
 ├─ tests/                      # pytest suites (layers + full layouts)
@@ -29,15 +32,15 @@ auditable history of every change.
 
 - **original/** contains the exact artifacts Moosy published. We treat them as
   the source of truth; regeneration must leave them unchanged.
-- **sources/variant_metadata.json** stores the metadata we need to keep intact
-  (titles, UUIDs, notes, tags, release filenames).
+- **sources/…_metadata.json** store the metadata we need to keep intact
+  (titles, UUIDs, notes, tags, release filenames) per layout family.
 - **src/glove80/base.py** defines the shared `LayerSpec`/`KeySpec`
   helpers used by all layouts, regardless of brand.
 - **src/glove80/tailorkey/** contains the TailorKey implementation:
   declarative layer modules under `layers/`, the `layouts.py` composer, and the
   layer registry used by tests/CI.
-- **src/glove80/quantum_touch/** currently replays the canonical QuantumTouch
-  layout; its layers can be codified the same way as TailorKey over time.
+- **src/glove80/quantum_touch/** mirrors the same structure for the
+  QuantumTouch layout—all layers are generated via `LayerSpec`/`KeySpec`.
 - **src/glove80/metadata.py** loads the release metadata (UUIDs,
   titles, etc.) once with type checking so scripts and tests share it safely.
 - **scripts/generate_layouts.py** regenerates every supported layout (TailorKey,
@@ -50,8 +53,8 @@ auditable history of every change.
 
 ## Workflow
 
-1. Modify the generator code under `src/glove80/` (or adjust metadata
-   in `sources/variant_metadata.json` if the release notes/UUIDs change).
+1. Modify the generator code under `src/glove80/` (or adjust the appropriate
+   metadata file in `sources/` if the release notes/UUIDs change).
 2. Run the generator:
 
    ```bash
@@ -59,7 +62,7 @@ auditable history of every change.
    ```
 
    The script rebuilds each JSON under `original/`. A clean `git diff` confirms
-   the new code still matches Moosy’s published layouts.
+   the new code still matches the published layouts.
 
 3. Run the tests:
 
@@ -74,14 +77,13 @@ auditable history of every change.
 
 - When adding a new TailorKey layer, implement it in
   `src/glove80/tailorkey/layers/…` using `LayerSpec`/`KeySpec`, then
-  register its builder in `glove80.tailorkey.layers.LAYER_PROVIDERS`.
-- To introduce a new release variant, add its entry to
-  `sources/variant_metadata.json`; the typed loader (`metadata.py`) keeps the
-  rest of the tooling in sync automatically.
+  register its builder in `glove80.tailorkey.layers.LAYER_PROVIDERS`. Follow
+  the same pattern under `glove80/quantum_touch/…` (or a new layout folder) for
+  other families.
+- To introduce a new release variant, add its entry to the appropriate metadata
+  file under `sources/`; the typed loader (`metadata.py`) keeps the rest of the
+  tooling in sync automatically.
 
 ## Continuous Integration
 
-A future CI workflow can simply execute the two commands above. The generated
-release JSON files can then be uploaded as build artifacts or attached to a
-GitHub release, ensuring the hosted layouts always correspond to the committed
-source files.
+GitHub Actions already runs `uv run pytest` plus `python3 scripts/generate_layouts.py` on every push/PR and fails the build if `original/` changes. This ensures the checked-in JSON artifacts always match the code-generated layouts.
