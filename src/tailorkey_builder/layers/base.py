@@ -68,8 +68,8 @@ def copy_layers_map(layers: LayerMap) -> LayerMap:
 
 
 def apply_patch(layer: Layer, patch: PatchSpec) -> None:
-    for index, replacement in patch.items():
-        layer[index] = _normalize_replacement(replacement)
+    for index, spec in patch.items():
+        layer[index] = spec.to_dict()
 
 
 def apply_patch_if(layer: Layer, condition: bool, patch: PatchSpec) -> None:
@@ -91,10 +91,4 @@ def _coerce_param(param: Any) -> Dict[str, Any]:
     raise TypeError(f"Unsupported param type: {type(param)!r}")
 
 
-def _normalize_replacement(replacement: KeySpec | Dict[str, Any]) -> Dict[str, Any]:
-    if isinstance(replacement, KeySpec):
-        return replacement.to_dict()
-    return deepcopy(replacement)
-
-
-PatchSpec = Dict[int, KeySpec | Dict[str, Any]]
+PatchSpec = Dict[int, KeySpec]
