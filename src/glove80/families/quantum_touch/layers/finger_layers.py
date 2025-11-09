@@ -1,4 +1,4 @@
-"""Programmatic builders for QuantumTouch finger-training layers."""
+"""Programmatic builders for QuantumTouch finger layers."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Bilateral-specific training layers."""
+"""Bilateral-specific finger layers."""
 
 from __future__ import annotations
 
@@ -233,8 +233,8 @@ def assemble_bilateral_layers(variant: str, *, mac: bool = False, remap: bool = 
     return layers
 
 
-def build_bilateral_training_layers(variant: str) -> LayerMap:
-    """Return the eight bilateral training layers if needed."""
+def build_bilateral_finger_layers(variant: str) -> LayerMap:
+    """Return the eight bilateral finger layers if needed."""
 
     base_variant = base_variant_for(variant)
     if base_variant not in {"bilateral_windows", "bilateral_mac"}:

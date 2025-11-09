@@ -1,6 +1,6 @@
 # Glorious Engrammer Guide
 
-Glorious Engrammer is Sunaku's multi-layer Glove80 layout with per-key RGB cues, mouse control, and ergonomic training layers.
+Glorious Engrammer is Sunaku's multi-layer Glove80 layout with per-key RGB cues, mouse control, and ergonomic finger layers.
 The sources in `src/glove80/families/glorious_engrammer` describe the layout declaratively so `just regen` reproduces the released JSON verbatim.
 
 ## Canonical Layouts (accessed 8 Nov 2025)

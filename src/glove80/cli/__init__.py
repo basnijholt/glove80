@@ -25,12 +25,7 @@ def _print_results(results: list[GenerationResult]) -> None:
     for result in results:
         status_icon = "✅ updated" if result.changed else "⚪ unchanged"
         status_style = "[green]" if result.changed else "[dim white]"
-        table.add_row(
-            result.layout,
-            result.variant,
-            str(result.destination),
-            f"{status_style}{status_icon}[/]"
-        )
+        table.add_row(result.layout, result.variant, str(result.destination), f"{status_style}{status_icon}[/]")
 
     console.print(table)
     summary = ", ".join(f"{r.layout}:{r.variant}" for r in results)

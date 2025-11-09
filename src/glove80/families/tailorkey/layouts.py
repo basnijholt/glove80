@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 from glove80.layouts import LayoutBuilder
 from glove80.layouts.components import LayoutFeatureComponents
@@ -123,9 +123,7 @@ def _home_row_provider(names: Sequence[str], layers: Mapping[str, Any]):
     return provider
 
 
-def _group_anchor(
-    layer_names: Sequence[str], group_names: Sequence[str]
-) -> tuple[str | None, str | None]:
+def _group_anchor(layer_names: Sequence[str], group_names: Sequence[str]) -> tuple[str | None, str | None]:
     if not group_names:
         return None, None
 

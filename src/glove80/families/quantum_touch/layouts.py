@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence
+from typing import Dict, Sequence
 
 from glove80.layouts import LayoutBuilder
 from glove80.layouts.family import LayoutFamily, REGISTRY

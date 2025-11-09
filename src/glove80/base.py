@@ -64,9 +64,7 @@ class LayerSpec:
         for raw_index, spec in self.overrides.items():
             index = self._coerce_override_index(raw_index)
             if index < 0 or index > upper_bound:
-                raise ValueError(
-                    f"Override index {index} is outside the valid range 0-{upper_bound}"
-                )
+                raise ValueError(f"Override index {index} is outside the valid range 0-{upper_bound}")
             normalized[index] = spec
         object.__setattr__(self, "overrides", normalized)
         return self
@@ -81,9 +79,7 @@ class LayerSpec:
             try:
                 return int(raw_index, 10)
             except ValueError as exc:
-                raise TypeError(
-                    f"Override index '{raw_index}' is not an integer string"
-                ) from exc
+                raise TypeError(f"Override index '{raw_index}' is not an integer string") from exc
         if isinstance(raw_index, float):
             if raw_index.is_integer():
                 return int(raw_index)

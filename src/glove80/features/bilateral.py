@@ -1,4 +1,4 @@
-"""Feature components for Bilateral Home Row training layers."""
+"""Feature components for Bilateral Home Row finger layers."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def bilateral_home_row_components(
     platform: Literal["windows", "mac"] = "windows",
     remap: bool = False,
 ) -> LayoutFeatureComponents:
-    """Return the macros + layers needed for bilateral HRM training.
+    """Return the macros + layers needed for bilateral HRM finger practice.
 
     Parameters
     ----------

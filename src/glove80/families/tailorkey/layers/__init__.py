@@ -6,7 +6,7 @@ from glove80.base import Layer, LayerMap
 
 from ..alpha_layouts import base_variant_for, variant_alias
 from .autoshift import build_autoshift_layer
-from .bilateral import assemble_bilateral_layers, build_bilateral_training_layers
+from .bilateral import assemble_bilateral_layers, build_bilateral_finger_layers
 from .cursor import build_cursor_layer
 from .gaming import build_gaming_layer
 from .hrm import build_hrm_layers
@@ -44,7 +44,7 @@ LAYER_PROVIDERS: Iterable[LayerProvider] = [
     _single_layer("Lower", build_lower_layer),
     build_mouse_layers,
     _single_layer("Magic", build_magic_layer),
-    build_bilateral_training_layers,
+    build_bilateral_finger_layers,
 ]
 
 
@@ -63,7 +63,7 @@ __all__ = [
     "build_all_layers",
     "build_autoshift_layer",
     "assemble_bilateral_layers",
-    "build_bilateral_training_layers",
+    "build_bilateral_finger_layers",
     "build_cursor_layer",
     "build_gaming_layer",
     "build_hrm_layers",

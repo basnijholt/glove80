@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Mapping, MutableSequence, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 from typing import Literal
 
 from glove80.base import LayerMap
@@ -137,21 +137,15 @@ class LayoutBuilder:
     # ------------------------------------------------------------------
     # Feature-oriented helpers
     # ------------------------------------------------------------------
-    def set_mouse_layers_provider(
-        self, provider: Callable[[str], LayerMap]
-    ) -> "LayoutBuilder":
+    def set_mouse_layers_provider(self, provider: Callable[[str], LayerMap]) -> "LayoutBuilder":
         self._mouse_layers_provider = provider
         return self
 
-    def set_cursor_layers_provider(
-        self, provider: Callable[[str], LayerMap]
-    ) -> "LayoutBuilder":
+    def set_cursor_layers_provider(self, provider: Callable[[str], LayerMap]) -> "LayoutBuilder":
         self._cursor_layers_provider = provider
         return self
 
-    def set_home_row_provider(
-        self, provider: Callable[[str], LayoutFeatureComponents]
-    ) -> "LayoutBuilder":
+    def set_home_row_provider(self, provider: Callable[[str], LayoutFeatureComponents]) -> "LayoutBuilder":
         self._home_row_provider = provider
         return self
 
@@ -209,9 +203,7 @@ class LayoutBuilder:
     def build(self) -> dict[str, Any]:
         missing = [name for name in self._sections.layer_names if name not in self._sections.layers]
         if missing:
-            raise KeyError(
-                "Cannot build layout; missing layer data for: " + ", ".join(missing)
-            )
+            raise KeyError("Cannot build layout; missing layer data for: " + ", ".join(missing))
 
         return compose_layout(
             self._common_fields,
@@ -258,9 +250,7 @@ class LayoutBuilder:
             except ValueError:
                 raise ValueError(f"Layer '{before}' is not present in the order") from None
             updated = (
-                filtered[:anchor_index]
-                + [name for name in names if name not in filtered]
-                + filtered[anchor_index:]
+                filtered[:anchor_index] + [name for name in names if name not in filtered] + filtered[anchor_index:]
             )
             self._sections.layer_names = updated
             return
@@ -276,7 +266,6 @@ class LayoutBuilder:
                 + filtered[anchor_index + 1 :]
             )
             self._sections.layer_names = updated
-
 
     def _merge_feature_components(
         self,
