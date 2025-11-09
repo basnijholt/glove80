@@ -1,19 +1,7 @@
-"""Declarative spec helpers used by layout families."""
+"""Spec helper package.
 
-from .primitives import (
-    ComboSpec,
-    HoldTapSpec,
-    InputListenerNodeSpec,
-    InputListenerSpec,
-    InputProcessorSpec,
-    MacroSpec,
-)
+This package intentionally exposes no symbols by default. Families now build
+Pydantic models directly; legacy helpers live in `glove80.specs.primitives`.
+"""
 
-__all__ = [
-    "ComboSpec",
-    "HoldTapSpec",
-    "InputListenerNodeSpec",
-    "InputListenerSpec",
-    "InputProcessorSpec",
-    "MacroSpec",
-]
+__all__: list[str] = []
