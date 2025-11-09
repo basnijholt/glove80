@@ -7,10 +7,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from glove80.families import default as _default_family  # noqa: F401  # ensure registration
-from glove80.families import glorious_engrammer as _glorious_engrammer_family  # noqa: F401
-from glove80.families import quantum_touch as _quantum_touch_family  # noqa: F401
-from glove80.families import tailorkey as _tailorkey_family  # noqa: F401
+from glove80.families import default  # noqa: F401  # ensure registration
+from glove80.families import glorious_engrammer  # noqa: F401
+from glove80.families import quantum_touch  # noqa: F401
+from glove80.families import tailorkey  # noqa: F401
 from glove80.layouts.family import REGISTRY, LayoutFamily
 from glove80.metadata import MetadataByVariant, VariantMetadata, load_metadata
 

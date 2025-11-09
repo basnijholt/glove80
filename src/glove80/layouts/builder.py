@@ -325,9 +325,9 @@ def _as_plain_dict(obj: Any) -> dict[str, Any]:
         return obj
     # Mapping but not dict (e.g., OrderedDict or custom mapping)
     try:
-        from collections.abc import Mapping as _Mapping
+        from collections.abc import Mapping
 
-        if isinstance(obj, _Mapping):
+        if isinstance(obj, Mapping):
             return cast("dict[str, Any]", dict(obj))
     except Exception:  # pragma: no cover
         pass
@@ -340,9 +340,9 @@ def _macro_name(macro: Any) -> str:
         name = getattr(macro, "name")
     else:
         try:
-            from collections.abc import Mapping as _Mapping
+            from collections.abc import Mapping
 
-            if isinstance(macro, _Mapping):
+            if isinstance(macro, Mapping):
                 name = cast("Mapping[str, Any]", macro)["name"]
             else:
                 # Last resort: hope it behaves like a dict
