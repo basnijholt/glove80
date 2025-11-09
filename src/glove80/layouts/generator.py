@@ -5,20 +5,13 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, cast
+from typing import Any, Dict, Iterable, Iterator, List, cast
 
-from ..families.default.layouts import build_layout as build_default_layout
-from ..families.quantum_touch.layouts import build_layout as build_quantum_touch_layout
-from ..families.tailorkey.layouts import build_layout as build_tailorkey_layout
+from ..families import default as _default_family  # noqa: F401  # ensure registration
+from ..families import tailorkey as _tailorkey_family  # noqa: F401
+from ..families import quantum_touch as _quantum_touch_family  # noqa: F401
+from ..layouts.family import LayoutFamily, REGISTRY
 from ..metadata import MetadataByVariant, VariantMetadata, load_metadata
-
-LayoutBuilder = Callable[[str], dict]
-
-LAYOUT_BUILDERS: Dict[str, LayoutBuilder] = {
-    "default": build_default_layout,
-    "tailorkey": build_tailorkey_layout,
-    "quantum_touch": build_quantum_touch_layout,
-}
 
 META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 
@@ -36,16 +29,18 @@ class GenerationResult:
 def available_layouts() -> List[str]:
     """Return the sorted list of known layout families."""
 
-    return sorted(LAYOUT_BUILDERS)
+    return sorted(registered.name for registered in REGISTRY.families())
 
 
-def _normalize_layout_name(layout: str | None) -> Iterable[tuple[str, LayoutBuilder]]:
+def _normalize_layout_name(layout: str | None) -> Iterable[tuple[str, LayoutFamily]]:
+    registered_families = list(REGISTRY.families())
     if layout is None:
-        return [(name, builder) for name, builder in LAYOUT_BUILDERS.items()]
+        return [(registered.name, registered.family) for registered in registered_families]
     try:
-        return [(layout, LAYOUT_BUILDERS[layout])]
+        family = REGISTRY.get(layout)
+        return [(layout, family)]
     except KeyError as exc:
-        raise KeyError(f"Unknown layout '{layout}'. Available: {sorted(LAYOUT_BUILDERS)}") from exc
+        raise KeyError(f"Unknown layout '{layout}'. Available: {available_layouts()}") from exc
 
 
 def _iter_variants(
@@ -89,11 +84,11 @@ def generate_layouts(
     """Generate layouts and write (or check) their release artifacts."""
 
     results: List[GenerationResult] = []
-    for layout_name, builder in _normalize_layout_name(layout):
+    for layout_name, family in _normalize_layout_name(layout):
         metadata = load_metadata(layout=layout_name, path=metadata_path)
         for variant_name, meta in _iter_variants(layout_name, metadata, variant):
             destination = Path(meta["output"])
-            layout_payload = builder(variant_name)
+            layout_payload = family.build(variant_name)
             _augment_layout_with_metadata(layout_payload, meta)
 
             changed = False

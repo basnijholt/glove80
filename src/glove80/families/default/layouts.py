@@ -7,6 +7,7 @@ from typing import Dict
 
 from glove80.base import LayerMap, build_layer_from_spec
 from glove80.layouts.common import assemble_layers, attach_variant_metadata
+from glove80.layouts.family import LayoutFamily, REGISTRY
 from glove80.specs.primitives import materialize_sequence
 
 from .specs import VARIANT_SPECS, VariantSpec
@@ -16,24 +17,45 @@ def _build_layers_map(spec: VariantSpec) -> LayerMap:
     return {name: build_layer_from_spec(layer_spec) for name, layer_spec in spec.layer_specs.items()}
 
 
-def build_layout(variant: str) -> Dict:
-    try:
-        spec = VARIANT_SPECS[variant]
-    except KeyError as exc:
-        raise KeyError(f"Unknown default layout '{variant}'. Available: {sorted(VARIANT_SPECS)}") from exc
+class Family(LayoutFamily):
+    name = "default"
 
-    layout: Dict = deepcopy(spec.common_fields)
-    layout["layer_names"] = list(spec.layer_names)
-    layout["macros"] = []
-    layout["holdTaps"] = []
-    layout["combos"] = []
-    layout["inputListeners"] = materialize_sequence(spec.input_listeners)
+    def variants(self) -> Dict[str, VariantSpec]:
+        return dict(VARIANT_SPECS)
 
-    layers = _build_layers_map(spec)
-    layout["layers"] = assemble_layers(layout["layer_names"], layers, variant=variant)
+    def metadata_key(self) -> str:
+        return "default"
 
-    attach_variant_metadata(layout, variant=variant, layout_key="default")
-    return layout
+    def build(self, variant: str) -> Dict:
+        try:
+            spec = VARIANT_SPECS[variant]
+        except KeyError as exc:
+            raise KeyError(f"Unknown default layout '{variant}'. Available: {sorted(VARIANT_SPECS)}") from exc
+
+        layout: Dict = deepcopy(spec.common_fields)
+        layout["layer_names"] = list(spec.layer_names)
+        layout["macros"] = []
+        layout["holdTaps"] = []
+        layout["combos"] = []
+        layout["inputListeners"] = materialize_sequence(spec.input_listeners)
+
+        layers = _build_layers_map(spec)
+        layout["layers"] = assemble_layers(layout["layer_names"], layers, variant=variant)
+
+        attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
+        return layout
 
 
-__all__ = ["build_layout"]
+REGISTRY.register(Family())
+
+__all__ = ["Family"]
+
+
+_family = Family()
+
+
+def build_layout(variant: str = "default") -> dict:
+    return _family.build(variant)
+
+
+__all__ = ["Family", "build_layout"]

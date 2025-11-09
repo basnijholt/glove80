@@ -5,11 +5,9 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, Sequence
 
-from glove80.layouts.common import (
-    assemble_layers,
-    attach_variant_metadata,
-    resolve_referenced_fields,
-)
+from glove80.layouts.common import assemble_layers, attach_variant_metadata, resolve_referenced_fields
+from glove80.layouts.family import LayoutFamily, REGISTRY
+
 from .layers import build_all_layers
 from .specs import (
     COMBO_DATA,
@@ -37,14 +35,35 @@ def _base_layout_payload() -> Dict:
     return layout
 
 
-def build_layout(variant: str = "default") -> Dict:
-    """Return the canonical QuantumTouch layout composed from code."""
+class Family(LayoutFamily):
+    name = "quantum_touch"
 
-    layout = _base_layout_payload()
-    layer_names = layout["layer_names"]
-    resolve_referenced_fields(layout, layer_names=layer_names)
-    generated_layers = build_all_layers(variant)
-    layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
-    attach_variant_metadata(layout, variant=variant, layout_key="quantum_touch")
+    def variants(self) -> Sequence[str]:
+        return ["default"]
 
-    return layout
+    def metadata_key(self) -> str:
+        return "quantum_touch"
+
+    def build(self, variant: str = "default") -> Dict:
+        layout = _base_layout_payload()
+        layer_names = layout["layer_names"]
+        resolve_referenced_fields(layout, layer_names=layer_names)
+        generated_layers = build_all_layers(variant)
+        layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
+        attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
+        return layout
+
+
+REGISTRY.register(Family())
+
+__all__ = ["Family"]
+
+
+_family = Family()
+
+
+def build_layout(variant: str = "default") -> dict:
+    return _family.build(variant)
+
+
+__all__ = ["Family", "build_layout"]

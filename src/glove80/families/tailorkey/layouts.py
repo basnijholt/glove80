@@ -5,11 +5,9 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Sequence, cast
 
-from glove80.layouts.common import (
-    assemble_layers,
-    attach_variant_metadata,
-    resolve_referenced_fields,
-)
+from glove80.layouts.common import assemble_layers, attach_variant_metadata, resolve_referenced_fields
+from glove80.layouts.family import LayoutFamily, REGISTRY
+
 from .layers import build_all_layers
 from .specs import (
     COMBO_DATA,
@@ -22,22 +20,6 @@ from .specs import (
     MACRO_ORDER,
     MACRO_OVERRIDES,
 )
-
-
-def _build_macros(variant: str) -> List[Dict[str, Any]]:
-    order = _get_variant_section(MACRO_ORDER, variant, "macro order")
-    overrides = MACRO_OVERRIDES.get(variant, {})
-    macro_defs = cast(Mapping[str, Any], MACRO_DEFS)
-    macros: List[Dict[str, Any]] = []
-    for macro_name in order:
-        macros.append(_materialize_named_entry(macro_defs, macro_name, overrides.get(macro_name)))
-    return macros
-
-
-def _build_hold_taps(variant: str) -> List[Dict[str, Any]]:
-    order = _get_variant_section(HOLD_TAP_ORDER, variant, "hold-tap order")
-    hold_tap_defs = cast(Mapping[str, Any], HOLD_TAP_DEFS)
-    return [_materialize_named_entry(hold_tap_defs, name) for name in order]
 
 
 def _materialize_named_entry(definitions: Mapping[str, Any], name: str, override: Any | None = None) -> Dict[str, Any]:
@@ -66,6 +48,19 @@ def _materialize_sequence(items: Sequence[Any]) -> List[Any]:
     return result
 
 
+def _build_macros(variant: str) -> List[Dict[str, Any]]:
+    order = _get_variant_section(MACRO_ORDER, variant, "macro order")
+    overrides = MACRO_OVERRIDES.get(variant, {})
+    macro_defs = cast(Mapping[str, Any], MACRO_DEFS)
+    return [_materialize_named_entry(macro_defs, name, overrides.get(name)) for name in order]
+
+
+def _build_hold_taps(variant: str) -> List[Dict[str, Any]]:
+    order = _get_variant_section(HOLD_TAP_ORDER, variant, "hold-tap order")
+    hold_tap_defs = cast(Mapping[str, Any], HOLD_TAP_DEFS)
+    return [_materialize_named_entry(hold_tap_defs, name) for name in order]
+
+
 def _base_layout_payload(variant: str) -> Dict[str, Any]:
     layout = deepcopy(COMMON_FIELDS)
     layout["layer_names"] = deepcopy(_get_variant_section(LAYER_NAME_MAP, variant, "layer names"))
@@ -78,14 +73,35 @@ def _base_layout_payload(variant: str) -> Dict[str, Any]:
     return layout
 
 
-def build_layout(variant: str) -> Dict:
-    """Build the complete layout dictionary for the given variant."""
+class Family(LayoutFamily):
+    name = "tailorkey"
 
-    layout = _base_layout_payload(variant)
-    layer_names = layout["layer_names"]
-    resolve_referenced_fields(layout, layer_names=layer_names)
-    generated_layers = build_all_layers(variant)
-    layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
-    attach_variant_metadata(layout, variant=variant, layout_key="tailorkey")
+    def variants(self) -> Sequence[str]:
+        return list(LAYER_NAME_MAP.keys())
 
-    return layout
+    def metadata_key(self) -> str:
+        return "tailorkey"
+
+    def build(self, variant: str) -> Dict:
+        layout = _base_layout_payload(variant)
+        layer_names = layout["layer_names"]
+        resolve_referenced_fields(layout, layer_names=layer_names)
+        generated_layers = build_all_layers(variant)
+        layout["layers"] = assemble_layers(layer_names, generated_layers, variant=variant)
+        attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
+        return layout
+
+
+REGISTRY.register(Family())
+
+__all__ = ["Family"]
+
+
+_family = Family()
+
+
+def build_layout(variant: str = "default") -> dict:
+    return _family.build(variant)
+
+
+__all__ = ["Family", "build_layout"]
