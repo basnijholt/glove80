@@ -8,6 +8,8 @@ from glove80.base import LayerRef
 from glove80.specs import ComboSpec
 from glove80.specs.utils import kp, ks, mod, layer_param
 
+from ..alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
+
 
 ORDER = (
     "capslock_v1_TKZ",
@@ -151,6 +153,12 @@ COMBO_DATA["bilateral_mac"] = [
     _with_layers(BASE_COMBOS["sticky_meh_rght_v1_TKZ"], _layers("Autoshift", "HRM_macOS")),
     _with_layers(BASE_COMBOS["capslock_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
 ]
+
+
+for _variant in TAILORKEY_VARIANTS:
+    if _variant not in COMBO_DATA:
+        template = base_variant_for(_variant)
+        COMBO_DATA[_variant] = list(COMBO_DATA[template])
 
 
 __all__ = ["COMBO_DATA"]

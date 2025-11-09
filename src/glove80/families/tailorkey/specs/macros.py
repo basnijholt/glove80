@@ -7,6 +7,7 @@ from typing import Dict
 from glove80.specs import MacroSpec
 from glove80.specs.utils import call, kp, ks, layer_param, mod
 
+from ..alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
 from .finger_data import FINGERS
 
 
@@ -473,6 +474,14 @@ MACRO_OVERRIDES: Dict[str, Dict[str, MacroSpec]] = {
         )
     }
 }
+
+
+for _variant in TAILORKEY_VARIANTS:
+    if _variant not in MACRO_ORDER:
+        template = base_variant_for(_variant)
+        MACRO_ORDER[_variant] = list(MACRO_ORDER[template])
+        if template in MACRO_OVERRIDES:
+            MACRO_OVERRIDES[_variant] = dict(MACRO_OVERRIDES[template])
 
 
 __all__ = ["MACRO_DEFS", "MACRO_ORDER", "MACRO_OVERRIDES"]

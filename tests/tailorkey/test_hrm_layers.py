@@ -2,14 +2,7 @@ import pytest
 
 from glove80.families.tailorkey.layers.hrm import build_hrm_layers
 
-
-VARIANTS = [
-    "windows",
-    "mac",
-    "dual",
-    "bilateral_windows",
-    "bilateral_mac",
-]
+from .helpers import TAILORKEY_VARIANTS
 
 
 def _canonical_layers(variant: str, loader):
@@ -21,7 +14,7 @@ def _canonical_layers(variant: str, loader):
     return layer_map
 
 
-@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("variant", TAILORKEY_VARIANTS)
 def test_hrm_layers(variant, load_tailorkey_variant):
     expected = _canonical_layers(variant, load_tailorkey_variant)
     actual = build_hrm_layers(variant)

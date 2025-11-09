@@ -2,14 +2,7 @@ import pytest
 
 from glove80.families.tailorkey.layers.mouse import build_mouse_layers
 
-
-VARIANTS = [
-    "windows",
-    "mac",
-    "dual",
-    "bilateral_windows",
-    "bilateral_mac",
-]
+from .helpers import TAILORKEY_VARIANTS
 
 LAYER_NAMES = ["Mouse", "MouseSlow", "MouseFast", "MouseWarp"]
 
@@ -23,7 +16,7 @@ def _load_canonical_layers(variant: str, loader):
     return layers
 
 
-@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("variant", TAILORKEY_VARIANTS)
 def test_mouse_layers_match_canonical(variant, load_tailorkey_variant):
     expected = _load_canonical_layers(variant, load_tailorkey_variant)
     generated = build_mouse_layers(variant)

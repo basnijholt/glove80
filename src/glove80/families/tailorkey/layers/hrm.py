@@ -13,6 +13,8 @@ from glove80.base import (
     copy_layer,
 )
 
+from ..alpha_layouts import base_variant_for, needs_alpha_remap, remap_layer_keys
+
 
 _BASE_HRM_SPEC = LayerSpec(
     overrides={
@@ -148,34 +150,48 @@ _BILATERAL_MAC_PATCH: PatchSpec = {
 }
 
 
+def _maybe_remap(layer: Layer, variant: str, remap_required: bool) -> None:
+    if remap_required:
+        remap_layer_keys(layer, variant)
+
+
 def build_hrm_layers(variant: str) -> LayerMap:
     """Return the HRM layers needed for the variant."""
 
     layers: LayerMap = {}
+    remap_required = needs_alpha_remap(variant)
+    base_variant = base_variant_for(variant)
 
-    if variant == "windows":
-        layers["HRM_WinLinx"] = copy_layer(_BASE_HRM_LAYER)
-    elif variant == "mac":
+    if base_variant == "windows":
+        layer = copy_layer(_BASE_HRM_LAYER)
+        _maybe_remap(layer, variant, remap_required)
+        layers["HRM_WinLinx"] = layer
+    elif base_variant == "mac":
         layer = copy_layer(_BASE_HRM_LAYER)
         apply_patch(layer, _MAC_PATCH)
+        _maybe_remap(layer, variant, remap_required)
         layers["HRM_macOS"] = layer
-    elif variant == "dual":
+    elif base_variant == "dual":
         win_layer = copy_layer(_BASE_HRM_LAYER)
         apply_patch(win_layer, _DUAL_PATCH)
+        _maybe_remap(win_layer, variant, remap_required)
         layers["HRM_WinLinx"] = win_layer
 
         mac_layer = copy_layer(_BASE_HRM_LAYER)
         apply_patch(mac_layer, _MAC_PATCH)
         apply_patch(mac_layer, _DUAL_MAC_PATCH)
+        _maybe_remap(mac_layer, variant, remap_required)
         layers["HRM_macOS"] = mac_layer
-    elif variant == "bilateral_windows":
+    elif base_variant == "bilateral_windows":
         layer = copy_layer(_BASE_HRM_LAYER)
         apply_patch(layer, _BILATERAL_WIN_PATCH)
+        _maybe_remap(layer, variant, remap_required)
         layers["HRM_WinLinx"] = layer
-    elif variant == "bilateral_mac":
+    elif base_variant == "bilateral_mac":
         layer = copy_layer(_BASE_HRM_LAYER)
         apply_patch(layer, _MAC_PATCH)
         apply_patch(layer, _BILATERAL_MAC_PATCH)
+        _maybe_remap(layer, variant, remap_required)
         layers["HRM_macOS"] = layer
     else:  # pragma: no cover
         raise ValueError(f"Unsupported variant: {variant}")

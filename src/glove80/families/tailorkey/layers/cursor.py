@@ -12,6 +12,8 @@ from glove80.base import (
     copy_layer,
 )
 
+from ..alpha_layouts import base_variant_for
+
 
 CURSOR_SPEC = LayerSpec(
     overrides={
@@ -140,5 +142,5 @@ _MAC_PATCH: PatchSpec = {
 
 def build_cursor_layer(variant: str) -> Layer:
     layer = copy_layer(_BASE_CURSOR_LAYER)
-    apply_patch_if(layer, variant in {"mac", "bilateral_mac"}, _MAC_PATCH)
+    apply_patch_if(layer, base_variant_for(variant) in {"mac", "bilateral_mac"}, _MAC_PATCH)
     return layer

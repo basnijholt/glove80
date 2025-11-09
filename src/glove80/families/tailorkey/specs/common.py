@@ -2,6 +2,8 @@
 
 from glove80.layouts.common import _build_common_fields
 
+from ..alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
+
 COMMON_FIELDS = _build_common_fields(creator="moosy")
 
 LAYER_NAME_MAP = {
@@ -94,6 +96,11 @@ LAYER_NAME_MAP = {
         "Magic",
     ],
 }
+
+for variant in TAILORKEY_VARIANTS:
+    if variant not in LAYER_NAME_MAP:
+        base = base_variant_for(variant)
+        LAYER_NAME_MAP[variant] = list(LAYER_NAME_MAP[base])
 
 
 __all__ = ["COMMON_FIELDS", "LAYER_NAME_MAP"]

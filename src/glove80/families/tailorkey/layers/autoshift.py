@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from glove80.base import KeySpec, Layer, LayerSpec, build_layer_from_spec, copy_layer
 
+from ..alpha_layouts import needs_alpha_remap, remap_layer_keys
+
 
 AUTOSHIFT_SPEC = LayerSpec(
     overrides={
@@ -61,5 +63,8 @@ AUTOSHIFT_SPEC = LayerSpec(
 _BASE_AUTOSHIFT_LAYER: Layer = build_layer_from_spec(AUTOSHIFT_SPEC)
 
 
-def build_autoshift_layer(_variant: str) -> Layer:
-    return copy_layer(_BASE_AUTOSHIFT_LAYER)
+def build_autoshift_layer(variant: str) -> Layer:
+    layer = copy_layer(_BASE_AUTOSHIFT_LAYER)
+    if needs_alpha_remap(variant):
+        remap_layer_keys(layer, variant)
+    return layer

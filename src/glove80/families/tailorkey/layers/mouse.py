@@ -15,6 +15,8 @@ from glove80.base import (
 )
 from glove80.layers.mouse_helpers import build_transparent_mouse_layer
 
+from ..alpha_layouts import base_variant_for
+
 MOUSE_LAYER_SPECS: Dict[str, LayerSpec] = {
     "Mouse": LayerSpec(
         overrides={
@@ -137,13 +139,15 @@ def build_mouse_layers(variant: str) -> Dict[str, Layer]:
     layers = copy_layers_map(_BASE_MOUSE_LAYERS)
     mouse = layers["Mouse"]
 
-    if variant in {"mac", "bilateral_mac"}:
+    base_variant = base_variant_for(variant)
+
+    if base_variant in {"mac", "bilateral_mac"}:
         apply_patch(mouse, _MAC_MOUSE_PATCH)
 
-    if variant == "dual":
+    if base_variant == "dual":
         apply_patch(mouse, _DUAL_MOUSE_PATCH)
 
-    if variant in {"bilateral_windows", "bilateral_mac"}:
+    if base_variant in {"bilateral_windows", "bilateral_mac"}:
         apply_patch(mouse, _BILATERAL_MOUSE_PATCH)
 
     return layers

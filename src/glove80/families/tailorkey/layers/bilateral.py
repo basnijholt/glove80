@@ -13,6 +13,8 @@ from glove80.base import (
     build_layer_from_spec,
 )
 
+from ..alpha_layouts import base_variant_for
+
 
 _LEFT_TAP_KEYS: Dict[int, str] = {
     0: "F1",
@@ -219,11 +221,12 @@ _MAC_PATCHES: Dict[str, PatchSpec] = {
 def build_bilateral_training_layers(variant: str) -> LayerMap:
     """Return the eight bilateral training layers if needed."""
 
-    if variant not in {"bilateral_windows", "bilateral_mac"}:
+    base_variant = base_variant_for(variant)
+    if base_variant not in {"bilateral_windows", "bilateral_mac"}:
         return {}
 
     layers = _build_bilateral_layers()
-    if variant == "bilateral_mac":
+    if base_variant == "bilateral_mac":
         for name, patch in _MAC_PATCHES.items():
             apply_patch(layers[name], patch)
 

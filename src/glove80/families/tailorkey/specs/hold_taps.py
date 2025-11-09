@@ -7,6 +7,7 @@ from typing import Dict, Tuple
 
 from glove80.specs import HoldTapSpec
 
+from ..alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
 from .finger_data import FINGERS
 
 FINGER_MAP = {f"{meta.hand}_{meta.finger}": meta for meta in FINGERS}
@@ -474,6 +475,11 @@ HOLD_TAP_ORDER = {
         "&thumb_v2_TKZ",
     ],
 }
+
+for _variant in TAILORKEY_VARIANTS:
+    if _variant not in HOLD_TAP_ORDER:
+        base_variant = base_variant_for(_variant)
+        HOLD_TAP_ORDER[_variant] = list(HOLD_TAP_ORDER[base_variant])
 
 
 __all__ = ["HOLD_TAP_DEFS", "HOLD_TAP_ORDER"]

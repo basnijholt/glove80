@@ -12,6 +12,8 @@ from glove80.base import (
     copy_layer,
 )
 
+from ..alpha_layouts import base_variant_for
+
 
 LOWER_LAYER_SPEC = LayerSpec(
     overrides={
@@ -93,5 +95,5 @@ def build_lower_layer(variant: str) -> Layer:
     """Return the Lower layer customized for the given variant."""
 
     layer = copy_layer(_BASE_LOWER_LAYER)
-    apply_patch_if(layer, variant == "dual", _DUAL_PATCH)
+    apply_patch_if(layer, base_variant_for(variant) == "dual", _DUAL_PATCH)
     return layer

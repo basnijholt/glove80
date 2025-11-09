@@ -2,14 +2,7 @@ import pytest
 
 from glove80.families.tailorkey.layers.typing import build_typing_layer
 
-
-VARIANTS = [
-    "windows",
-    "mac",
-    "dual",
-    "bilateral_windows",
-    "bilateral_mac",
-]
+from .helpers import TAILORKEY_VARIANTS
 
 
 def _load_layer(variant: str, loader):
@@ -18,6 +11,6 @@ def _load_layer(variant: str, loader):
     return data["layers"][idx]
 
 
-@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("variant", TAILORKEY_VARIANTS)
 def test_typing_layer(variant, load_tailorkey_variant):
     assert build_typing_layer(variant) == _load_layer(variant, load_tailorkey_variant)

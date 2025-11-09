@@ -7,6 +7,8 @@ from typing import Dict, Sequence, Tuple
 from glove80.base import LayerRef
 from glove80.specs import InputListenerNodeSpec, InputListenerSpec, InputProcessorSpec
 
+from ..alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
+
 LAYER_SEQUENCE = ("MouseSlow", "MouseFast", "MouseWarp")
 
 
@@ -48,6 +50,11 @@ INPUT_LISTENER_DATA: Dict[str, list[InputListenerSpec]] = {
     "bilateral_windows": list(_listeners("LAYER_MouseSlow", "LAYER_MouseSlow", "LAYER_MouseWarp", "LAYER_MouseWarp")),
     "bilateral_mac": list(_listeners("LAYER_MouseSlow\n", "LAYER_MouseSlow\n", "LAYER_MouseWarp", "LAYER_MouseWarp")),
 }
+
+for _variant in TAILORKEY_VARIANTS:
+    if _variant not in INPUT_LISTENER_DATA:
+        template = base_variant_for(_variant)
+        INPUT_LISTENER_DATA[_variant] = list(INPUT_LISTENER_DATA[template])
 
 
 __all__ = ["INPUT_LISTENER_DATA"]

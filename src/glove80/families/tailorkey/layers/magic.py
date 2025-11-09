@@ -12,6 +12,8 @@ from glove80.base import (
     copy_layer,
 )
 
+from ..alpha_layouts import base_variant_for
+
 
 MAGIC_SPEC = LayerSpec(
     overrides={
@@ -110,5 +112,5 @@ _DUAL_PATCH: PatchSpec = {
 
 def build_magic_layer(variant: str) -> Layer:
     layer = copy_layer(_BASE_MAGIC_LAYER)
-    apply_patch_if(layer, variant == "dual", _DUAL_PATCH)
+    apply_patch_if(layer, base_variant_for(variant) == "dual", _DUAL_PATCH)
     return layer

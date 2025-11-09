@@ -12,6 +12,8 @@ from glove80.base import (
     copy_layer,
 )
 
+from ..alpha_layouts import base_variant_for
+
 
 SYMBOL_SPEC = LayerSpec(
     overrides={
@@ -109,5 +111,5 @@ _MAC_PATCH: PatchSpec = {
 
 def build_symbol_layer(variant: str) -> Layer:
     layer = copy_layer(_BASE_SYMBOL_LAYER)
-    apply_patch_if(layer, variant in {"mac", "bilateral_mac"}, _MAC_PATCH)
+    apply_patch_if(layer, base_variant_for(variant) in {"mac", "bilateral_mac"}, _MAC_PATCH)
     return layer

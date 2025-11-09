@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from glove80.base import KeySpec, Layer, LayerSpec, build_layer_from_spec, copy_layer
 
+from ..alpha_layouts import needs_alpha_remap, remap_layer_keys
+
 
 TYPING_LAYER_SPEC = LayerSpec(
     overrides={
@@ -21,7 +23,10 @@ TYPING_LAYER_SPEC = LayerSpec(
 _BASE_TYPING_LAYER: Layer = build_layer_from_spec(TYPING_LAYER_SPEC)
 
 
-def build_typing_layer(_variant: str) -> Layer:
-    """The Typing layer is identical across all variants."""
+def build_typing_layer(variant: str) -> Layer:
+    """Return the typing layer for the requested variant."""
 
-    return copy_layer(_BASE_TYPING_LAYER)
+    layer = copy_layer(_BASE_TYPING_LAYER)
+    if needs_alpha_remap(variant):
+        remap_layer_keys(layer, variant)
+    return layer

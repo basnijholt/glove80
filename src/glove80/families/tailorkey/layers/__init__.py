@@ -2,6 +2,9 @@
 
 from typing import Callable, Iterable
 
+from glove80.base import Layer, LayerMap
+
+from ..alpha_layouts import base_variant_for, variant_alias
 from .autoshift import build_autoshift_layer
 from .bilateral import build_bilateral_training_layers
 from .cursor import build_cursor_layer
@@ -12,8 +15,6 @@ from .magic import build_magic_layer
 from .mouse import build_mouse_layers
 from .symbol import build_symbol_layer
 from .typing import build_typing_layer
-
-from glove80.base import Layer, LayerMap
 
 LayerProvider = Callable[[str], LayerMap]
 
@@ -27,8 +28,9 @@ def _single_layer(name: str, builder: Callable[[str], Layer]) -> LayerProvider:
 
 def _cursor_provider(variant: str) -> LayerMap:
     layers = {"Cursor": build_cursor_layer(variant)}
-    if variant == "dual":
-        layers["Cursor_macOS"] = build_cursor_layer("mac")
+    if base_variant_for(variant) == "dual":
+        mac_variant = variant_alias(variant, "mac")
+        layers["Cursor_macOS"] = build_cursor_layer(mac_variant)
     return layers
 
 
