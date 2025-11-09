@@ -1,11 +1,11 @@
-"""Hold-tap specifications for TailorKey variants."""
+"""Hold-tap definitions for TailorKey variants (Pydantic models)."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from glove80.families.tailorkey.alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
-from glove80.specs import HoldTapSpec
+from glove80.layouts.schema import HoldTap
 
 from .finger_data import FINGERS
 
@@ -25,51 +25,51 @@ BASE_DESCRIPTIONS = {
 }
 
 
-HOLD_TAP_DEFS: dict[str, HoldTapSpec] = {
-    "&AS_HT_v2_TKZ": HoldTapSpec(
+HOLD_TAP_DEFS: dict[str, HoldTap] = {
+    "&AS_HT_v2_TKZ": HoldTap(
         name="&AS_HT_v2_TKZ",
         description="AutoShift Helper - &AS main macro is chained to &AS_HT hold tap and &AS_Shifted macro. For faster typists, it is recommended to decrease the tapping-term-ms value. A suggested value is 135 ms.\nMore: https://github.com/nickcoutsos/keymap-editor/wiki/Autoshift-using-ZMK-behaviors",
-        bindings=("&AS_Shifted_v1_TKZ", "&kp"),
-        tapping_term_ms=190,
+        bindings=["&AS_Shifted_v1_TKZ", "&kp"],
+        tappingTermMs=190,
         flavor="tap-preferred",
     ),
-    "&CAPSWord_v1_TKZ": HoldTapSpec(
+    "&CAPSWord_v1_TKZ": HoldTap(
         name="&CAPSWord_v1_TKZ",
         description="Capsword helper - tap for caps_word - hold for key press",
-        bindings=("&kp", "&caps_word"),
-        tapping_term_ms=200,
+        bindings=["&kp", "&caps_word"],
+        tappingTermMs=200,
     ),
-    "&space_v3_TKZ": HoldTapSpec(
+    "&space_v3_TKZ": HoldTap(
         name="&space_v3_TKZ",
         description="space_layer_access - TailorKey",
-        bindings=("&mo", "&kp"),
-        tapping_term_ms=200,
+        bindings=["&mo", "&kp"],
+        tappingTermMs=200,
         flavor="balanced",
-        quick_tap_ms=150,
+        quickTapMs=150,
     ),
-    "&thumb_v2_TKZ": HoldTapSpec(
+    "&thumb_v2_TKZ": HoldTap(
         name="&thumb_v2_TKZ",
         description="thumb_layer_access - TailorKey",
-        bindings=("&mo", "&kp"),
-        tapping_term_ms=200,
+        bindings=["&mo", "&kp"],
+        tappingTermMs=200,
         flavor="balanced",
-        quick_tap_ms=300,
+        quickTapMs=300,
     ),
 }
 
 for key, description in BASE_DESCRIPTIONS.items():
     meta = FINGER_MAP[key]
     name = f"&HRM_{meta.hand}_{meta.finger}_v1_TKZ"
-    HOLD_TAP_DEFS[name] = HoldTapSpec(
+    HOLD_TAP_DEFS[name] = HoldTap(
         name=name,
         description=description,
-        bindings=("&kp", "&kp"),
-        tapping_term_ms=meta.tapping_term_ms,
+        bindings=["&kp", "&kp"],
+        tappingTermMs=meta.tapping_term_ms,
         flavor="tap-preferred",
-        quick_tap_ms=meta.quick_tap_ms,
-        require_prior_idle_ms=meta.require_prior_idle_ms,
-        hold_trigger_on_release=True,
-        hold_trigger_key_positions=meta.hold_trigger_positions,
+        quickTapMs=meta.quick_tap_ms,
+        requirePriorIdleMs=meta.require_prior_idle_ms,
+        holdTriggerOnRelease=True,
+        holdTriggerKeyPositions=list(meta.hold_trigger_positions),
     )
 
 
@@ -329,7 +329,7 @@ POSITION_OVERRIDES = {
 }
 
 
-def _build_bilateral_spec(template: BilateralTemplate) -> HoldTapSpec:
+def _build_bilateral_spec(template: BilateralTemplate) -> HoldTap:
     meta = FINGER_MAP[template.finger_key]
     if template.binding_kind == "hold":
         bindings = (f"&HRM_{meta.hand}_{meta.finger}_hold_v1B_TKZ", "&kp")
@@ -337,16 +337,16 @@ def _build_bilateral_spec(template: BilateralTemplate) -> HoldTapSpec:
         bindings = ("&kp", f"&HRM_{meta.hand}_{meta.finger}_tap_v1B_TKZ")
     require_idle_ms = INDEX_IDLE_MS if template.name == "&HRM_left_ring_index_v1B_TKZ" else meta.require_prior_idle_ms
     positions = POSITION_OVERRIDES.get(template.name, meta.bilateral_positions or meta.hold_trigger_positions)
-    return HoldTapSpec(
+    return HoldTap(
         name=template.name,
         description=template.description,
-        bindings=bindings,
-        tapping_term_ms=meta.tapping_term_ms,
+        bindings=list(bindings),
+        tappingTermMs=meta.tapping_term_ms,
         flavor="tap-preferred",
-        quick_tap_ms=meta.quick_tap_ms,
-        require_prior_idle_ms=require_idle_ms,
-        hold_trigger_on_release=True,
-        hold_trigger_key_positions=positions,
+        quickTapMs=meta.quick_tap_ms,
+        requirePriorIdleMs=require_idle_ms,
+        holdTriggerOnRelease=True,
+        holdTriggerKeyPositions=list(positions),
     )
 
 
