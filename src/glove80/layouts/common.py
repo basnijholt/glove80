@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from glove80.base import Layer, LayerMap, resolve_layer_refs
-from glove80.layouts.schema import CommonFields as CommonFieldsModel
+from glove80.layouts.schema import CommonFields as CommonFieldsModel, LayoutPayload as LayoutPayloadModel
 from glove80.metadata import get_variant_metadata
 
 if TYPE_CHECKING:
@@ -81,7 +81,9 @@ def compose_layout(
         )
     layout["layers"] = _assemble_layers(layer_names, generated_layers, variant=variant)
     _attach_variant_metadata(layout, variant=variant, layout_key=metadata_key)
-    return layout
+    # Validate final payload and normalize away None values.
+    validated = LayoutPayloadModel(**layout).model_dump(by_alias=True, exclude_none=True)
+    return validated
 
 
 def _build_common_fields(

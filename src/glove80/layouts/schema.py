@@ -7,7 +7,7 @@ changes reviewable and tests green between commits.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -117,3 +117,43 @@ class CommonFields(BaseModel):
 
 
 __all__.append("CommonFields")
+
+
+class LayoutPayload(BaseModel):
+    """Top-level layout payload shape (validated, still serialized as dict).
+
+    We intentionally accept plain dicts for sections (macros, holdTaps, etc.)
+    to keep the emission path lightweight while still validating presence and
+    basic structure. Unknown extra keys are allowed for forward compatibility.
+    """
+
+    model_config = ConfigDict(extra="allow", frozen=True)
+
+    # Common fields
+    keyboard: str
+    firmware_api_version: str
+    locale: str
+    unlisted: bool
+    custom_defined_behaviors: str
+    custom_devicetree: str
+    config_parameters: List[Dict]
+    layout_parameters: Dict
+
+    # Sections
+    layer_names: List[str]
+    macros: List[Dict]
+    holdTaps: List[Dict]
+    combos: List[Dict]
+    inputListeners: List[Dict]
+    layers: List[List[Dict]]
+
+    # Attached metadata (optional)
+    title: Optional[str] = None
+    uuid: Optional[str] = None
+    parent_uuid: Optional[str] = None
+    date: Optional[Any] = None
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+__all__.append("LayoutPayload")
