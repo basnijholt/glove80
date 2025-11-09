@@ -10,6 +10,10 @@ The code in `src/glove80/families/tailorkey` captures the entire layout in decla
 - [TailorKey v4.2h Bilateral](https://my.glove80.com/#/layout/user/85f92852-413b-4931-ac7d-cf42e6b129eb) (accessed 8 Nov 2025)
 - [TailorKey v4.2h - macOS Bilateral](https://my.glove80.com/#/layout/user/906466c2-8029-4831-9571-2bf250ca4505) (accessed 8 Nov 2025)
 
+## Generated Variants
+- The Colemak, Colemak-DH, and Dvorak families (windows, macOS, Dual OS, and Bilateral) are produced directly by the Python specs and live under `layouts/tailorkey/releases/TailorKey v4.2h - *.json`.
+- You can download the equivalent layouts from the editor if you like, but running `glove80 generate --layout tailorkey` will recreate exactly what is published in this folder, so we treat the checked-in JSON as the canonical source for those new variants.
+
 ## Structure
 - `specs/common.py` lists the canonical layer order and shared layout metadata fields.
 - `specs/macros.py`, `specs/hold_taps.py`, `specs/combos.py`, and `specs/input_listeners.py` use the spec primitives to declare every behavioral building block.
