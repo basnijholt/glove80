@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -54,3 +55,27 @@ def test_cli_generate_unknown_layout_error() -> None:
     assert result.exit_code != 0
     assert isinstance(result.exception, KeyError)
     assert "Unknown layout" in str(result.exception)
+
+
+def test_cli_generate_writes_output_with_custom_metadata(tmp_path: Path) -> None:
+    metadata = json.loads(TAILORKEY_METADATA.read_text())
+    entry = metadata["windows"]
+    custom_output = tmp_path / "tailorkey-windows.json"
+    entry["output"] = str(custom_output)
+    custom_metadata = tmp_path / "metadata.json"
+    custom_metadata.write_text(json.dumps({"windows": entry}))
+
+    result = RUNNER.invoke(
+        app,
+        [
+            "generate",
+            "--layout",
+            "tailorkey",
+            "--variant",
+            "windows",
+            "--metadata",
+            str(custom_metadata),
+        ],
+    )
+    assert result.exit_code == 0
+    assert custom_output.exists()
