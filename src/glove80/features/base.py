@@ -1,25 +1,16 @@
-"""Lightweight helpers for sharing feature bundles across layouts."""
+"""Helpers for applying reusable layout feature bundles."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping, MutableSequence, Sequence
+from typing import Any, Dict, Mapping, MutableSequence
 
-from glove80.base import LayerMap
-
-
-@dataclass(frozen=True)
-class LayoutFeatureComponents:
-    """Small bundle of reusable layout pieces (macros, layers, etc.)."""
-
-    macros: Sequence[Dict[str, Any]] = ()
-    hold_taps: Sequence[Dict[str, Any]] = ()
-    combos: Sequence[Dict[str, Any]] = ()
-    input_listeners: Sequence[Dict[str, Any]] = ()
-    layers: LayerMap = field(default_factory=dict)
+from glove80.layouts.components import LayoutFeatureComponents
 
 
-def _ensure_section(layout: Mapping[str, MutableSequence[Dict[str, Any]]], key: str) -> MutableSequence[Dict[str, Any]]:
+def _ensure_section(
+    layout: Mapping[str, MutableSequence[Dict[str, Any]]],
+    key: str,
+) -> MutableSequence[Dict[str, Any]]:
     section = layout.get(key)
     if section is None:
         raise KeyError(f"Layout is missing '{key}' section")
@@ -29,7 +20,25 @@ def _ensure_section(layout: Mapping[str, MutableSequence[Dict[str, Any]]], key: 
 def apply_feature(layout: dict, components: LayoutFeatureComponents) -> None:
     """Mutate *layout* in-place by appending the provided components."""
 
-    _ensure_section(layout, "macros").extend(components.macros)
+    existing_macros = list(_ensure_section(layout, "macros"))
+    macros_by_name = {macro.get("name"): macro for macro in existing_macros if "name" in macro}
+    macro_order = [macro.get("name") for macro in existing_macros if "name" in macro]
+
+    def _set_macro(macro_dict: Dict[str, Any]) -> None:
+        name = macro_dict.get("name")
+        if not isinstance(name, str):
+            raise KeyError("Feature macros must include a 'name'")
+        macros_by_name[name] = macro_dict
+        if name not in macro_order:
+            macro_order.append(name)
+
+    for macro in components.macros:
+        _set_macro(macro)
+    for macro in components.macro_overrides.values():
+        _set_macro(macro)
+
+    layout["macros"] = [macros_by_name[name] for name in macro_order]
+
     _ensure_section(layout, "holdTaps").extend(components.hold_taps)
     _ensure_section(layout, "combos").extend(components.combos)
     _ensure_section(layout, "inputListeners").extend(components.input_listeners)
@@ -46,4 +55,4 @@ def apply_feature(layout: dict, components: LayoutFeatureComponents) -> None:
     layout["layers"] = [layers_by_name[name] for name in layer_names]
 
 
-__all__ = ["LayoutFeatureComponents", "apply_feature"]
+__all__ = ["apply_feature", "LayoutFeatureComponents"]

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, MutableSequence, Sequence
+from typing import Any, Callable, Iterable, Mapping, MutableSequence, Sequence
 
 from glove80.base import LayerMap
+from glove80.layouts.components import LayoutFeatureComponents
 
 from .common import compose_layout
 
@@ -43,12 +44,18 @@ class LayoutBuilder:
         common_fields: Mapping[str, Any],
         layer_names: Sequence[str] | None = None,
         resolve_refs: bool = True,
+        mouse_layers_provider: Callable[[str], LayerMap] | None = None,
+        cursor_layers_provider: Callable[[str], LayerMap] | None = None,
+        home_row_provider: Callable[[str], LayoutFeatureComponents] | None = None,
     ) -> None:
         self.metadata_key = metadata_key
         self.variant = variant
         self._common_fields: Mapping[str, Any] = dict(common_fields)
         self._resolve_refs = resolve_refs
         self._sections = _Sections(layer_names=_unique_sequence(layer_names or ()))
+        self._mouse_layers_provider = mouse_layers_provider
+        self._cursor_layers_provider = cursor_layers_provider
+        self._home_row_provider = home_row_provider
 
     # ------------------------------------------------------------------
     # Base section wiring
@@ -125,62 +132,66 @@ class LayoutBuilder:
     # ------------------------------------------------------------------
     # Feature-oriented helpers
     # ------------------------------------------------------------------
-    def add_mouse_layers(
-        self,
-        *,
-        layers: LayerMap,
-        macros: Sequence[Mapping[str, Any]] = (),
-        combos: Sequence[Mapping[str, Any]] = (),
-        listeners: Sequence[Mapping[str, Any]] = (),
-        insert_after: str | None = None,
+    def set_mouse_layers_provider(
+        self, provider: Callable[[str], LayerMap]
     ) -> "LayoutBuilder":
-        self.add_layers(layers, insert_after=insert_after)
-        self.add_macros(macros)
-        self.add_combos(combos)
-        self.add_input_listeners(listeners)
+        self._mouse_layers_provider = provider
         return self
 
-    def add_cursor_layer(
-        self,
-        *,
-        layer_name: str,
-        layer_data: Any,
-        macros: Sequence[Mapping[str, Any]] = (),
-        insert_after: str | None = None,
+    def set_cursor_layers_provider(
+        self, provider: Callable[[str], LayerMap]
     ) -> "LayoutBuilder":
-        if layer_name not in self._sections.layer_names:
-            self._insert_layer_names([layer_name], after=insert_after)
-        self._sections.layers[layer_name] = layer_data
-        self.add_macros(macros)
+        self._cursor_layers_provider = provider
         return self
+
+    def set_home_row_provider(
+        self, provider: Callable[[str], LayoutFeatureComponents]
+    ) -> "LayoutBuilder":
+        self._home_row_provider = provider
+        return self
+
+    def add_mouse_layers(self, *, insert_after: str | None = None) -> "LayoutBuilder":
+        if self._mouse_layers_provider is None:
+            raise ValueError("Mouse layer provider is not configured for this builder")
+        layers = self._mouse_layers_provider(self.variant)
+        return self.add_layers(layers, insert_after=insert_after)
+
+    def add_cursor_layer(self, *, insert_after: str | None = None) -> "LayoutBuilder":
+        if self._cursor_layers_provider is None:
+            raise ValueError("Cursor layer provider is not configured for this builder")
+        layers = self._cursor_layers_provider(self.variant)
+        return self.add_layers(layers, insert_after=insert_after)
 
     def add_home_row_mods(
         self,
         *,
         target_layer: str,
-        layers: LayerMap,
-        macros: Sequence[Mapping[str, Any]],
-        hold_taps: Sequence[Mapping[str, Any]] = (),
-        combos: Sequence[Mapping[str, Any]] = (),
-        listeners: Sequence[Mapping[str, Any]] = (),
-        extra_layer_order: Sequence[str] | None = None,
-        insert_training_layers_after: str | None = None,
+        insert_after: str | None = None,
+        feature_provider: Callable[[str], LayoutFeatureComponents] | None = None,
     ) -> "LayoutBuilder":
-        """Attach home-row modifiers and their supporting structures."""
+        """Attach home-row modifiers and associated macros/combos.
 
+        Parameters
+        ----------
+        target_layer:
+            Layer name that the modifiers conceptually extend. New layers are
+            inserted directly after this layer unless *insert_after* overrides
+            the placement.
+        insert_after:
+            Optional explicit anchor at which to append the generated layers.
+        feature_provider:
+            Optional override for the configured home-row provider. The
+            callable must return a :class:`LayoutFeatureComponents` instance.
+        """
+
+        provider = feature_provider or self._home_row_provider
+        if provider is None:
+            raise ValueError("Home-row modifier provider is not configured for this builder")
         if target_layer not in self._sections.layer_names:
             raise ValueError(f"Unknown target layer '{target_layer}'")
-
-        insertion_anchor = insert_training_layers_after or target_layer
-        self.add_layers(
-            layers,
-            insert_after=insertion_anchor,
-            explicit_order=extra_layer_order,
-        )
-        self.add_macros(macros)
-        self.add_hold_taps(hold_taps)
-        self.add_combos(combos)
-        self.add_input_listeners(listeners)
+        components = provider(self.variant)
+        anchor = insert_after or target_layer
+        self._merge_feature_components(components, insert_after=anchor)
         return self
 
     # ------------------------------------------------------------------
@@ -231,6 +242,34 @@ class LayoutBuilder:
             + filtered[anchor_index + 1 :]
         )
         self._sections.layer_names = updated
+
+    def _merge_feature_components(
+        self,
+        components: LayoutFeatureComponents,
+        *,
+        insert_after: str | None = None,
+    ) -> None:
+        macros_section = self._sections.macros
+
+        def _set_macro(macro_dict: Mapping[str, Any]) -> None:
+            name = _macro_name(macro_dict)
+            macros_section[name] = dict(macro_dict)
+
+        for macro in components.macros:
+            _set_macro(macro)
+        for macro in components.macro_overrides.values():
+            _set_macro(macro)
+
+        self.add_hold_taps(components.hold_taps)
+        self.add_combos(components.combos)
+        self.add_input_listeners(components.input_listeners)
+
+        if components.layers:
+            self.add_layers(
+                components.layers,
+                insert_after=insert_after,
+                explicit_order=list(components.layers.keys()),
+            )
 
 
 def _macro_name(macro: Mapping[str, Any]) -> str:

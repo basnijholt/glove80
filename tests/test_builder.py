@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-import copy
-
-import pytest
-
+from glove80.layouts.components import LayoutFeatureComponents
 from glove80.layouts.builder import LayoutBuilder
 from glove80.layouts.common import BASE_COMMON_FIELDS, compose_layout
 
 
 def _mock_layer(token: str) -> list[dict[str, object]]:
     return [{"value": token, "params": []} for _ in range(4)]
+
+
+def _mock_feature_components(name: str) -> LayoutFeatureComponents:
+    return LayoutFeatureComponents(
+        macros=[{"name": name, "bindings": []}],
+        layers={f"{name}_layer": _mock_layer(name)},
+    )
 
 
 def test_builder_matches_compose_layout() -> None:
@@ -51,42 +55,55 @@ def test_add_home_row_mods_inserts_layers_and_sections() -> None:
         "Typing": _mock_layer("&kp_A"),
         "Symbol": _mock_layer("&kp_HASH"),
     }
-    hrm_layers = {
-        "HRM_layer": _mock_layer("&hrm"),
-    }
-    hrm_macros = [{"name": "&hrm_macro", "bindings": []}]
-
     builder = LayoutBuilder(
         metadata_key="tailorkey",
         variant="windows",
         common_fields=BASE_COMMON_FIELDS,
         layer_names=["Typing", "Symbol"],
+        home_row_provider=lambda _: _mock_feature_components("&hrm_macro"),
     )
     builder.add_layers(base_layers)
 
-    builder.add_home_row_mods(
-        target_layer="Typing",
-        layers=hrm_layers,
-        macros=hrm_macros,
-    )
+    builder.add_home_row_mods(target_layer="Typing")
 
     layout = builder.build()
     assert layout["macros"][0]["name"] == "&hrm_macro"
-    assert layout["layer_names"][1] == "HRM_layer"
-    assert layout["layers"][1] == hrm_layers["HRM_layer"]
+    assert layout["layer_names"][1] == "&hrm_macro_layer"
 
 
 def test_add_mouse_layers_respects_order() -> None:
-    mouse_layers = {"Mouse": _mock_layer("&mouse")}
-
     builder = LayoutBuilder(
         metadata_key="tailorkey",
         variant="windows",
         common_fields=BASE_COMMON_FIELDS,
         layer_names=["Typing"],
+        mouse_layers_provider=lambda _: {"Mouse": _mock_layer("&mouse")},
     )
     builder.add_layers({"Typing": _mock_layer("&kp_A")})
-    builder.add_mouse_layers(layers=mouse_layers, insert_after="Typing")
+    builder.add_mouse_layers(insert_after="Typing")
 
     layout = builder.build()
     assert layout["layer_names"][1] == "Mouse"
+
+
+def test_high_level_feature_methods_use_providers() -> None:
+    builder = LayoutBuilder(
+        metadata_key="tailorkey",
+        variant="windows",
+        common_fields=BASE_COMMON_FIELDS,
+        layer_names=["Typing"],
+        mouse_layers_provider=lambda _: {"Mouse": _mock_layer("&mouse")},
+        cursor_layers_provider=lambda _: {"Cursor": _mock_layer("&cursor")},
+        home_row_provider=lambda _: _mock_feature_components("&hrm_macro"),
+    )
+    builder.add_layers({"Typing": _mock_layer("&kp_A")})
+
+    builder.add_mouse_layers(insert_after="Typing")
+    builder.add_cursor_layer(insert_after="Mouse")
+    builder.add_home_row_mods(target_layer="Typing", insert_after="Cursor")
+
+    layout = builder.build()
+    assert layout["layer_names"][1] == "Mouse"
+    assert layout["layer_names"][2] == "Cursor"
+    assert layout["layer_names"][3] == "&hrm_macro_layer"
+    assert any(macro["name"] == "&hrm_macro" for macro in layout["macros"])

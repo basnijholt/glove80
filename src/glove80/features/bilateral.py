@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from glove80.features.base import LayoutFeatureComponents
+from glove80.layouts.components import LayoutFeatureComponents
 from glove80.families.tailorkey.layers.bilateral import assemble_bilateral_layers
 from glove80.families.tailorkey.specs.macros import MACRO_DEFS
 

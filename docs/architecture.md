@@ -15,7 +15,7 @@ This project keeps every part of the Glove80 layout toolchain in version control
 3. Re-running the command is idempotent: if the serialized JSON already matches the generated payload, the file is left untouched.
 
 ## Shared Helpers
-`glove80/layouts/common.py` and the higher-level `glove80.layouts.LayoutBuilder` codify the shared logic between layout families: resolving `LayerRef` placeholders, assembling the ordered layer list, and injecting metadata fields. Layout authors can now compose whole layouts by instantiating the builder, feeding it layer providers, and calling `.build()`—the same workflow used inside the built-in families.
+`glove80/layouts/common.py` and the higher-level `glove80.layouts.LayoutBuilder` codify the shared logic between layout families: resolving `LayerRef` placeholders, assembling the ordered layer list, and injecting metadata fields. Layout authors can now compose whole layouts by instantiating the builder, feeding it layer providers, and calling `.build()`—the same workflow used inside the built-in families. The builder exposes ergonomics-focused helpers such as `add_mouse_layers()`, `add_cursor_layer()`, and `add_home_row_mods()`; you wire in the concrete providers (e.g., `build_mouse_layers`) once and then script against those high-level methods for both library and CLI workflows.
 
 ## Tests & CI
 - Layer-focused tests under `tests/tailorkey/` lock down every specialized factory (HRM, cursor, mouse, etc.).
