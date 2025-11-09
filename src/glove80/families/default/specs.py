@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
+from collections.abc import Mapping, Sequence
+
+from pydantic import BaseModel, ConfigDict
 
 from glove80.layouts.common import build_common_fields
 from glove80.layouts.schema import InputListener, InputProcessor, ListenerNode
 
 from .layer_data import BASE_LAYERS, FACTORY_LAYERS, LOWER_LAYERS, MAGIC_LAYERS, MOUSE_EXTRAS
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from glove80.base import LayerSpec
+from glove80.base import LayerSpec
 
 
-@dataclass(frozen=True)
-class VariantSpec:
+class VariantSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     common_fields: dict[str, Any]
     layer_names: Sequence[str]
     layer_specs: Mapping[str, LayerSpec]

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from importlib import resources
-from typing import TYPE_CHECKING, Any
+from typing import Any
+from collections.abc import Mapping, Sequence
 
+from pydantic import BaseModel, ConfigDict
 from glove80.layouts.common import build_common_fields
 
 from .layers import LAYER_SPECS
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from glove80.base import LayerSpec
+from glove80.base import LayerSpec
 
 
 def _load_text(name: str) -> str:
@@ -57,8 +55,9 @@ LAYER_ORDER: Sequence[str] = (
 )
 
 
-@dataclass(frozen=True)
-class VariantSpec:
+class VariantSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     common_fields: dict[str, Any]
     layer_names: Sequence[str]
     layer_specs: Mapping[str, LayerSpec]
