@@ -4,26 +4,50 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 
 from ..layouts.generator import GenerationResult, available_layouts, generate_layouts
 from ..layouts.family import REGISTRY
 
 app = typer.Typer(help="Utilities for working with Glove80 layouts.")
+console = Console()
 
 
 def _print_results(results: list[GenerationResult]) -> None:
+    table = Table(title="✨ Layout Generation Results", show_header=True, header_style="bold magenta")
+    table.add_column("Layout", style="cyan", no_wrap=True)
+    table.add_column("Variant", style="blue")
+    table.add_column("Destination", style="white")
+    table.add_column("Status", justify="center")
+
     for result in results:
-        status = "updated" if result.changed else "unchanged"
-        typer.echo(f"{result.layout}:{result.variant}: {result.destination} ({status})")
+        status_icon = "✅ updated" if result.changed else "⚪ unchanged"
+        status_style = "[green]" if result.changed else "[dim white]"
+        table.add_row(
+            result.layout,
+            result.variant,
+            str(result.destination),
+            f"{status_style}{status_icon}[/]"
+        )
+
+    console.print(table)
 
 
 @app.command("families")
 def families() -> None:
     """List registered layout families and their variants."""
 
+    table = Table(title="🎹 Available Layout Families", show_header=True, header_style="bold cyan")
+    table.add_column("Family", style="yellow", no_wrap=True)
+    table.add_column("Variants", style="green")
+
     for registered in REGISTRY.families():
         variants = ", ".join(sorted(registered.family.variants()))
-        typer.echo(f"{registered.name}: {variants}")
+        table.add_row(registered.name, variants)
+
+    console.print(table)
 
 
 @app.callback(invoke_without_command=True)
@@ -31,7 +55,9 @@ def main(ctx: typer.Context) -> None:
     """Show the top-level help when no sub-command is provided."""
 
     if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
+        help_text = ctx.get_help()
+        panel = Panel(help_text, title="[bold cyan]Glove80 Utilities[/]", border_style="cyan")
+        console.print(panel)
         raise typer.Exit()
 
 
@@ -53,7 +79,7 @@ def generate(
     results = generate_layouts(layout=layout, variant=variant, metadata_path=metadata, dry_run=dry_run)
     if not results:
         available = ", ".join(available_layouts())
-        typer.secho(f"No results generated. Known layouts: {available}", fg=typer.colors.YELLOW)
+        console.print(f"[bold yellow]⚠️  No results generated.[/] Known layouts: [cyan]{available}[/]")
         raise typer.Exit(code=1)
 
     _print_results(results)
