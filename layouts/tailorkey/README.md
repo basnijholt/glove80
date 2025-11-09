@@ -1,7 +1,7 @@
 # TailorKey Guide
 
 TailorKey is the zero-code Glove80 layout curated by @moosy.
-The code in `src/glove80/tailorkey` captures the entire layout in declarative specs so every variant (Windows, macOS, Dual, Bilateral) is reproducible.
+The code in `src/glove80/layout_families/tailorkey` captures the entire layout in declarative specs so every variant (Windows, macOS, Dual, Bilateral) is reproducible.
 
 ## Canonical Layouts
 - [TailorKey v4.2h](https://my.glove80.com/#/layout/user/12312d23-b371-445a-9183-83552767bd76) (accessed 8 Nov 2025)
