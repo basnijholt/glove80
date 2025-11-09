@@ -1,4 +1,4 @@
-"""Combo specifications for TailorKey variants."""
+"""Combo definitions for TailorKey variants (Pydantic models)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from glove80.base import LayerRef
 from glove80.families.tailorkey.alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
-from glove80.specs import ComboSpec
+from glove80.layouts.schema import Combo
 from glove80.specs.utils import kp, ks, layer_param, mod
 
 if TYPE_CHECKING:
@@ -23,75 +23,75 @@ ORDER = (
 
 
 BASE_COMBOS = {
-    "capslock_v1_TKZ": ComboSpec(
+    "capslock_v1_TKZ": Combo(
         name="capslock_v1_TKZ",
         description="capslock when pressing both T1's - TailorKey",
-        binding=kp("CAPS"),
-        key_positions=(52, 57),
-        timeout_ms=50,
-        layers=(LayerRef("HRM_WinLinx"), LayerRef("Autoshift")),
+        binding=kp("CAPS").to_dict(),
+        keyPositions=[52, 57],
+        timeoutMs=50,
+        layers=[LayerRef("HRM_WinLinx"), LayerRef("Autoshift")],
     ),
-    "F11_v1_TKZ": ComboSpec(
+    "F11_v1_TKZ": Combo(
         name="F11_v1_TKZ",
         description="F11 on RH_C5 and RH_R1+R2 - TailorKey",
-        binding=kp("F11"),
-        key_positions=(8, 20),
-        timeout_ms=50,
-        layers=(LayerRef("HRM_WinLinx"), LayerRef("Autoshift")),
+        binding=kp("F11").to_dict(),
+        keyPositions=[8, 20],
+        timeoutMs=50,
+        layers=[LayerRef("HRM_WinLinx"), LayerRef("Autoshift")],
     ),
-    "F12_v1_TKZ": ComboSpec(
+    "F12_v1_TKZ": Combo(
         name="F12_v1_TKZ",
         description="F12 on RH_C6 and RH_R1+R2 - TailorKey",
-        binding=kp("F12"),
-        key_positions=(9, 21),
-        timeout_ms=50,
-        layers=(LayerRef("HRM_WinLinx"), LayerRef("Autoshift")),
+        binding=kp("F12").to_dict(),
+        keyPositions=[9, 21],
+        timeoutMs=50,
+        layers=[LayerRef("HRM_WinLinx"), LayerRef("Autoshift")],
     ),
-    "sticky_hyp_rght_v1_TKZ": ComboSpec(
+    "sticky_hyp_rght_v1_TKZ": Combo(
         name="sticky_hyp_rght_v1_TKZ",
         description='sticky "hyper" modifiers (Win + Alt + Ctrl + Shift) - TailorKey',
-        binding=ks("&sk", mod("LG", mod("LA", mod("LC", "LSHFT")))),
-        key_positions=(74, 57),
-        timeout_ms=50,
-        layers=(LayerRef("HRM_WinLinx"), LayerRef("Autoshift")),
+        binding=ks("&sk", mod("LG", mod("LA", mod("LC", "LSHFT")))).to_dict(),
+        keyPositions=[74, 57],
+        timeoutMs=50,
+        layers=[LayerRef("HRM_WinLinx"), LayerRef("Autoshift")],
     ),
-    "sticky_meh_rght_v1_TKZ": ComboSpec(
+    "sticky_meh_rght_v1_TKZ": Combo(
         name="sticky_meh_rght_v1_TKZ",
         description='sticky "meh" modifiers (Alt + Ctrl + Shift) - TailorKey',
-        binding=ks("&sk", mod("LA", mod("LC", "LSHFT"))),
-        key_positions=(73, 74),
-        timeout_ms=50,
-        layers=(LayerRef("HRM_WinLinx"), LayerRef("Autoshift")),
+        binding=ks("&sk", mod("LA", mod("LC", "LSHFT"))).to_dict(),
+        keyPositions=[73, 74],
+        timeoutMs=50,
+        layers=[LayerRef("HRM_WinLinx"), LayerRef("Autoshift")],
     ),
-    "gaming_layer_v1_TKZ": ComboSpec(
+    "gaming_layer_v1_TKZ": Combo(
         name="gaming_layer_v1_TKZ",
         description="toggle gaming layer - TailorKey",
-        binding=ks("&tog", layer_param("Gaming")),
-        key_positions=(51, 68),
-        timeout_ms=50,
-        layers=(-1,),
+        binding=ks("&tog", layer_param("Gaming")).to_dict(),
+        keyPositions=[51, 68],
+        timeoutMs=50,
+        layers=[-1],
     ),
 }
 
 
-def _with_layers(combo: ComboSpec, layers: Iterable[LayerRef | int]) -> ComboSpec:
-    return ComboSpec(
+def _with_layers(combo: Combo, layers: Iterable[LayerRef | int]) -> Combo:
+    return Combo(
         name=combo.name,
         description=combo.description,
         binding=combo.binding,
-        key_positions=combo.key_positions,
-        timeout_ms=combo.timeout_ms,
-        layers=tuple(layers),
+        keyPositions=combo.keyPositions,
+        timeoutMs=combo.timeoutMs,
+        layers=list(layers),
     )
 
 
-def _with_description(combo: ComboSpec, description: str) -> ComboSpec:
-    return ComboSpec(
+def _with_description(combo: Combo, description: str) -> Combo:
+    return Combo(
         name=combo.name,
         description=description,
         binding=combo.binding,
-        key_positions=combo.key_positions,
-        timeout_ms=combo.timeout_ms,
+        keyPositions=combo.keyPositions,
+        timeoutMs=combo.timeoutMs,
         layers=combo.layers,
     )
 
@@ -103,7 +103,7 @@ def _layers(*names: str) -> tuple[LayerRef, ...]:
 WINDOWS_STICKY_DESC = 'sticky "hyper" modifiers (Win + Alt + Ctrl + Shift) - Use with Tab - TailorKey'
 WINDOWS_MEH_DESC = 'sticky "meh" modifiers (Alt + Ctrl + Shift) - Use with Tab - TailorKey'
 
-COMBO_DATA: dict[str, list[ComboSpec]] = {
+COMBO_DATA: dict[str, list[Combo]] = {
     "windows": [
         BASE_COMBOS["capslock_v1_TKZ"],
         BASE_COMBOS["F11_v1_TKZ"],
@@ -115,11 +115,11 @@ COMBO_DATA: dict[str, list[ComboSpec]] = {
 }
 
 
-def _variant_list(layer_names: tuple[str, ...]) -> list[ComboSpec]:
-    combos: list[ComboSpec] = []
+def _variant_list(layer_names: tuple[str, ...]) -> list[Combo]:
+    combos: list[Combo] = []
     for name in ORDER:
         combo = BASE_COMBOS[name]
-        if combo.layers == (-1,):
+        if combo.layers == [-1]:
             combos.append(combo)
         else:
             combos.append(_with_layers(combo, _layers(*layer_names)))

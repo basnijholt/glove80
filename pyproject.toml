@@ -22,7 +22,6 @@ pythonpath = [
     "."
 ]
 addopts = """
-    -vvv
     --cov=src/glove80
     --cov-report term
     --cov-report html
