@@ -1,5 +1,10 @@
-"""MoErgo default Glove80 layouts."""
+"""MoErgo default Glove80 layouts.
 
-from . import layouts  # noqa: F401
+Importing this package ensures the family registers itself via
+``glove80.families.default.layouts``.
+"""
 
-__all__ = []
+from . import layouts
+
+# Export the module to make the import a public API symbol.
+__all__ = ["layouts"]

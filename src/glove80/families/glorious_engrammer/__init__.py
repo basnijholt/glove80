@@ -1,5 +1,8 @@
-"""Glorious Engrammer layout family."""
+"""Glorious Engrammer layout family.
 
-from . import layouts  # noqa: F401
+Import side effect registers the family via ``.layouts``.
+"""
 
-__all__ = []
+from . import layouts
+
+__all__ = ["layouts"]

@@ -1,9 +1,11 @@
 """Layout family implementations."""
 
-# Import families so they self-register via REGISTRY.
-from . import default  # noqa: F401
-from . import glorious_engrammer  # noqa: F401
-from . import quantum_touch  # noqa: F401
-from . import tailorkey  # noqa: F401
+# Importing these packages triggers side-effect registration in their
+# ``layouts`` modules. We also export them, so the imports are part of the
+# public API and not considered unused.
+from . import default
+from . import glorious_engrammer
+from . import quantum_touch
+from . import tailorkey
 
 __all__ = ["default", "glorious_engrammer", "quantum_touch", "tailorkey"]
