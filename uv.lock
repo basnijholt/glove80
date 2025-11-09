@@ -180,6 +180,7 @@ name = "glove80"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -195,6 +196,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2.12.4" },
+    { name = "rich", specifier = ">=14.2.0" },
     { name = "typer", specifier = ">=0.12.5" },
 ]
 
