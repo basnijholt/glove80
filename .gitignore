@@ -24,6 +24,9 @@ build/
 .mypy_cache/
 .ruff_cache/
 
+# Local agent / debug artifacts
+.code/
+
 # Coverage
 .coverage
 coverage.xml

@@ -7,6 +7,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from glove80.base import KeySpec, LayerRef
+from glove80.layouts.schema import (
+    Combo as ComboModel,
+    InputProcessor as InputProcessorModel,
+    ListenerNode as ListenerNodeModel,
+    Macro as MacroModel,
+    HoldTap as HoldTapModel,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -40,16 +47,17 @@ class MacroSpec:
     tap_ms: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        data: dict[str, Any] = {
-            "name": self.name,
-            "description": self.description,
-            "bindings": [binding.to_dict() for binding in self.bindings],
-            "params": list(self.params),
-        }
-        if self.wait_ms is not None:
-            data["waitMs"] = self.wait_ms
-        if self.tap_ms is not None:
-            data["tapMs"] = self.tap_ms
+        model = MacroModel(
+            name=self.name,
+            description=self.description,
+            bindings=[binding.to_dict() for binding in self.bindings],
+            params=list(self.params),
+            waitMs=self.wait_ms,
+            tapMs=self.tap_ms,
+        )
+        data = model.model_dump(by_alias=True, exclude_none=True)
+        # Preserve KeySpec dicts (may contain LayerRef inside nested params)
+        data["bindings"] = [binding.to_dict() for binding in self.bindings]
         return data
 
 
@@ -68,24 +76,20 @@ class HoldTapSpec:
     hold_trigger_key_positions: Sequence[int] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        data: dict[str, Any] = {
-            "name": self.name,
-            "description": self.description,
-            "bindings": list(self.bindings),
-        }
-        if self.tapping_term_ms is not None:
-            data["tappingTermMs"] = self.tapping_term_ms
-        if self.flavor is not None:
-            data["flavor"] = self.flavor
-        if self.quick_tap_ms is not None:
-            data["quickTapMs"] = self.quick_tap_ms
-        if self.require_prior_idle_ms is not None:
-            data["requirePriorIdleMs"] = self.require_prior_idle_ms
-        if self.hold_trigger_on_release is not None:
-            data["holdTriggerOnRelease"] = self.hold_trigger_on_release
-        if self.hold_trigger_key_positions is not None:
-            data["holdTriggerKeyPositions"] = list(self.hold_trigger_key_positions)
-        return data
+        model = HoldTapModel(
+            name=self.name,
+            description=self.description,
+            bindings=list(self.bindings),
+            tappingTermMs=self.tapping_term_ms,
+            flavor=self.flavor,
+            quickTapMs=self.quick_tap_ms,
+            requirePriorIdleMs=self.require_prior_idle_ms,
+            holdTriggerOnRelease=self.hold_trigger_on_release,
+            holdTriggerKeyPositions=(
+                list(self.hold_trigger_key_positions) if self.hold_trigger_key_positions else None
+            ),
+        )
+        return model.model_dump(by_alias=True, exclude_none=True)
 
 
 @dataclass(frozen=True)
@@ -100,15 +104,19 @@ class ComboSpec:
     timeout_ms: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        data: dict[str, Any] = {
-            "name": self.name,
-            "description": self.description,
-            "binding": self.binding.to_dict(),
-            "keyPositions": list(self.key_positions),
-            "layers": list(self.layers),
-        }
-        if self.timeout_ms is not None:
-            data["timeoutMs"] = self.timeout_ms
+        model = ComboModel(
+            name=self.name,
+            description=self.description,
+            binding=self.binding.to_dict(),
+            keyPositions=list(self.key_positions),
+            layers=list(self.layers),
+            timeoutMs=self.timeout_ms,
+        )
+        data = model.model_dump(by_alias=True, exclude_none=True)
+        # Preserve original binding (may contain LayerRef inside nested KeySpecs)
+        data["binding"] = self.binding.to_dict()
+        # Preserve LayerRef objects for later resolution to indices
+        data["layers"] = list(self.layers)
         return data
 
 
@@ -120,10 +128,8 @@ class InputProcessorSpec:
     params: Sequence[Any] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "code": self.code,
-            "params": [_serialize_simple(param) for param in self.params],
-        }
+        model = InputProcessorModel(code=self.code, params=[_serialize_simple(param) for param in self.params])
+        return model.model_dump(by_alias=True, exclude_none=True)
 
 
 @dataclass(frozen=True)
@@ -136,13 +142,14 @@ class InputListenerNodeSpec:
     input_processors: Sequence[InputProcessorSpec] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        data: dict[str, Any] = {
-            "code": self.code,
-            "layers": list(self.layers),
-            "inputProcessors": [proc.to_dict() for proc in self.input_processors],
-        }
-        if self.description is not None:
-            data["description"] = self.description
+        model = ListenerNodeModel(
+            code=self.code,
+            layers=list(self.layers),
+            description=self.description,
+            inputProcessors=[InputProcessorModel(**proc.to_dict()) for proc in self.input_processors],
+        )
+        data = model.model_dump(by_alias=True, exclude_none=True)
+        data["layers"] = list(self.layers)
         return data
 
 

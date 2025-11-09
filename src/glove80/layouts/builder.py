@@ -315,7 +315,7 @@ def _as_plain_dict(obj: Any) -> dict[str, Any]:
     """
     if hasattr(obj, "model_dump"):
         try:
-            return obj.model_dump(by_alias=True)  # type: ignore[no-any-return]
+            return obj.model_dump(by_alias=True, exclude_none=True)  # type: ignore[no-any-return]
         except Exception:  # pragma: no cover - best effort
             pass
     if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
