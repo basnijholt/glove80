@@ -4,21 +4,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Sequence
 
 from glove80.base import LayerSpec
+from glove80.layouts.common import build_common_fields
 from glove80.specs.primitives import InputListenerNodeSpec, InputListenerSpec, InputProcessorSpec
 
 from .layer_data import BASE_LAYERS, FACTORY_LAYERS, LOWER_LAYERS, MAGIC_LAYERS, MOUSE_EXTRAS
-
-COMMON_TEMPLATE = {
-    "keyboard": "glove80",
-    "firmware_api_version": "1",
-    "locale": "en-US",
-    "unlisted": False,
-    "creator": "moergo",
-    "custom_defined_behaviors": "",
-    "custom_devicetree": "",
-    "config_parameters": [],
-    "layout_parameters": {},
-}
 
 
 @dataclass(frozen=True)
@@ -92,51 +81,44 @@ def _variant_layers(name: str, *, extra_layers: Mapping[str, LayerSpec] | None =
     return layers
 
 
-def _common_fields(*, creator: str = "moergo", config_parameters: Sequence[dict] | None = None) -> Dict[str, Any]:
-    fields = dict(COMMON_TEMPLATE)
-    fields["creator"] = creator
-    fields["config_parameters"] = list(config_parameters or [])
-    return fields
-
-
 VARIANT_SPECS: Dict[str, VariantSpec] = {
     "factory_default": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic", "Factory"),
         layer_specs=_variant_layers("factory_default"),
     ),
     "factory_default_macos": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic", "Factory"),
         layer_specs=_variant_layers("factory_default_macos"),
     ),
     "colemak": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("colemak"),
     ),
     "colemak_dh": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("colemak_dh"),
     ),
     "dvorak": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("dvorak"),
     ),
     "workman": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("workman"),
     ),
     "kinesis": VariantSpec(
-        common_fields=_common_fields(),
+        common_fields=build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("kinesis"),
     ),
     "mouse_emulation": VariantSpec(
-        common_fields=_common_fields(
+        common_fields=build_common_fields(
             creator="MoErgo",
             config_parameters=[{"paramName": "HID_POINTING", "value": "y"}],
         ),
@@ -145,4 +127,4 @@ VARIANT_SPECS: Dict[str, VariantSpec] = {
         input_listeners=MOUSE_INPUT_LISTENERS,
     ),
 }
-__all__ = ["COMMON_TEMPLATE", "VARIANT_SPECS", "VariantSpec"]
+__all__ = ["VARIANT_SPECS", "VariantSpec"]

@@ -1,16 +1,8 @@
 """Common metadata for TailorKey specs."""
 
-COMMON_FIELDS = {
-    "keyboard": "glove80",
-    "firmware_api_version": "1",
-    "locale": "en-US",
-    "unlisted": False,
-    "creator": "moosy",
-    "custom_defined_behaviors": "",
-    "custom_devicetree": "",
-    "config_parameters": [],
-    "layout_parameters": {},
-}
+from glove80.layouts.common import build_common_fields
+
+COMMON_FIELDS = build_common_fields(creator="moosy")
 
 LAYER_NAME_MAP = {
     "windows": [
