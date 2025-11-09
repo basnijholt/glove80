@@ -43,6 +43,41 @@ def build_layout_payload(
     return layout
 
 
+def compose_layout(
+    common_fields: Mapping[str, Any],
+    *,
+    layer_names: Sequence[str],
+    generated_layers: LayerMap,
+    metadata_key: str,
+    variant: str,
+    macros: Sequence[Any] | None = None,
+    hold_taps: Sequence[Any] | None = None,
+    combos: Sequence[Any] | None = None,
+    input_listeners: Sequence[Any] | None = None,
+    resolve_refs: bool = True,
+    ref_fields: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Compose a full layout payload given common metadata and generated layers."""
+
+    layout = build_layout_payload(
+        common_fields,
+        layer_names=layer_names,
+        macros=macros,
+        hold_taps=hold_taps,
+        combos=combos,
+        input_listeners=input_listeners,
+    )
+    if resolve_refs:
+        _resolve_referenced_fields(
+            layout,
+            layer_names=layer_names,
+            fields=ref_fields or DEFAULT_REF_FIELDS,
+        )
+    layout["layers"] = _assemble_layers(layer_names, generated_layers, variant=variant)
+    _attach_variant_metadata(layout, variant=variant, layout_key=metadata_key)
+    return layout
+
+
 def _build_common_fields(
     *,
     creator: str,

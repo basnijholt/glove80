@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Sequence
 
-from glove80.layouts.common import _assemble_layers, _attach_variant_metadata, build_layout_payload
+from glove80.layouts.common import compose_layout
 from glove80.layouts.family import LayoutFamily, REGISTRY
 
 from .layers import build_all_layers
@@ -59,11 +59,15 @@ class Family(LayoutFamily):
                 f"Unknown Glorious Engrammer variant '{variant}'. Available: {sorted(VARIANT_SPECS)}"
             ) from exc
 
-        layout: Dict = build_layout_payload(spec.common_fields, layer_names=spec.layer_names)
-
         generated_layers = build_all_layers(variant)
-        layout["layers"] = _assemble_layers(layout["layer_names"], generated_layers, variant=variant)
-        _attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
+        layout = compose_layout(
+            spec.common_fields,
+            layer_names=spec.layer_names,
+            generated_layers=generated_layers,
+            metadata_key=self.metadata_key(),
+            variant=variant,
+            resolve_refs=False,
+        )
         return _order_layout_fields(layout)
 
 

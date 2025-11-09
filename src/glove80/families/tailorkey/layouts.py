@@ -4,12 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Mapping, Sequence
 
-from glove80.layouts.common import (
-    _assemble_layers,
-    _attach_variant_metadata,
-    _resolve_referenced_fields,
-    build_layout_payload,
-)
+from glove80.layouts.common import compose_layout
 from glove80.layouts.family import LayoutFamily, REGISTRY
 from glove80.specs.primitives import materialize_named_sequence, materialize_sequence
 
@@ -49,19 +44,6 @@ def _layer_names(variant: str) -> List[str]:
     return list(_get_variant_section(LAYER_NAME_MAP, variant, "layer names"))
 
 
-def _base_layout_payload(variant: str) -> Dict[str, Any]:
-    combos = materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
-    listeners = materialize_sequence(_get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners"))
-    return build_layout_payload(
-        COMMON_FIELDS,
-        layer_names=_layer_names(variant),
-        macros=_build_macros(variant),
-        hold_taps=_build_hold_taps(variant),
-        combos=combos,
-        input_listeners=listeners,
-    )
-
-
 class Family(LayoutFamily):
     name = "tailorkey"
 
@@ -72,13 +54,20 @@ class Family(LayoutFamily):
         return "tailorkey"
 
     def build(self, variant: str) -> Dict:
-        layout = _base_layout_payload(variant)
-        layer_names = layout["layer_names"]
-        _resolve_referenced_fields(layout, layer_names=layer_names)
+        combos = materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
+        listeners = materialize_sequence(_get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners"))
         generated_layers = build_all_layers(variant)
-        layout["layers"] = _assemble_layers(layer_names, generated_layers, variant=variant)
-        _attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
-        return layout
+        return compose_layout(
+            COMMON_FIELDS,
+            layer_names=_layer_names(variant),
+            macros=_build_macros(variant),
+            hold_taps=_build_hold_taps(variant),
+            combos=combos,
+            input_listeners=listeners,
+            generated_layers=generated_layers,
+            metadata_key=self.metadata_key(),
+            variant=variant,
+        )
 
 
 REGISTRY.register(Family())
