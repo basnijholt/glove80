@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 
 from ..layouts.generator import GenerationResult, available_layouts, generate_layouts
+from ..layouts.family import REGISTRY
 
 app = typer.Typer(help="Utilities for working with Glove80 layouts.")
 
@@ -14,6 +15,15 @@ def _print_results(results: list[GenerationResult]) -> None:
     for result in results:
         status = "updated" if result.changed else "unchanged"
         typer.echo(f"{result.layout}:{result.variant}: {result.destination} ({status})")
+
+
+@app.command("families")
+def families() -> None:
+    """List registered layout families and their variants."""
+
+    for registered in REGISTRY.families():
+        variants = ", ".join(sorted(registered.family.variants()))
+        typer.echo(f"{registered.name}: {variants}")
 
 
 @app.callback(invoke_without_command=True)
