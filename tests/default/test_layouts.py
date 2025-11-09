@@ -1,6 +1,7 @@
 import pytest
 
 from glove80 import build_layout as build_family_layout
+from tests.assertions import assert_layout_equal
 
 
 @pytest.mark.parametrize(
@@ -19,4 +20,4 @@ from glove80 import build_layout as build_family_layout
 def test_default_layout_matches_release(variant, load_default_variant):
     expected = load_default_variant(variant)
     built = build_family_layout("default", variant)
-    assert built == expected
+    assert_layout_equal(built, expected, label=f"default:{variant}")
