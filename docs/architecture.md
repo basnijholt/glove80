@@ -17,6 +17,34 @@ This project keeps every part of the Glove80 layout toolchain in version control
 ## Shared Helpers
 `glove80/layouts/common.py` and the higher-level `glove80.layouts.LayoutBuilder` codify the shared logic between layout families: resolving `LayerRef` placeholders, assembling the ordered layer list, and injecting metadata fields. Layout authors can now compose whole layouts by instantiating the builder, feeding it layer providers, and calling `.build()`—the same workflow used inside the built-in families. The builder exposes ergonomics-focused helpers such as `add_mouse_layers()`, `add_cursor_layer()`, and `add_home_row_mods()`; you wire in the concrete providers (e.g., `build_mouse_layers`) once and then script against those high-level methods for both library and CLI workflows.
 
+```python
+from glove80.layouts import LayoutBuilder
+from glove80.layouts.components import LayoutFeatureComponents
+from glove80.families.tailorkey.layers import build_mouse_layers, build_cursor_layer, build_hrm_layers
+
+def _hrm_layers_for(variant: str):
+    layers = build_hrm_layers(variant)
+    return LayoutFeatureComponents(layers=layers)
+
+generated_layers = build_all_layers(variant)
+builder = LayoutBuilder(
+    metadata_key="tailorkey",
+    variant=variant,
+    common_fields=COMMON_FIELDS,
+    layer_names=_layer_names(variant),
+    mouse_layers_provider=build_mouse_layers,
+    cursor_layers_provider=lambda v: {"Cursor": build_cursor_layer(v)},
+    home_row_provider=_hrm_layers_for,
+)
+builder.add_layers(generated_layers)
+builder.add_home_row_mods(target_layer="Typing", position="before")
+builder.add_cursor_layer(insert_after="Autoshift")
+builder.add_mouse_layers(insert_after="Lower")
+payload = builder.build()
+```
+
+The helper methods guarantee that the required macros, combos, input listeners, and layer indices stay in sync each time the feature is applied, so TailorKey, Default, QuantumTouch, Glorious Engrammer, and any user scripts all share one consistent pipeline.
+
 ## Tests & CI
 - Layer-focused tests under `tests/tailorkey/` lock down every specialized factory (HRM, cursor, mouse, etc.).
 - Parity tests under `tests/glorious_engrammer/` ensure the Sunaku release stays identical to the generated payload.
