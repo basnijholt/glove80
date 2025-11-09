@@ -68,3 +68,30 @@ class Combo(BaseModel):
 
 
 __all__.append("Combo")
+
+
+class InputProcessor(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: str
+    params: List[Union[str, int, float, bool, dict, list]] = Field(default_factory=list)
+
+
+class ListenerNode(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: str
+    layers: List[Union[int, LayerRef]]
+    description: Optional[str] = None
+    inputProcessors: List[InputProcessor] = Field(default_factory=list)
+
+
+class InputListener(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: str
+    inputProcessors: List[InputProcessor] = Field(default_factory=list)
+    nodes: List[ListenerNode]
+
+
+__all__ += ["InputProcessor", "ListenerNode", "InputListener"]
