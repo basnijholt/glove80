@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -10,6 +11,11 @@ from glove80.cli import app
 RUNNER = CliRunner()
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TAILORKEY_METADATA = REPO_ROOT / "src/glove80/families/tailorkey/metadata.json"
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+def _strip_ansi(value: str) -> str:
+    return ANSI_RE.sub("", value)
 
 
 def test_cli_families_lists_registered() -> None:
@@ -29,7 +35,7 @@ def test_cli_generate_dry_run_for_specific_variant() -> None:
 def test_cli_generate_requires_layout_when_metadata_provided() -> None:
     result = RUNNER.invoke(app, ["generate", "--metadata", str(TAILORKEY_METADATA)])
     assert result.exit_code != 0
-    assert "--metadata requires --layout" in result.output
+    assert "--metadata requires --layout" in _strip_ansi(result.output)
 
 
 def test_cli_generate_accepts_explicit_metadata_file() -> None:
