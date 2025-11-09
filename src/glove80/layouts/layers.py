@@ -10,7 +10,7 @@ from glove80.specs.utils import kp
 Token = Any
 
 
-def token_to_key(token: Token) -> KeySpec:
+def _token_to_key(token: Token) -> KeySpec:
     if isinstance(token, KeySpec):
         return token
     if isinstance(token, tuple):
@@ -24,16 +24,16 @@ def token_to_key(token: Token) -> KeySpec:
     raise TypeError(f"Unsupported token type: {token!r}")
 
 
-def rows_to_layer_spec(rows: Sequence[Sequence[Token]]) -> LayerSpec:
+def _rows_to_layer_spec(rows: Sequence[Sequence[Token]]) -> LayerSpec:
     flat: list[Token] = [token for row in rows for token in row]
     if len(flat) != 80:
         raise ValueError(f"Expected 80 entries for a layer, got {len(flat)}")
-    overrides = {idx: token_to_key(token) for idx, token in enumerate(flat)}
+    overrides = {idx: _token_to_key(token) for idx, token in enumerate(flat)}
     return LayerSpec(overrides=overrides)
 
 
-def transparent_layer() -> LayerSpec:
+def _transparent_layer() -> LayerSpec:
     return LayerSpec(overrides={})
 
 
-__all__ = ["rows_to_layer_spec", "transparent_layer", "token_to_key", "Token"]
+__all__ = ["_rows_to_layer_spec", "_transparent_layer", "_token_to_key", "Token"]

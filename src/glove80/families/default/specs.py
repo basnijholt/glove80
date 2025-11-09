@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Sequence
 
 from glove80.base import LayerSpec
-from glove80.layouts.common import build_common_fields
+from glove80.layouts.common import _build_common_fields
 from glove80.specs.primitives import InputListenerNodeSpec, InputListenerSpec, InputProcessorSpec
 
 from .layer_data import BASE_LAYERS, FACTORY_LAYERS, LOWER_LAYERS, MAGIC_LAYERS, MOUSE_EXTRAS
@@ -83,42 +83,42 @@ def _variant_layers(name: str, *, extra_layers: Mapping[str, LayerSpec] | None =
 
 VARIANT_SPECS: Dict[str, VariantSpec] = {
     "factory_default": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic", "Factory"),
         layer_specs=_variant_layers("factory_default"),
     ),
     "factory_default_macos": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic", "Factory"),
         layer_specs=_variant_layers("factory_default_macos"),
     ),
     "colemak": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("colemak"),
     ),
     "colemak_dh": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("colemak_dh"),
     ),
     "dvorak": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("dvorak"),
     ),
     "workman": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("workman"),
     ),
     "kinesis": VariantSpec(
-        common_fields=build_common_fields(creator="moergo"),
+        common_fields=_build_common_fields(creator="moergo"),
         layer_names=("Base", "Lower", "Magic"),
         layer_specs=_variant_layers("kinesis"),
     ),
     "mouse_emulation": VariantSpec(
-        common_fields=build_common_fields(
+        common_fields=_build_common_fields(
             creator="MoErgo",
             config_parameters=[{"paramName": "HID_POINTING", "value": "y"}],
         ),

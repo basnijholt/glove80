@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from glove80.base import LayerSpec
 
-from glove80.layouts.layers import rows_to_layer_spec, transparent_layer
+from glove80.layouts.layers import _rows_to_layer_spec, _transparent_layer
 
 # --- Base layers ---------------------------------------------------------
 
@@ -99,14 +99,14 @@ BASE_MOUSE_ROWS = [
     ("DEL", "LALT", "RALT", ("&lt", 2, "RET"), "SPACE", "UP", "DOWN", "LBKT", "RBKT", "PG_DN"),
 ]
 
-BASE_WINDOWS = rows_to_layer_spec(BASE_WINDOWS_ROWS)
-BASE_MAC = rows_to_layer_spec(BASE_MAC_ROWS)
-BASE_COLEMAK = rows_to_layer_spec(BASE_COLEMAK_ROWS)
-BASE_COLEMAK_DH = rows_to_layer_spec(BASE_COLEMAK_DH_ROWS)
-BASE_DVORAK = rows_to_layer_spec(BASE_DVORAK_ROWS)
-BASE_WORKMAN = rows_to_layer_spec(BASE_WORKMAN_ROWS)
-BASE_KINESIS = rows_to_layer_spec(BASE_KINESIS_ROWS)
-BASE_MOUSE = rows_to_layer_spec(BASE_MOUSE_ROWS)
+BASE_WINDOWS = _rows_to_layer_spec(BASE_WINDOWS_ROWS)
+BASE_MAC = _rows_to_layer_spec(BASE_MAC_ROWS)
+BASE_COLEMAK = _rows_to_layer_spec(BASE_COLEMAK_ROWS)
+BASE_COLEMAK_DH = _rows_to_layer_spec(BASE_COLEMAK_DH_ROWS)
+BASE_DVORAK = _rows_to_layer_spec(BASE_DVORAK_ROWS)
+BASE_WORKMAN = _rows_to_layer_spec(BASE_WORKMAN_ROWS)
+BASE_KINESIS = _rows_to_layer_spec(BASE_KINESIS_ROWS)
+BASE_MOUSE = _rows_to_layer_spec(BASE_MOUSE_ROWS)
 
 # --- Lower layers --------------------------------------------------------
 
@@ -154,8 +154,8 @@ LOWER_KINESIS_ROWS = [
     ("&trans", "&trans", "&trans", "&trans", "&trans", "KP_N0", "KP_N0", "KP_DOT", "KP_ENTER", ("&to", 0)),
 ]
 
-LOWER_STANDARD = rows_to_layer_spec(LOWER_STANDARD_ROWS)
-LOWER_KINESIS = rows_to_layer_spec(LOWER_KINESIS_ROWS)
+LOWER_STANDARD = _rows_to_layer_spec(LOWER_STANDARD_ROWS)
+LOWER_KINESIS = _rows_to_layer_spec(LOWER_KINESIS_ROWS)
 
 # --- Magic / Factory -----------------------------------------------------
 
@@ -324,9 +324,9 @@ FACTORY_LAYER_ROWS = [
     ),
 ]
 
-MAGIC_FACTORY = rows_to_layer_spec(MAGIC_FACTORY_ROWS)
-MAGIC_STANDARD = rows_to_layer_spec(MAGIC_STANDARD_ROWS)
-FACTORY_LAYER = rows_to_layer_spec(FACTORY_LAYER_ROWS)
+MAGIC_FACTORY = _rows_to_layer_spec(MAGIC_FACTORY_ROWS)
+MAGIC_STANDARD = _rows_to_layer_spec(MAGIC_STANDARD_ROWS)
+FACTORY_LAYER = _rows_to_layer_spec(FACTORY_LAYER_ROWS)
 
 # --- Mouse layers --------------------------------------------------------
 
@@ -407,8 +407,8 @@ MOUSE_LAYER_ROWS = [
     ),
 ]
 
-MOUSE_LAYER = rows_to_layer_spec(MOUSE_LAYER_ROWS)
-TRANSPARENT_MOUSE_LAYER = transparent_layer()
+MOUSE_LAYER = _rows_to_layer_spec(MOUSE_LAYER_ROWS)
+TRANSPARENT_MOUSE_LAYER = _transparent_layer()
 
 # --- Public mappings -----------------------------------------------------
 

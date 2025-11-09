@@ -1,8 +1,8 @@
 """Common metadata for TailorKey specs."""
 
-from glove80.layouts.common import build_common_fields
+from glove80.layouts.common import _build_common_fields
 
-COMMON_FIELDS = build_common_fields(creator="moosy")
+COMMON_FIELDS = _build_common_fields(creator="moosy")
 
 LAYER_NAME_MAP = {
     "windows": [

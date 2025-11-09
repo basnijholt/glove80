@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Dict
 
 from glove80.base import LayerMap, build_layer_from_spec
-from glove80.layouts.common import assemble_layers, attach_variant_metadata
+from glove80.layouts.common import _assemble_layers, _attach_variant_metadata
 from glove80.layouts.family import LayoutFamily, REGISTRY
 from glove80.specs.primitives import materialize_sequence
 
@@ -40,9 +40,9 @@ class Family(LayoutFamily):
         layout["inputListeners"] = materialize_sequence(spec.input_listeners)
 
         layers = _build_layers_map(spec)
-        layout["layers"] = assemble_layers(layout["layer_names"], layers, variant=variant)
+        layout["layers"] = _assemble_layers(layout["layer_names"], layers, variant=variant)
 
-        attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
+        _attach_variant_metadata(layout, variant=variant, layout_key=self.metadata_key())
         return layout
 
 

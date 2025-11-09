@@ -22,7 +22,7 @@ BASE_COMMON_FIELDS = {
 }
 
 
-def build_common_fields(
+def _build_common_fields(
     *,
     creator: str,
     locale: str = "en-US",
@@ -46,7 +46,7 @@ def build_common_fields(
     return fields
 
 
-def resolve_referenced_fields(
+def _resolve_referenced_fields(
     layout: dict,
     *,
     layer_names: Sequence[str],
@@ -59,7 +59,7 @@ def resolve_referenced_fields(
         layout[field] = resolve_layer_refs(layout[field], layer_indices)
 
 
-def assemble_layers(layer_names: Sequence[str], generated_layers: LayerMap, *, variant: str) -> list[Layer]:
+def _assemble_layers(layer_names: Sequence[str], generated_layers: LayerMap, *, variant: str) -> list[Layer]:
     """Return the ordered list of layers, erroring if any are missing."""
 
     ordered: list[Layer] = []
@@ -71,7 +71,7 @@ def assemble_layers(layer_names: Sequence[str], generated_layers: LayerMap, *, v
     return ordered
 
 
-def attach_variant_metadata(layout: dict, *, variant: str, layout_key: str) -> None:
+def _attach_variant_metadata(layout: dict, *, variant: str, layout_key: str) -> None:
     """Inject metadata fields into the layout payload."""
 
     meta = get_variant_metadata(variant, layout=layout_key)
