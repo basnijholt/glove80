@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Mapping, Sequence
 
-from glove80.layouts.common import compose_layout
+from glove80.layouts import LayoutBuilder
 from glove80.layouts.family import LayoutFamily, REGISTRY
 from glove80.specs.primitives import materialize_named_sequence, materialize_sequence
 
@@ -57,17 +57,20 @@ class Family(LayoutFamily):
         combos = materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
         listeners = materialize_sequence(_get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners"))
         generated_layers = build_all_layers(variant)
-        return compose_layout(
-            COMMON_FIELDS,
-            layer_names=_layer_names(variant),
-            macros=_build_macros(variant),
-            hold_taps=_build_hold_taps(variant),
-            combos=combos,
-            input_listeners=listeners,
-            generated_layers=generated_layers,
+        layer_names = _layer_names(variant)
+
+        builder = LayoutBuilder(
             metadata_key=self.metadata_key(),
             variant=variant,
+            common_fields=COMMON_FIELDS,
+            layer_names=layer_names,
         )
+        builder.add_layers({name: generated_layers[name] for name in layer_names})
+        builder.add_macros(_build_macros(variant))
+        builder.add_hold_taps(_build_hold_taps(variant))
+        builder.add_combos(combos)
+        builder.add_input_listeners(listeners)
+        return builder.build()
 
 
 REGISTRY.register(Family())
