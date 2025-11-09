@@ -6,7 +6,7 @@ checked into `src/glove80`.
 
 ## Highlights
 - The default, TailorKey, and QuantumTouch families live under `src/glove80/families/` with typed specs, factories, and regression tests.
-- Metadata travels with the package (`src/glove80/layouts/*/metadata.json`), so the CLI and library always agree on
+- Metadata travels with the package (`src/glove80/families/*/metadata.json`), so the CLI and library always agree on
   UUIDs, release notes, and output paths.
 - A Typer-powered CLI (`python -m glove80 generate …`) replaces ad-hoc scripts and keeps the regeneration workflow
   uniform across layouts.
@@ -33,6 +33,18 @@ checked into `src/glove80`.
 
 `just --list` shows the available helper tasks.
 
+## Using the Python API
+The public API lives on the root package:
+
+```python
+from glove80 import build_layout, list_families
+
+print(list_families())  # ['default', 'tailorkey', 'quantum_touch']
+layout = build_layout("tailorkey", "mac")
+```
+
+`build_layout(<family>, <variant>)` always returns the same dictionary that the CLI would write into `layouts/<family>/releases/…`.
+
 ## Repository Layout
 ```
 .
@@ -43,8 +55,8 @@ checked into `src/glove80`.
 ├─ docs/                        # architecture overview
 ├─ src/glove80/
 │  ├─ cli/                      # Typer CLI
-│  ├─ layouts/                  # packaged metadata + generator helpers
-│  └─ families/          # default, TailorKey, QuantumTouch implementations
+│  ├─ layouts/                  # registry, common helpers, CLI wiring
+│  └─ families/                 # default, TailorKey, QuantumTouch implementations + metadata
 │     ├─ default/
 │     ├─ tailorkey/
 │     └─ quantum_touch/
