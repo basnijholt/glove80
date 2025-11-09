@@ -40,6 +40,11 @@ def quantum_touch_metadata() -> MetadataByVariant:
 
 
 @pytest.fixture(scope="session")
+def glorious_engrammer_metadata() -> MetadataByVariant:
+    return load_metadata(layout="glorious_engrammer")
+
+
+@pytest.fixture(scope="session")
 def load_default_variant(repo_root: Path) -> Callable[[str], dict]:
     def _loader(variant: str) -> dict:
         meta = get_variant_metadata(variant, layout="default")
@@ -63,6 +68,16 @@ def load_tailorkey_variant(repo_root: Path) -> Callable[[str], dict]:
 def load_quantum_touch_variant(repo_root: Path) -> Callable[[str], dict]:
     def _loader(variant: str) -> dict:
         meta = get_variant_metadata(variant, layout="quantum_touch")
+        path = repo_root / meta["output"]
+        return json.loads(path.read_text())
+
+    return _loader
+
+
+@pytest.fixture(scope="session")
+def load_glorious_engrammer_variant(repo_root: Path) -> Callable[[str], dict]:
+    def _loader(variant: str) -> dict:
+        meta = get_variant_metadata(variant, layout="glorious_engrammer")
         path = repo_root / meta["output"]
         return json.loads(path.read_text())
 

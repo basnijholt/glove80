@@ -18,6 +18,7 @@ LAYOUT_METADATA_PACKAGES: Dict[str, str] = {
     "default": "glove80.families.default",
     "tailorkey": "glove80.families.tailorkey",
     "quantum_touch": "glove80.families.quantum_touch",
+    "glorious_engrammer": "glove80.families.glorious_engrammer",
 }
 
 

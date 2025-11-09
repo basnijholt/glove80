@@ -6,6 +6,7 @@ This project keeps every part of the Glove80 layout toolchain in version control
 - **Specs (`src/glove80/families/*/specs/`)** define macros, hold-taps, combos, input listeners, and per-layer overrides using typed dataclasses from `glove80.specs.primitives`.
 - **Layer factories (`src/glove80/families/*/layers/`)** build sparse `LayerSpec` objects into the 80-key arrays expected by the Glove80 firmware.
 - TailorKey factories mix and match reusable helpers (mouse, cursor, HRM, etc.), while QuantumTouch layers reuse the same primitives to build finger-training variants.
+- Glorious Engrammer stores Sunaku's 32 layers as explicit row tuples that feed the same `_rows_to_layer_spec` helper as the other families.
 - **Metadata (`src/glove80/families/<family>/metadata.json`)** stores the immutable release information checked in by the original layout authors (UUIDs, parent UUIDs, titles, tags, notes, and the relative output path). Packaging the metadata keeps CLI invocations and library imports perfectly aligned.
 
 ## Generation Flow
@@ -19,5 +20,6 @@ That keeps TailorKey and QuantumTouch layout builders focused on their declarati
 
 ## Tests & CI
 - Layer-focused tests under `tests/tailorkey/` lock down every specialized factory (HRM, cursor, mouse, etc.).
+- Parity tests under `tests/glorious_engrammer/` ensure the Sunaku release stays identical to the generated payload.
 - Layout parity tests compare the composed dictionary against the checked-in JSON for every variant in `layouts/<layout>/releases`.
 - The GitHub Actions `ci.yml` workflow runs `just regen` and `just ci`, so a pull request cannot be merged unless the generated JSON matches the code and all tests pass.

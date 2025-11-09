@@ -10,12 +10,18 @@ from glove80.specs.utils import kp
 Token = Any
 
 
+def _normalize_param_token(param: Token) -> Token:
+    if isinstance(param, tuple):
+        return _token_to_key(param)
+    return param
+
+
 def _token_to_key(token: Token) -> KeySpec:
     if isinstance(token, KeySpec):
         return token
     if isinstance(token, tuple):
         value = token[0]
-        params = tuple(token[1:])
+        params = tuple(_normalize_param_token(param) for param in token[1:])
         return KeySpec(value, params)
     if isinstance(token, str):
         if token.startswith("&"):

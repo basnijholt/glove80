@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, Iterator, List, cast
 from ..families import default as _default_family  # noqa: F401  # ensure registration
 from ..families import tailorkey as _tailorkey_family  # noqa: F401
 from ..families import quantum_touch as _quantum_touch_family  # noqa: F401
+from ..families import glorious_engrammer as _glorious_engrammer_family  # noqa: F401
 from ..layouts.family import LayoutFamily, REGISTRY
 from ..metadata import MetadataByVariant, VariantMetadata, load_metadata
 
