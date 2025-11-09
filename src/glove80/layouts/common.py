@@ -71,6 +71,8 @@ def compose_layout(
         combos=combos,
         input_listeners=input_listeners,
     )
+    # Always normalize section items to dictionaries for JSON stability.
+    _normalize_sections_to_dicts(layout, fields=ref_fields or DEFAULT_REF_FIELDS)
     if resolve_refs:
         _resolve_referenced_fields(
             layout,
@@ -84,7 +86,7 @@ def compose_layout(
     return validated
 
 
-def _build_common_fields(
+def build_common_fields(
     *,
     creator: str,
     locale: str = "en-US",
@@ -107,16 +109,56 @@ def _build_common_fields(
     return fields
 
 
+def _normalize_sections_to_dicts(
+    layout: dict[str, Any],
+    *,
+    fields: Iterable[str] = DEFAULT_REF_FIELDS,
+) -> None:
+    """Coerce any pydantic models within sections to plain dicts."""
+    for field in fields:
+        items = layout.get(field) or []
+        normalized: list[Any] = []
+        for item in items:
+            if hasattr(item, "model_dump"):
+                try:
+                    datum = item.model_dump(by_alias=True, exclude_none=True)
+                except Exception:
+                    datum = item.model_dump()
+            else:
+                datum = item
+            normalized.append(datum)
+        layout[field] = normalized
+
+
 def _resolve_referenced_fields(
     layout: dict[str, Any],
     *,
     layer_names: Sequence[str],
     fields: Iterable[str] = DEFAULT_REF_FIELDS,
 ) -> None:
-    """Resolve LayerRef placeholders for the requested fields."""
+    """Resolve layer references for the requested fields after normalization.
+
+    At this point, any pydantic models were converted to dictionaries. Pydantic
+    would have serialized LayerRef dataclasses as ``{"name": str}``, so we need
+    to map such dicts (and any surviving LayerRef instances) to integer indices.
+    """
     layer_indices = {name: idx for idx, name in enumerate(layer_names)}
+
+    def _resolve(obj: Any) -> Any:
+        # First, resolve any real LayerRef instances
+        obj = resolve_layer_refs(obj, layer_indices)
+        # Fallback: resolve serialized LayerRef dicts of shape {"name": str}
+        if isinstance(obj, dict):
+            if set(obj.keys()) == {"name"} and isinstance(obj.get("name"), str):
+                name = obj["name"]
+                return layer_indices[name]
+            return {k: _resolve(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_resolve(v) for v in obj]
+        return obj
+
     for field in fields:
-        layout[field] = resolve_layer_refs(layout[field], layer_indices)
+        layout[field] = _resolve(layout[field])
 
 
 def _assemble_layers(layer_names: Sequence[str], generated_layers: LayerMap, *, variant: str) -> list[Layer]:

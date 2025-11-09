@@ -30,10 +30,10 @@ def _unique_sequence(values: Iterable[str]) -> list[str]:
 class _Sections:
     layer_names: list[str] = field(default_factory=list)
     layers: LayerMap = field(default_factory=dict)
-    macros: OrderedDict[str, dict[str, Any]] = field(default_factory=OrderedDict)
-    hold_taps: list[dict[str, Any]] = field(default_factory=list)
-    combos: list[dict[str, Any]] = field(default_factory=list)
-    input_listeners: list[dict[str, Any]] = field(default_factory=list)
+    macros: OrderedDict[str, Any] = field(default_factory=OrderedDict)
+    hold_taps: list[Any] = field(default_factory=list)
+    combos: list[Any] = field(default_factory=list)
+    input_listeners: list[Any] = field(default_factory=list)
 
 
 class LayoutBuilder:
@@ -113,7 +113,7 @@ class LayoutBuilder:
             updated = OrderedDict()
             for macro in macros:
                 name = _macro_name(macro)
-                updated[name] = _as_plain_dict(macro)
+                updated[name] = macro
             for name, macro in existing.items():
                 if name not in updated:
                     updated[name] = macro
@@ -122,19 +122,19 @@ class LayoutBuilder:
 
         for macro in macros:
             name = _macro_name(macro)
-            existing[name] = _as_plain_dict(macro)
+            existing[name] = macro
         return self
 
     def add_hold_taps(self, hold_taps: Sequence[Any]) -> LayoutBuilder:
-        self._sections.hold_taps.extend(_as_plain_dict(spec) for spec in hold_taps)
+        self._sections.hold_taps.extend(hold_taps)
         return self
 
     def add_combos(self, combos: Sequence[Any]) -> LayoutBuilder:
-        self._sections.combos.extend(_as_plain_dict(spec) for spec in combos)
+        self._sections.combos.extend(combos)
         return self
 
     def add_input_listeners(self, listeners: Sequence[Any]) -> LayoutBuilder:
-        self._sections.input_listeners.extend(_as_plain_dict(spec) for spec in listeners)
+        self._sections.input_listeners.extend(listeners)
         return self
 
     # ------------------------------------------------------------------
@@ -288,7 +288,7 @@ class LayoutBuilder:
 
         def _set_macro(macro_obj: Any) -> None:
             name = _macro_name(macro_obj)
-            macros_section[name] = _as_plain_dict(macro_obj)
+            macros_section[name] = macro_obj
 
         for macro in components.macros:
             _set_macro(macro)
@@ -307,31 +307,8 @@ class LayoutBuilder:
                 explicit_order=list(components.layers.keys()),
             )
 
-
-def _as_plain_dict(obj: Any) -> dict[str, Any]:
-    """Normalize a section item to a plain dict.
-
-    Supports either mappings or pydantic v2 BaseModel objects.
-    """
-    if hasattr(obj, "model_dump"):
-        try:
-            return cast("dict[str, Any]", obj.model_dump(by_alias=True, exclude_none=True))
-        except Exception:  # pragma: no cover - best effort
-            pass
-    if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
-        # Fallback for pydantic v1 style, just in case
-        return cast("dict[str, Any]", obj.dict())
-    if isinstance(obj, dict):
-        return obj
-    # Mapping but not dict (e.g., OrderedDict or custom mapping)
-    try:
-        from collections.abc import Mapping
-
-        if isinstance(obj, Mapping):
-            return cast("dict[str, Any]", dict(obj))
-    except Exception:  # pragma: no cover
-        pass
-    raise TypeError(f"Unsupported section item type: {type(obj)!r}")
+    # No dict/model coercion helpers in the builder: we carry models through
+    # and normalize to dicts in compose_layout just before payload validation.
 
 
 def _macro_name(macro: Any) -> str:

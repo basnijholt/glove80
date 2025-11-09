@@ -46,7 +46,7 @@ def bilateral_home_row_components(
         When True, the layer keys are remapped according to the provided *variant*.
 
     """
-    macros = [MACRO_DEFS[name].to_dict() for name in _BILATERAL_MACRO_NAMES]
+    macros = [MACRO_DEFS[name].to_model() for name in _BILATERAL_MACRO_NAMES]
     layers = assemble_bilateral_layers(variant, mac=(platform == "mac"), remap=remap)
     return LayoutFeatureComponents(macros=macros, layers=layers)
 

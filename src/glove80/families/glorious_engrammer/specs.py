@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from importlib import resources
 from typing import TYPE_CHECKING, Any
 
-from glove80.layouts.common import _build_common_fields
+from glove80.layouts.common import build_common_fields
 
 from .layers import LAYER_SPECS
 
@@ -66,7 +66,7 @@ class VariantSpec:
 
 VARIANT_SPECS: dict[str, VariantSpec] = {
     "v42_rc6_preview": VariantSpec(
-        common_fields=_build_common_fields(
+        common_fields=build_common_fields(
             creator="sunaku",
             custom_defined_behaviors=CUSTOM_DEFINED_BEHAVIORS,
             custom_devicetree=CUSTOM_DEVICE_TREE,

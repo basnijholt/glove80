@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 class LayoutFeatureComponents:
     """Small bundle of reusable layout pieces (macros, layers, etc.)."""
 
-    macros: Sequence[dict[str, Any]] = ()
-    macro_overrides: Mapping[str, dict[str, Any]] = field(default_factory=dict)
-    hold_taps: Sequence[dict[str, Any]] = ()
-    combos: Sequence[dict[str, Any]] = ()
-    input_listeners: Sequence[dict[str, Any]] = ()
+    macros: Sequence[Any] = ()
+    macro_overrides: Mapping[str, Any] = field(default_factory=dict)
+    hold_taps: Sequence[Any] = ()
+    combos: Sequence[Any] = ()
+    input_listeners: Sequence[Any] = ()
     layers: LayerMap = field(default_factory=dict)
 
 

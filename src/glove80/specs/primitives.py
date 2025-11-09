@@ -13,6 +13,7 @@ from glove80.layouts.schema import (
     ListenerNode as ListenerNodeModel,
     Macro as MacroModel,
     HoldTap as HoldTapModel,
+    InputListener as InputListenerModel,
 )
 
 if TYPE_CHECKING:
@@ -46,8 +47,8 @@ class MacroSpec:
     wait_ms: int | None = None
     tap_ms: int | None = None
 
-    def to_dict(self) -> dict[str, Any]:
-        model = MacroModel(
+    def to_model(self) -> MacroModel:
+        return MacroModel(
             name=self.name,
             description=self.description,
             bindings=[binding.to_dict() for binding in self.bindings],
@@ -55,8 +56,10 @@ class MacroSpec:
             waitMs=self.wait_ms,
             tapMs=self.tap_ms,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        model = self.to_model()
         data = model.model_dump(by_alias=True, exclude_none=True)
-        # Preserve KeySpec dicts (may contain LayerRef inside nested params)
         data["bindings"] = [binding.to_dict() for binding in self.bindings]
         return data
 
@@ -75,8 +78,8 @@ class HoldTapSpec:
     hold_trigger_on_release: bool | None = None
     hold_trigger_key_positions: Sequence[int] | None = None
 
-    def to_dict(self) -> dict[str, Any]:
-        model = HoldTapModel(
+    def to_model(self) -> HoldTapModel:
+        return HoldTapModel(
             name=self.name,
             description=self.description,
             bindings=list(self.bindings),
@@ -89,7 +92,9 @@ class HoldTapSpec:
                 list(self.hold_trigger_key_positions) if self.hold_trigger_key_positions else None
             ),
         )
-        return model.model_dump(by_alias=True, exclude_none=True)
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.to_model().model_dump(by_alias=True, exclude_none=True)
 
 
 @dataclass(frozen=True)
@@ -103,8 +108,8 @@ class ComboSpec:
     layers: Sequence[int | LayerRef]
     timeout_ms: int | None = None
 
-    def to_dict(self) -> dict[str, Any]:
-        model = ComboModel(
+    def to_model(self) -> ComboModel:
+        return ComboModel(
             name=self.name,
             description=self.description,
             binding=self.binding.to_dict(),
@@ -112,10 +117,11 @@ class ComboSpec:
             layers=list(self.layers),
             timeoutMs=self.timeout_ms,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        model = self.to_model()
         data = model.model_dump(by_alias=True, exclude_none=True)
-        # Preserve original binding (may contain LayerRef inside nested KeySpecs)
         data["binding"] = self.binding.to_dict()
-        # Preserve LayerRef objects for later resolution to indices
         data["layers"] = list(self.layers)
         return data
 
@@ -127,9 +133,11 @@ class InputProcessorSpec:
     code: str
     params: Sequence[Any] = ()
 
+    def to_model(self) -> InputProcessorModel:
+        return InputProcessorModel(code=self.code, params=[_serialize_simple(param) for param in self.params])
+
     def to_dict(self) -> dict[str, Any]:
-        model = InputProcessorModel(code=self.code, params=[_serialize_simple(param) for param in self.params])
-        return model.model_dump(by_alias=True, exclude_none=True)
+        return self.to_model().model_dump(by_alias=True, exclude_none=True)
 
 
 @dataclass(frozen=True)
@@ -141,13 +149,16 @@ class InputListenerNodeSpec:
     description: str | None = None
     input_processors: Sequence[InputProcessorSpec] = ()
 
-    def to_dict(self) -> dict[str, Any]:
-        model = ListenerNodeModel(
+    def to_model(self) -> ListenerNodeModel:
+        return ListenerNodeModel(
             code=self.code,
             layers=list(self.layers),
             description=self.description,
             inputProcessors=[InputProcessorModel(**proc.to_dict()) for proc in self.input_processors],
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        model = self.to_model()
         data = model.model_dump(by_alias=True, exclude_none=True)
         data["layers"] = list(self.layers)
         return data
@@ -161,12 +172,15 @@ class InputListenerSpec:
     nodes: Sequence[InputListenerNodeSpec]
     input_processors: Sequence[InputProcessorSpec] = ()
 
+    def to_model(self) -> InputListenerModel:
+        return InputListenerModel(
+            code=self.code,
+            inputProcessors=[proc.to_model() for proc in self.input_processors],
+            nodes=[node.to_model() for node in self.nodes],
+        )
+
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "code": self.code,
-            "inputProcessors": [proc.to_dict() for proc in self.input_processors],
-            "nodes": [node.to_dict() for node in self.nodes],
-        }
+        return self.to_model().model_dump(by_alias=True, exclude_none=True)
 
 
 def _materialize_item(item: Any) -> Any:
@@ -176,8 +190,16 @@ def _materialize_item(item: Any) -> Any:
 
 
 def materialize_sequence(items: Iterable[Any]) -> list[Any]:
-    """Convert spec objects (with to_dict) into dictionaries."""
-    return [_materialize_item(item) for item in items]
+    """Convert specs to pydantic models when possible (fallback to raw)."""
+    result: list[Any] = []
+    for item in items:
+        if hasattr(item, "to_model"):
+            result.append(item.to_model())
+        elif hasattr(item, "to_dict"):
+            result.append(_materialize_item(item))
+        else:
+            result.append(item)
+    return result
 
 
 def materialize_named_sequence(
@@ -193,5 +215,8 @@ def materialize_named_sequence(
         if value is None:
             msg = f"Unknown definition '{name}'"
             raise KeyError(msg)
-        resolved.append(_materialize_item(value))
+        if hasattr(value, "to_model"):
+            resolved.append(value.to_model())
+        else:
+            resolved.append(_materialize_item(value))
     return resolved

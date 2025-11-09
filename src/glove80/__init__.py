@@ -1,6 +1,8 @@
-"""Public entry point for the Glove80 toolkit."""
+"""Public entry point for the Glove80 toolkit.
 
-from .cli import app
-from .layouts.family import build_layout, get_family, list_families
+Keep this surface minimal to avoid exposing internals inadvertently.
+"""
 
-__all__ = ["app", "build_layout", "get_family", "list_families"]
+from .layouts.family import build_layout
+
+__all__ = ["build_layout"]

@@ -1,8 +1,9 @@
-"""Reusable layout feature helpers."""
+"""Reusable layout feature helpers.
 
-from glove80.layouts.components import LayoutFeatureComponents
+Public API: only high-level helpers; types live under ``glove80.layouts.components``.
+"""
 
 from .base import apply_feature
 from .bilateral import bilateral_home_row_components
 
-__all__ = ["LayoutFeatureComponents", "apply_feature", "bilateral_home_row_components"]
+__all__ = ["apply_feature", "bilateral_home_row_components"]

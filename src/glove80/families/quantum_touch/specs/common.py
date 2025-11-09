@@ -1,6 +1,6 @@
 """Common metadata for QuantumTouch layouts."""
 
-from glove80.layouts.common import _build_common_fields
+from glove80.layouts.common import build_common_fields
 
 CUSTOM_BEHAVIORS = """// "Meh" key to define custom commands in e.g., VSCode
 // NOTE: Using right-side keys because of Keyd remaps in Linux
@@ -121,7 +121,7 @@ macros {
     };
 };"""
 
-COMMON_FIELDS = _build_common_fields(
+COMMON_FIELDS = build_common_fields(
     creator="basnijholt",
     custom_defined_behaviors=CUSTOM_BEHAVIORS.rstrip(),
     custom_devicetree='&mt {\n    flavor = "tap-preferred";\n    tapping-term-ms = <220>;\n};',
