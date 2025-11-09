@@ -15,9 +15,9 @@ from typing import Dict, List, TypedDict
 
 DEFAULT_LAYOUT = "tailorkey"
 LAYOUT_METADATA_PACKAGES: Dict[str, str] = {
-    "default": "glove80.layouts.default",
-    "tailorkey": "glove80.layouts.tailorkey",
-    "quantum_touch": "glove80.layouts.quantum_touch",
+    "default": "glove80.families.default",
+    "tailorkey": "glove80.families.tailorkey",
+    "quantum_touch": "glove80.families.quantum_touch",
 }
 
 
