@@ -7,16 +7,11 @@ changes reviewable and tests green between commits.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union, Literal, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:  # Avoid runtime import cycles; visible to type checker
-    from glove80.base import LayerRef
-else:  # pragma: no cover - lightweight runtime placeholder
-
-    class LayerRef:  # type: ignore[too-many-ancestors]
-        pass
+from glove80.base import LayerRef
 
 
 class Macro(BaseModel):
