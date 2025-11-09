@@ -1,8 +1,14 @@
-"""Helpers for regenerating release JSON artifacts."""
+"""Helpers for regenerating release JSON artifacts.
+
+This module explicitly imports each family's ``layouts`` submodule to ensure
+they register themselves with the global REGISTRY, keeping package
+``__init__`` files minimal and free of side-effects.
+"""
 
 from __future__ import annotations
 
 import json
+from importlib import import_module
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -14,6 +20,23 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
+
+
+# Ensure all families are registered by importing their layouts modules.
+_FAMILY_LAYOUT_MODULES = (
+    "glove80.families.default.layouts",
+    "glove80.families.glorious_engrammer.layouts",
+    "glove80.families.quantum_touch.layouts",
+    "glove80.families.tailorkey.layouts",
+)
+
+
+def _register_families() -> None:
+    for module_path in _FAMILY_LAYOUT_MODULES:
+        import_module(module_path)
+
+
+_register_families()
 
 
 @dataclass(frozen=True)

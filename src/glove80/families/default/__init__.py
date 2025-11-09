@@ -1,10 +1,6 @@
-"""MoErgo default Glove80 layouts.
+"""MoErgo default Glove80 layouts package.
 
-Importing this package ensures the family registers itself via
-``glove80.families.default.layouts``.
+No side-effect imports; see ``.layouts`` for the registration logic.
 """
 
-from . import layouts
-
-# Export the module to make the import a public API symbol.
-__all__ = ["layouts"]
+__all__: list[str] = []

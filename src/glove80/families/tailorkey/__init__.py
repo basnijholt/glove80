@@ -1,8 +1,6 @@
-"""TailorKey-specific layout generation.
+"""TailorKey-specific layout generation package.
 
-Import side effect registers the family via ``.layouts``.
+No side-effect imports; see ``.layouts`` for registration logic.
 """
 
-from . import layouts
-
-__all__ = ["layouts"]
+__all__: list[str] = []
