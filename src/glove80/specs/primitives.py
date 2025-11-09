@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from ..base import KeySpec, LayerRef
 
@@ -158,13 +159,30 @@ class InputListenerSpec:
         }
 
 
+def _materialize_item(item: Any) -> Any:
+    if hasattr(item, "to_dict"):
+        return item.to_dict()
+    return deepcopy(item)
+
+
 def materialize_sequence(items: Iterable[Any]) -> list[Any]:
     """Convert spec objects (with to_dict) into dictionaries."""
 
-    result = []
-    for item in items:
-        if hasattr(item, "to_dict"):
-            result.append(item.to_dict())
-        else:
-            result.append(item)
-    return result
+    return [_materialize_item(item) for item in items]
+
+
+def materialize_named_sequence(
+    definitions: Mapping[str, Any],
+    order: Sequence[str],
+    overrides: Mapping[str, Any] | None = None,
+) -> list[Any]:
+    """Materialize a named sequence with optional overrides."""
+
+    resolved: list[Any] = []
+    overrides = overrides or {}
+    for name in order:
+        value = overrides.get(name, definitions.get(name))
+        if value is None:
+            raise KeyError(f"Unknown definition '{name}'")
+        resolved.append(_materialize_item(value))
+    return resolved

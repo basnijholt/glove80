@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any, Dict, Sequence
 
 from glove80.layouts.common import (
     _assemble_layers,
     _attach_variant_metadata,
     _resolve_referenced_fields,
+    build_layout_payload,
 )
 from glove80.layouts.family import LayoutFamily, REGISTRY
+from glove80.specs.primitives import materialize_named_sequence, materialize_sequence
 
 from .layers import build_all_layers
 from .specs import (
@@ -25,18 +26,19 @@ from .specs import (
 )
 
 
-def _materialize_named_sequence(defs: Dict[str, Any], order: Sequence[str]) -> list[Dict[str, Any]]:
-    return [defs[name].to_dict() for name in order]
-
-
 def _base_layout_payload() -> Dict:
-    layout = deepcopy(COMMON_FIELDS)
-    layout["layer_names"] = deepcopy(LAYER_NAMES)
-    layout["macros"] = _materialize_named_sequence(MACRO_DEFS, MACRO_ORDER)
-    layout["holdTaps"] = _materialize_named_sequence(HOLD_TAP_DEFS, HOLD_TAP_ORDER)
-    layout["combos"] = [combo.to_dict() for combo in COMBO_DATA["default"]]
-    layout["inputListeners"] = [listener.to_dict() for listener in INPUT_LISTENER_DATA["default"]]
-    return layout
+    combos = materialize_sequence(COMBO_DATA["default"])
+    listeners = materialize_sequence(INPUT_LISTENER_DATA["default"])
+    macros = materialize_named_sequence(MACRO_DEFS, MACRO_ORDER)
+    hold_taps = materialize_named_sequence(HOLD_TAP_DEFS, HOLD_TAP_ORDER)
+    return build_layout_payload(
+        COMMON_FIELDS,
+        layer_names=LAYER_NAMES,
+        macros=macros,
+        hold_taps=hold_taps,
+        combos=combos,
+        input_listeners=listeners,
+    )
 
 
 class Family(LayoutFamily):

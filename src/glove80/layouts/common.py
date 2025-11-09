@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Iterable, Mapping, Sequence
 
 from ..base import Layer, LayerMap, resolve_layer_refs
@@ -20,6 +21,26 @@ BASE_COMMON_FIELDS = {
     "config_parameters": [],
     "layout_parameters": {},
 }
+
+
+def build_layout_payload(
+    common_fields: Mapping[str, Any],
+    *,
+    layer_names: Sequence[str],
+    macros: Sequence[Any] | None = None,
+    hold_taps: Sequence[Any] | None = None,
+    combos: Sequence[Any] | None = None,
+    input_listeners: Sequence[Any] | None = None,
+) -> dict[str, Any]:
+    """Create a baseline layout payload from shared metadata and sections."""
+
+    layout = deepcopy(common_fields)
+    layout["layer_names"] = list(layer_names)
+    layout["macros"] = list(macros or [])
+    layout["holdTaps"] = list(hold_taps or [])
+    layout["combos"] = list(combos or [])
+    layout["inputListeners"] = list(input_listeners or [])
+    return layout
 
 
 def _build_common_fields(

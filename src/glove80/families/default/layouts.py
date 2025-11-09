@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Dict
 
 from glove80.base import LayerMap, build_layer_from_spec
-from glove80.layouts.common import _assemble_layers, _attach_variant_metadata
+from glove80.layouts.common import _assemble_layers, _attach_variant_metadata, build_layout_payload
 from glove80.layouts.family import LayoutFamily, REGISTRY
 from glove80.specs.primitives import materialize_sequence
 
@@ -32,12 +31,11 @@ class Family(LayoutFamily):
         except KeyError as exc:  # pragma: no cover
             raise KeyError(f"Unknown default layout '{variant}'. Available: {sorted(VARIANT_SPECS)}") from exc
 
-        layout: Dict = deepcopy(spec.common_fields)
-        layout["layer_names"] = list(spec.layer_names)
-        layout["macros"] = []
-        layout["holdTaps"] = []
-        layout["combos"] = []
-        layout["inputListeners"] = materialize_sequence(spec.input_listeners)
+        layout: Dict = build_layout_payload(
+            spec.common_fields,
+            layer_names=spec.layer_names,
+            input_listeners=materialize_sequence(spec.input_listeners),
+        )
 
         layers = _build_layers_map(spec)
         layout["layers"] = _assemble_layers(layout["layer_names"], layers, variant=variant)

@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Any, Dict, List, Mapping, Sequence, cast
+from typing import Any, Dict, List, Mapping, Sequence
 
 from glove80.layouts.common import (
     _assemble_layers,
     _attach_variant_metadata,
     _resolve_referenced_fields,
+    build_layout_payload,
 )
 from glove80.layouts.family import LayoutFamily, REGISTRY
+from glove80.specs.primitives import materialize_named_sequence, materialize_sequence
 
 from .layers import build_all_layers
 from .specs import (
@@ -26,15 +27,6 @@ from .specs import (
 )
 
 
-def _materialize_named_entry(definitions: Mapping[str, Any], name: str, override: Any | None = None) -> Dict[str, Any]:
-    data = override or definitions.get(name)
-    if data is None:  # pragma: no cover
-        raise KeyError(f"Unknown definition '{name}'")
-    if hasattr(data, "to_dict"):
-        return data.to_dict()
-    return deepcopy(data)
-
-
 def _get_variant_section(sections: Mapping[str, Sequence[Any]], variant: str, label: str) -> List[Any]:
     try:
         return list(sections[variant])
@@ -42,39 +34,32 @@ def _get_variant_section(sections: Mapping[str, Sequence[Any]], variant: str, la
         raise KeyError(f"No {label} for variant '{variant}'") from exc
 
 
-def _materialize_sequence(items: Sequence[Any]) -> List[Any]:
-    result: List[Any] = []
-    for item in items:
-        if hasattr(item, "to_dict"):
-            result.append(item.to_dict())
-        else:
-            result.append(deepcopy(item))
-    return result
-
-
 def _build_macros(variant: str) -> List[Dict[str, Any]]:
     order = _get_variant_section(MACRO_ORDER, variant, "macro order")
-    overrides = MACRO_OVERRIDES.get(variant, {})
-    macro_defs = cast(Mapping[str, Any], MACRO_DEFS)
-    return [_materialize_named_entry(macro_defs, name, overrides.get(name)) for name in order]
+    overrides = MACRO_OVERRIDES.get(variant)
+    return materialize_named_sequence(MACRO_DEFS, order, overrides)
 
 
 def _build_hold_taps(variant: str) -> List[Dict[str, Any]]:
     order = _get_variant_section(HOLD_TAP_ORDER, variant, "hold-tap order")
-    hold_tap_defs = cast(Mapping[str, Any], HOLD_TAP_DEFS)
-    return [_materialize_named_entry(hold_tap_defs, name) for name in order]
+    return materialize_named_sequence(HOLD_TAP_DEFS, order)
+
+
+def _layer_names(variant: str) -> List[str]:
+    return list(_get_variant_section(LAYER_NAME_MAP, variant, "layer names"))
 
 
 def _base_layout_payload(variant: str) -> Dict[str, Any]:
-    layout = deepcopy(COMMON_FIELDS)
-    layout["layer_names"] = deepcopy(_get_variant_section(LAYER_NAME_MAP, variant, "layer names"))
-    layout["macros"] = _build_macros(variant)
-    layout["holdTaps"] = _build_hold_taps(variant)
-    layout["combos"] = _materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
-    layout["inputListeners"] = _materialize_sequence(
-        _get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners")
+    combos = materialize_sequence(_get_variant_section(COMBO_DATA, variant, "combo definitions"))
+    listeners = materialize_sequence(_get_variant_section(INPUT_LISTENER_DATA, variant, "input listeners"))
+    return build_layout_payload(
+        COMMON_FIELDS,
+        layer_names=_layer_names(variant),
+        macros=_build_macros(variant),
+        hold_taps=_build_hold_taps(variant),
+        combos=combos,
+        input_listeners=listeners,
     )
-    return layout
 
 
 class Family(LayoutFamily):

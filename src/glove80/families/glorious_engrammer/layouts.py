@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any, Dict, Sequence
 
-from glove80.layouts.common import _assemble_layers, _attach_variant_metadata
+from glove80.layouts.common import _assemble_layers, _attach_variant_metadata, build_layout_payload
 from glove80.layouts.family import LayoutFamily, REGISTRY
 
 from .layers import build_all_layers
@@ -60,12 +59,7 @@ class Family(LayoutFamily):
                 f"Unknown Glorious Engrammer variant '{variant}'. Available: {sorted(VARIANT_SPECS)}"
             ) from exc
 
-        layout: Dict = deepcopy(spec.common_fields)
-        layout["layer_names"] = list(spec.layer_names)
-        layout["macros"] = []
-        layout["holdTaps"] = []
-        layout["combos"] = []
-        layout["inputListeners"] = []
+        layout: Dict = build_layout_payload(spec.common_fields, layer_names=spec.layer_names)
 
         generated_layers = build_all_layers(variant)
         layout["layers"] = _assemble_layers(layout["layer_names"], generated_layers, variant=variant)
