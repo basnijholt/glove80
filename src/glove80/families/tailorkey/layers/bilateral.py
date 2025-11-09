@@ -13,7 +13,7 @@ from glove80.base import (
     build_layer_from_spec,
 )
 
-from ..alpha_layouts import base_variant_for
+from ..alpha_layouts import base_variant_for, needs_alpha_remap, remap_layer_keys
 
 
 _LEFT_TAP_KEYS: Dict[int, str] = {
@@ -229,5 +229,9 @@ def build_bilateral_training_layers(variant: str) -> LayerMap:
     if base_variant == "bilateral_mac":
         for name, patch in _MAC_PATCHES.items():
             apply_patch(layers[name], patch)
+
+    if needs_alpha_remap(variant):
+        for layer in layers.values():
+            remap_layer_keys(layer, variant)
 
     return layers

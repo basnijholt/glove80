@@ -9044,7 +9044,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Q",
+            "value": "SQT",
             "params": []
           }
         ]
@@ -9053,7 +9053,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "W",
+            "value": "COMMA",
             "params": []
           }
         ]
@@ -9062,7 +9062,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "E",
+            "value": "DOT",
             "params": []
           }
         ]
@@ -9071,7 +9071,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "R",
+            "value": "P",
             "params": []
           }
         ]
@@ -9080,7 +9080,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "T",
+            "value": "Y",
             "params": []
           }
         ]
@@ -9134,7 +9134,7 @@
             "params": []
           },
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -9147,7 +9147,7 @@
             "params": []
           },
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -9160,7 +9160,7 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "G",
+            "value": "I",
             "params": []
           }
         ]
@@ -9173,7 +9173,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -9182,7 +9182,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -9191,7 +9191,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
@@ -9200,7 +9200,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "SEMI",
+            "value": "S",
             "params": []
           }
         ]
@@ -9217,7 +9217,34 @@
         "value": "&HRM_left_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Z",
+            "value": "SEMI",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_index_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "Q",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_index_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "J",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_index_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "K",
             "params": []
           }
         ]
@@ -9227,33 +9254,6 @@
         "params": [
           {
             "value": "X",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_index_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "C",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_index_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "V",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_index_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "B",
             "params": []
           }
         ]
@@ -9523,7 +9523,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Q",
+            "value": "SQT",
             "params": []
           }
         ]
@@ -9532,7 +9532,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "W",
+            "value": "COMMA",
             "params": []
           }
         ]
@@ -9541,7 +9541,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "E",
+            "value": "DOT",
             "params": []
           }
         ]
@@ -9550,7 +9550,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "R",
+            "value": "P",
             "params": []
           }
         ]
@@ -9559,7 +9559,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "T",
+            "value": "Y",
             "params": []
           }
         ]
@@ -9613,7 +9613,7 @@
             "params": []
           },
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -9630,7 +9630,7 @@
             "params": []
           },
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -9639,7 +9639,7 @@
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "G",
+            "value": "I",
             "params": []
           }
         ]
@@ -9652,7 +9652,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -9661,7 +9661,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -9670,13 +9670,30 @@
         "value": "&kp",
         "params": [
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
       },
       {
         "value": "&kp",
+        "params": [
+          {
+            "value": "S",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
             "value": "SEMI",
@@ -9685,18 +9702,28 @@
         ]
       },
       {
-        "value": "&trans",
-        "params": []
-      },
-      {
-        "value": "&trans",
-        "params": []
+        "value": "&HRM_left_middy_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "Q",
+            "params": []
+          }
+        ]
       },
       {
         "value": "&HRM_left_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Z",
+            "value": "J",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_middy_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "K",
             "params": []
           }
         ]
@@ -9706,33 +9733,6 @@
         "params": [
           {
             "value": "X",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_middy_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "C",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_middy_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "V",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_middy_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "B",
             "params": []
           }
         ]
@@ -10002,7 +10002,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Q",
+            "value": "SQT",
             "params": []
           }
         ]
@@ -10011,7 +10011,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "W",
+            "value": "COMMA",
             "params": []
           }
         ]
@@ -10020,7 +10020,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "E",
+            "value": "DOT",
             "params": []
           }
         ]
@@ -10029,7 +10029,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "R",
+            "value": "P",
             "params": []
           }
         ]
@@ -10038,7 +10038,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "T",
+            "value": "Y",
             "params": []
           }
         ]
@@ -10096,7 +10096,7 @@
             "params": []
           },
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -10109,7 +10109,7 @@
             "params": []
           },
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -10118,7 +10118,7 @@
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "G",
+            "value": "I",
             "params": []
           }
         ]
@@ -10131,7 +10131,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -10140,7 +10140,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -10149,13 +10149,30 @@
         "value": "&kp",
         "params": [
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
       },
       {
         "value": "&kp",
+        "params": [
+          {
+            "value": "S",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
             "value": "SEMI",
@@ -10164,18 +10181,28 @@
         ]
       },
       {
-        "value": "&trans",
-        "params": []
-      },
-      {
-        "value": "&trans",
-        "params": []
+        "value": "&HRM_left_ring_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "Q",
+            "params": []
+          }
+        ]
       },
       {
         "value": "&HRM_left_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Z",
+            "value": "J",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_ring_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "K",
             "params": []
           }
         ]
@@ -10185,33 +10212,6 @@
         "params": [
           {
             "value": "X",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_ring_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "C",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_ring_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "V",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_ring_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "B",
             "params": []
           }
         ]
@@ -10481,7 +10481,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Q",
+            "value": "SQT",
             "params": []
           }
         ]
@@ -10490,7 +10490,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "W",
+            "value": "COMMA",
             "params": []
           }
         ]
@@ -10499,7 +10499,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "E",
+            "value": "DOT",
             "params": []
           }
         ]
@@ -10508,7 +10508,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "R",
+            "value": "P",
             "params": []
           }
         ]
@@ -10517,7 +10517,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "T",
+            "value": "Y",
             "params": []
           }
         ]
@@ -10562,7 +10562,7 @@
             "params": []
           },
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -10575,7 +10575,7 @@
             "params": []
           },
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -10588,7 +10588,7 @@
             "params": []
           },
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -10597,7 +10597,7 @@
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "G",
+            "value": "I",
             "params": []
           }
         ]
@@ -10610,7 +10610,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -10619,7 +10619,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -10628,13 +10628,30 @@
         "value": "&kp",
         "params": [
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
       },
       {
         "value": "&kp",
+        "params": [
+          {
+            "value": "S",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&trans",
+        "params": []
+      },
+      {
+        "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
             "value": "SEMI",
@@ -10643,18 +10660,28 @@
         ]
       },
       {
-        "value": "&trans",
-        "params": []
-      },
-      {
-        "value": "&trans",
-        "params": []
+        "value": "&HRM_left_pinky_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "Q",
+            "params": []
+          }
+        ]
       },
       {
         "value": "&HRM_left_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Z",
+            "value": "J",
+            "params": []
+          }
+        ]
+      },
+      {
+        "value": "&HRM_left_pinky_tap_v1B_TKZ",
+        "params": [
+          {
+            "value": "K",
             "params": []
           }
         ]
@@ -10664,33 +10691,6 @@
         "params": [
           {
             "value": "X",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_pinky_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "C",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_pinky_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "V",
-            "params": []
-          }
-        ]
-      },
-      {
-        "value": "&HRM_left_pinky_tap_v1B_TKZ",
-        "params": [
-          {
-            "value": "B",
             "params": []
           }
         ]
@@ -10980,7 +10980,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Y",
+            "value": "F",
             "params": []
           }
         ]
@@ -10989,7 +10989,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "U",
+            "value": "G",
             "params": []
           }
         ]
@@ -10998,7 +10998,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "I",
+            "value": "C",
             "params": []
           }
         ]
@@ -11007,7 +11007,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "O",
+            "value": "R",
             "params": []
           }
         ]
@@ -11016,7 +11016,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "P",
+            "value": "L",
             "params": []
           }
         ]
@@ -11025,7 +11025,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "BSLH",
+            "value": "SLASH",
             "params": []
           }
         ]
@@ -11047,7 +11047,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -11056,7 +11056,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -11065,7 +11065,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -11078,7 +11078,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "H",
+            "value": "D",
             "params": []
           }
         ]
@@ -11095,7 +11095,7 @@
             "params": []
           },
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -11108,7 +11108,7 @@
             "params": []
           },
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
@@ -11121,7 +11121,7 @@
             "params": []
           },
           {
-            "value": "SEMI",
+            "value": "S",
             "params": []
           }
         ]
@@ -11130,7 +11130,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "SQT",
+            "value": "BSLH",
             "params": []
           }
         ]
@@ -11187,7 +11187,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "N",
+            "value": "B",
             "params": []
           }
         ]
@@ -11205,7 +11205,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "COMMA",
+            "value": "W",
             "params": []
           }
         ]
@@ -11214,7 +11214,7 @@
         "value": "&HRM_right_index_tap_v1B_TKZ",
         "params": [
           {
-            "value": "DOT",
+            "value": "V",
             "params": []
           }
         ]
@@ -11464,7 +11464,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Y",
+            "value": "F",
             "params": []
           }
         ]
@@ -11473,7 +11473,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "U",
+            "value": "G",
             "params": []
           }
         ]
@@ -11482,7 +11482,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "I",
+            "value": "C",
             "params": []
           }
         ]
@@ -11491,7 +11491,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "O",
+            "value": "R",
             "params": []
           }
         ]
@@ -11500,7 +11500,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "P",
+            "value": "L",
             "params": []
           }
         ]
@@ -11509,7 +11509,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "BSLH",
+            "value": "SLASH",
             "params": []
           }
         ]
@@ -11531,7 +11531,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -11540,7 +11540,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -11549,7 +11549,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -11562,7 +11562,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "H",
+            "value": "D",
             "params": []
           }
         ]
@@ -11575,7 +11575,7 @@
             "params": []
           },
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -11592,7 +11592,7 @@
             "params": []
           },
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
@@ -11605,7 +11605,7 @@
             "params": []
           },
           {
-            "value": "SEMI",
+            "value": "S",
             "params": []
           }
         ]
@@ -11614,7 +11614,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "SQT",
+            "value": "BSLH",
             "params": []
           }
         ]
@@ -11671,7 +11671,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "N",
+            "value": "B",
             "params": []
           }
         ]
@@ -11689,7 +11689,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "COMMA",
+            "value": "W",
             "params": []
           }
         ]
@@ -11698,7 +11698,7 @@
         "value": "&HRM_right_middy_tap_v1B_TKZ",
         "params": [
           {
-            "value": "DOT",
+            "value": "V",
             "params": []
           }
         ]
@@ -11948,7 +11948,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Y",
+            "value": "F",
             "params": []
           }
         ]
@@ -11957,7 +11957,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "U",
+            "value": "G",
             "params": []
           }
         ]
@@ -11966,7 +11966,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "I",
+            "value": "C",
             "params": []
           }
         ]
@@ -11975,7 +11975,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "O",
+            "value": "R",
             "params": []
           }
         ]
@@ -11984,7 +11984,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "P",
+            "value": "L",
             "params": []
           }
         ]
@@ -11993,7 +11993,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "BSLH",
+            "value": "SLASH",
             "params": []
           }
         ]
@@ -12015,7 +12015,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -12024,7 +12024,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -12033,7 +12033,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -12046,7 +12046,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "H",
+            "value": "D",
             "params": []
           }
         ]
@@ -12059,7 +12059,7 @@
             "params": []
           },
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -12072,7 +12072,7 @@
             "params": []
           },
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -12089,7 +12089,7 @@
             "params": []
           },
           {
-            "value": "SEMI",
+            "value": "S",
             "params": []
           }
         ]
@@ -12098,7 +12098,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "SQT",
+            "value": "BSLH",
             "params": []
           }
         ]
@@ -12155,7 +12155,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "N",
+            "value": "B",
             "params": []
           }
         ]
@@ -12173,7 +12173,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "COMMA",
+            "value": "W",
             "params": []
           }
         ]
@@ -12182,7 +12182,7 @@
         "value": "&HRM_right_ring_tap_v1B_TKZ",
         "params": [
           {
-            "value": "DOT",
+            "value": "V",
             "params": []
           }
         ]
@@ -12432,7 +12432,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "Y",
+            "value": "F",
             "params": []
           }
         ]
@@ -12441,7 +12441,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "U",
+            "value": "G",
             "params": []
           }
         ]
@@ -12450,7 +12450,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "I",
+            "value": "C",
             "params": []
           }
         ]
@@ -12459,7 +12459,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "O",
+            "value": "R",
             "params": []
           }
         ]
@@ -12468,7 +12468,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "P",
+            "value": "L",
             "params": []
           }
         ]
@@ -12477,7 +12477,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "BSLH",
+            "value": "SLASH",
             "params": []
           }
         ]
@@ -12499,7 +12499,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "S",
+            "value": "O",
             "params": []
           }
         ]
@@ -12508,7 +12508,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "D",
+            "value": "E",
             "params": []
           }
         ]
@@ -12517,7 +12517,7 @@
         "value": "&kp",
         "params": [
           {
-            "value": "F",
+            "value": "U",
             "params": []
           }
         ]
@@ -12530,7 +12530,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "H",
+            "value": "D",
             "params": []
           }
         ]
@@ -12543,7 +12543,7 @@
             "params": []
           },
           {
-            "value": "J",
+            "value": "H",
             "params": []
           }
         ]
@@ -12556,7 +12556,7 @@
             "params": []
           },
           {
-            "value": "K",
+            "value": "T",
             "params": []
           }
         ]
@@ -12569,7 +12569,7 @@
             "params": []
           },
           {
-            "value": "L",
+            "value": "N",
             "params": []
           }
         ]
@@ -12582,7 +12582,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "SQT",
+            "value": "BSLH",
             "params": []
           }
         ]
@@ -12639,7 +12639,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "N",
+            "value": "B",
             "params": []
           }
         ]
@@ -12657,7 +12657,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "COMMA",
+            "value": "W",
             "params": []
           }
         ]
@@ -12666,7 +12666,7 @@
         "value": "&HRM_right_pinky_tap_v1B_TKZ",
         "params": [
           {
-            "value": "DOT",
+            "value": "V",
             "params": []
           }
         ]
