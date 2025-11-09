@@ -34,7 +34,8 @@ def build_layout_payload(
 ) -> dict[str, Any]:
     """Create a baseline layout payload from shared metadata and sections."""
 
-    layout = deepcopy(common_fields)
+    # Make a concrete, mutable dict copy for mypy and runtime safety.
+    layout: dict[str, Any] = deepcopy(dict(common_fields))
     layout["layer_names"] = list(layer_names)
     layout["macros"] = list(macros or [])
     layout["holdTaps"] = list(hold_taps or [])

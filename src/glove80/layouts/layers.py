@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Sequence, TypeAlias
+from typing import Any, Sequence, TypeAlias
 
 from glove80.base import KeySpec, LayerRef, LayerSpec
 from glove80.specs.utils import kp
 
-TokenTuple: TypeAlias = tuple["Token", ...]
+TokenTuple: TypeAlias = tuple[Any, ...]
 Token: TypeAlias = KeySpec | TokenTuple | str | int | LayerRef
 ParamToken: TypeAlias = Token
 
@@ -26,9 +26,12 @@ def _token_to_key(token: Token) -> KeySpec:
     if isinstance(token, KeySpec):
         return token
     if isinstance(token, tuple):
-        value = token[0]
+        head = token[0]
         params = tuple(_normalize_param_token(param) for param in token[1:])
-        return KeySpec(value, params)
+        if isinstance(head, KeySpec):
+            # Merge an existing KeySpec with additional params.
+            return KeySpec(head.value, head.params + params)
+        return KeySpec(head, params)
     if isinstance(token, str):
         if token.startswith("&"):
             return KeySpec(token)
@@ -38,7 +41,7 @@ def _token_to_key(token: Token) -> KeySpec:
     raise TypeError(f"Unsupported token type: {token!r}")
 
 
-def rows_to_layer_spec(rows: Sequence[Sequence[Token]]) -> LayerSpec:
+def rows_to_layer_spec(rows: Sequence[Sequence[Any]]) -> LayerSpec:
     flat: list[Token] = [token for row in rows for token in row]
     if len(flat) != 80:  # pragma: no cover
         raise ValueError(f"Expected 80 entries for a layer, got {len(flat)}")
