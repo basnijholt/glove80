@@ -100,7 +100,7 @@ class LayoutBuilder:
 
     def add_macros(
         self,
-        macros: Sequence[Mapping[str, Any]],
+        macros: Sequence[Any],
         *,
         prepend: bool = False,
     ) -> LayoutBuilder:
@@ -113,7 +113,7 @@ class LayoutBuilder:
             updated = OrderedDict()
             for macro in macros:
                 name = _macro_name(macro)
-                updated[name] = dict(macro)
+                updated[name] = _as_plain_dict(macro)
             for name, macro in existing.items():
                 if name not in updated:
                     updated[name] = macro
@@ -122,19 +122,19 @@ class LayoutBuilder:
 
         for macro in macros:
             name = _macro_name(macro)
-            existing[name] = dict(macro)
+            existing[name] = _as_plain_dict(macro)
         return self
 
-    def add_hold_taps(self, hold_taps: Sequence[Mapping[str, Any]]) -> LayoutBuilder:
-        self._sections.hold_taps.extend(dict(spec) for spec in hold_taps)
+    def add_hold_taps(self, hold_taps: Sequence[Any]) -> LayoutBuilder:
+        self._sections.hold_taps.extend(_as_plain_dict(spec) for spec in hold_taps)
         return self
 
-    def add_combos(self, combos: Sequence[Mapping[str, Any]]) -> LayoutBuilder:
-        self._sections.combos.extend(dict(spec) for spec in combos)
+    def add_combos(self, combos: Sequence[Any]) -> LayoutBuilder:
+        self._sections.combos.extend(_as_plain_dict(spec) for spec in combos)
         return self
 
-    def add_input_listeners(self, listeners: Sequence[Mapping[str, Any]]) -> LayoutBuilder:
-        self._sections.input_listeners.extend(dict(spec) for spec in listeners)
+    def add_input_listeners(self, listeners: Sequence[Any]) -> LayoutBuilder:
+        self._sections.input_listeners.extend(_as_plain_dict(spec) for spec in listeners)
         return self
 
     # ------------------------------------------------------------------
@@ -286,9 +286,9 @@ class LayoutBuilder:
     ) -> None:
         macros_section = self._sections.macros
 
-        def _set_macro(macro_dict: Mapping[str, Any]) -> None:
-            name = _macro_name(macro_dict)
-            macros_section[name] = dict(macro_dict)
+        def _set_macro(macro_obj: Any) -> None:
+            name = _macro_name(macro_obj)
+            macros_section[name] = _as_plain_dict(macro_obj)
 
         for macro in components.macros:
             _set_macro(macro)
@@ -308,12 +308,42 @@ class LayoutBuilder:
             )
 
 
-def _macro_name(macro: Mapping[str, Any]) -> str:
+def _as_plain_dict(obj: Any) -> dict[str, Any]:
+    """Normalize a section item to a plain dict.
+
+    Supports either mappings or pydantic v2 BaseModel objects.
+    """
+    if hasattr(obj, "model_dump"):
+        try:
+            return obj.model_dump(by_alias=True)  # type: ignore[no-any-return]
+        except Exception:  # pragma: no cover - best effort
+            pass
+    if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
+        # Fallback for pydantic v1 style, just in case
+        return obj.dict()  # type: ignore[no-any-return]
+    if isinstance(obj, dict):
+        return obj
+    # Mapping but not dict (e.g., OrderedDict or custom mapping)
     try:
-        name = macro["name"]
-    except KeyError as exc:  # pragma: no cover - enforced via tests
-        msg = "Macro definitions must include a 'name'"
-        raise KeyError(msg) from exc
+        from collections.abc import Mapping as _Mapping
+
+        if isinstance(obj, _Mapping):  # type: ignore[arg-type]
+            return dict(obj)  # type: ignore[no-any-return]
+    except Exception:  # pragma: no cover
+        pass
+    raise TypeError(f"Unsupported section item type: {type(obj)!r}")
+
+
+def _macro_name(macro: Any) -> str:
+    # Support pydantic model attribute access or mapping lookup
+    if hasattr(macro, "name") and not isinstance(macro, dict):
+        name = getattr(macro, "name")
+    else:
+        try:
+            name = macro["name"]  # type: ignore[index]
+        except Exception as exc:  # pragma: no cover - enforced via tests
+            msg = "Macro definitions must include a 'name'"
+            raise KeyError(msg) from exc
     if not isinstance(name, str):  # pragma: no cover - sanity guard
         msg = "Macro name must be a string"
         raise TypeError(msg)
