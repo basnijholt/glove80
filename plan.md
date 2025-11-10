@@ -1,4 +1,12 @@
-# Glove80 Simplification Plan
+# Glove80 Simplification Plan — Status: COMPLETE (2025-11-09)
+
+This plan has been executed. Summary of outcomes:
+- Phase 1 (1–3): DONE
+- Phase 2 (5–6): DONE (scaffold command deferred)
+- Phase 3 (7–8): DONE
+- Phase 4 (9): DONE
+- Phase 5 (10–11): 10 DONE; 11 DEFERRED
+- Step 4 (Prefer direct compose for simple families): CANCELLED by request — builder retained for all families.
 
 This plan streamlines the codebase with a user‑first bias, fewer concepts, and a single source of truth. Changes are organized into phases that can land as small, independently reviewable PRs without breaking existing users or release JSON.
 
@@ -13,7 +21,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
 
 ## Phase 1 — Low‑risk consolidation (highest ROI)
 
-### 1) Unify family discovery (remove triple wiring)
+### 1) Unify family discovery (remove triple wiring) — DONE
 - Problem: Families are declared in three places (generator import list, metadata package map, import‑time registry). Easy to desync.
 - Change:
   - Derive import targets from `LAYOUT_METADATA_PACKAGES` (src/glove80/metadata.py:18). For each value `pkg`, import `f"{pkg}.layouts"`.
@@ -26,7 +34,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
   - Add a small unit test asserting that generator imports all packages named in `LAYOUT_METADATA_PACKAGES`.
 - Risk/mitigation: Low; if a family lacks `*.layouts` module, fail with a clear error listing the package name.
 
-### 2) Consolidate feature merge logic into one helper
+### 2) Consolidate feature merge logic into one helper — DONE
 - Problem: Duplicate logic in `LayoutBuilder._merge_feature_components` and `features.apply_feature()` increases drift risk.
 - Change:
   - Add `src/glove80/layouts/merge.py` with a single function `merge_components(layout: dict, components: LayoutFeatureComponents) -> None`.
@@ -39,7 +47,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
   - Keep `tests/test_features.py` and `tests/test_builder.py` but assert one canonical behavior (no change to expectations).
 - Risk/mitigation: Very low; behavior stays identical. Add unit test for the helper if helpful.
 
-### 3) Always resolve layer references (remove the toggle)
+### 3) Always resolve layer references (remove the toggle) — DONE
 - Problem: `resolve_refs` is a branchy option with little upside; always resolving is simpler and a no‑op when not used.
 - Change:
   - Remove the `resolve_refs` parameter from `compose_layout()` and `LayoutBuilder` ctor. Always resolve.
@@ -51,7 +59,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
   - Update any imports or ctor calls in tests that referenced the flag.
 - Risk/mitigation: Low; families that didn’t use refs are unaffected.
 
-### 4) Prefer direct compose for simple families
+### 4) Prefer direct compose for simple families — CANCELLED
 - Problem: Builder adds a concept where families just pour sections into `compose_layout`.
 - Change:
   - In `default`, `quantum_touch`, and `glorious_engrammer` families, replace the `LayoutBuilder` usage with a direct call to `compose_layout()`.
@@ -68,7 +76,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
 
 ## Phase 2 — API and CLI ergonomics
 
-### 5) Flatten and document the public API
+### 5) Flatten and document the public API — DONE
 - Goal: New users need a minimal, obvious surface.
 - Change:
   - Export `list_families()` and `features.apply_feature` from the top‑level package.
@@ -78,7 +86,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
   - README: add a “minimal API” snippet that builds + applies a feature in <10 lines.
 - Tests: Add a smoke test importing these names from `glove80`.
 
-### 6) CLI affordances
+### 6) CLI affordances — DONE (scaffold command DEFERRED)
 - Add `validate` command as a friendlier alias for `typed-parse`.
 - Add `--out` to `generate` to override the destination path without crafting a metadata file (applies when `--layout` and `--variant` are specified). If both `--out` and `--metadata` are given, `--out` wins for destination only.
 - Optional (later): `scaffold` command to generate a minimal Python spec file for a custom family/layout. Start with a minimal template; YAML can come later if desired.
@@ -93,7 +101,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
 
 ## Phase 3 — Data/naming simplifications
 
-### 7) Normalize family naming / aliasing
+### 7) Normalize family naming / aliasing — DONE
 - Problem: `glorious_engrammer` (code) vs `glorious-engrammer` (folder). Mild friction.
 - Change:
   - Introduce a simple alias map used by CLI display and `available_layouts()`, keeping canonical keys unchanged.
@@ -102,7 +110,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
   - README note.
 - Risk: Very low; it’s cosmetic.
 
-### 8) Simplify `LayoutFeatureComponents`
+### 8) Simplify `LayoutFeatureComponents` — DONE (added `macros_by_name` non-breaking)
 - Problem: `macros` + `macro_overrides` is two ways to express the same thing.
 - Change (non‑breaking, staged):
   - Add a new optional field `macros_by_name: Mapping[str, Macro]`.
@@ -118,7 +126,7 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
 
 ## Phase 4 — Documentation & examples
 
-### 9) Short-path docs and examples
+### 9) Short-path docs and examples — DONE
 - Add “Quick Start: Custom layout in 5 minutes” showing:
   - `build_layout('tailorkey', 'windows')`
   - `bilateral_home_row_components()` + `apply_feature()`
@@ -131,11 +139,9 @@ This plan streamlines the codebase with a user‑first bias, fewer concepts, and
 
 ## Phase 5 — Deprecations & cleanup (optional follow‑ups)
 
-### 10) Remove `resolve_refs` traces entirely
-- After Phase 1 lands and tests are green, delete any leftover references and update docstrings.
+### 10) Remove `resolve_refs` traces entirely — DONE
 
-### 11) Consider a plugin/entry‑points discovery (later)
-- If the project becomes a library, use Python entry points for third‑party families. Not required now; keep discovery simple via `LAYOUT_METADATA_PACKAGES`.
+### 11) Consider a plugin/entry‑points discovery (later) — DEFERRED
 
 ---
 
