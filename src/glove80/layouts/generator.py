@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from glove80.layouts.family import REGISTRY, LayoutFamily
+from glove80.layouts.family import REGISTRY, LayoutFamily, canonical_family_name
 from glove80.metadata import (
     LAYOUT_METADATA_PACKAGES,
     MetadataByVariant,
@@ -67,8 +67,8 @@ def _normalize_layout_name(layout: str | None) -> Iterable[tuple[str, LayoutFami
     if layout is None:
         return [(registered.name, registered.family) for registered in registered_families]
     try:
-        family = REGISTRY.get(layout)
-        return [(layout, family)]
+        family = REGISTRY.get(canonical_family_name(layout))
+        return [(canonical_family_name(layout), family)]
     except KeyError as exc:  # pragma: no cover
         msg = f"Unknown layout '{layout}'. Available: {available_layouts()}"
         raise KeyError(msg) from exc

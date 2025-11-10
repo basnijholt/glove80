@@ -63,6 +63,12 @@ def test_cli_generate_unknown_layout_error() -> None:
     assert "Unknown layout" in str(result.exception)
 
 
+def test_cli_generate_accepts_hyphen_alias() -> None:
+    # glorious-engrammer is an alias for glorious_engrammer
+    result = RUNNER.invoke(app, ["generate", "--layout", "glorious-engrammer", "--dry-run"])
+    assert result.exit_code == 0
+
+
 def test_cli_generate_writes_output_with_custom_metadata(tmp_path: Path) -> None:
     metadata = json.loads(TAILORKEY_METADATA.read_text())
     entry = metadata["windows"]
