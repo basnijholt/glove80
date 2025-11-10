@@ -14,7 +14,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from glove80.layouts.family import REGISTRY, LayoutFamily
-from glove80.metadata import MetadataByVariant, VariantMetadata, load_metadata
+from glove80.metadata import (
+    LAYOUT_METADATA_PACKAGES,
+    MetadataByVariant,
+    VariantMetadata,
+    load_metadata,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -22,18 +27,21 @@ if TYPE_CHECKING:
 META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 
 
-# Ensure all families are registered by importing their layouts modules.
-_FAMILY_LAYOUT_MODULES = (
-    "glove80.families.default.layouts",
-    "glove80.families.glorious_engrammer.layouts",
-    "glove80.families.quantum_touch.layouts",
-    "glove80.families.tailorkey.layouts",
-)
-
-
 def _register_families() -> None:
-    for module_path in _FAMILY_LAYOUT_MODULES:
-        import_module(module_path)
+    """Import each family's layouts module to trigger registry side-effects.
+
+    Discovery derives solely from the source of truth in
+    :data:`LAYOUT_METADATA_PACKAGES`. For every package path in that mapping,
+    we import its ``.layouts`` submodule. This removes the need to keep a
+    parallel, hard-coded list here and avoids desynchronization.
+    """
+    for pkg in LAYOUT_METADATA_PACKAGES.values():
+        module_path = f"{pkg}.layouts"
+        try:
+            import_module(module_path)
+        except ModuleNotFoundError as exc:  # pragma: no cover - exercised via error path
+            msg = f"Failed to import '{module_path}' while registering families (from {pkg!r})"
+            raise ModuleNotFoundError(msg) from exc
 
 
 _register_families()
