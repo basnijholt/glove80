@@ -35,7 +35,6 @@ class Family(LayoutFamily):
             variant=variant,
             common_fields=spec.common_fields,
             layer_names=spec.layer_names,
-            resolve_refs=False,
         )
         builder.add_layers(layers)
         builder.add_input_listeners(list(spec.input_listeners))

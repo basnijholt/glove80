@@ -69,7 +69,6 @@ class Family(LayoutFamily):
             variant=variant,
             common_fields=spec.common_fields,
             layer_names=spec.layer_names,
-            resolve_refs=False,
         )
         builder.add_layers({name: generated_layers[name] for name in spec.layer_names})
         layout = builder.build()

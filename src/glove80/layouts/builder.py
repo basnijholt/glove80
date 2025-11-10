@@ -48,7 +48,6 @@ class LayoutBuilder:
         variant: str,
         common_fields: Mapping[str, Any],
         layer_names: Sequence[str] | None = None,
-        resolve_refs: bool = True,
         mouse_layers_provider: Callable[[str], LayerMap] | None = None,
         cursor_layers_provider: Callable[[str], LayerMap] | None = None,
         home_row_provider: Callable[[str], LayoutFeatureComponents] | None = None,
@@ -56,7 +55,6 @@ class LayoutBuilder:
         self.metadata_key = metadata_key
         self.variant = variant
         self._common_fields: Mapping[str, Any] = dict(common_fields)
-        self._resolve_refs = resolve_refs
         self._sections = _Sections(layer_names=_unique_sequence(layer_names or ()))
         self._mouse_layers_provider = mouse_layers_provider
         self._cursor_layers_provider = cursor_layers_provider
@@ -224,7 +222,6 @@ class LayoutBuilder:
             hold_taps=self._sections.hold_taps,
             combos=self._sections.combos,
             input_listeners=self._sections.input_listeners,
-            resolve_refs=self._resolve_refs,
         )
 
     # ------------------------------------------------------------------
