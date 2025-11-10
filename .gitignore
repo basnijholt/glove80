@@ -30,3 +30,5 @@ build/
 # Coverage
 .coverage
 coverage.xml
+
+third_party/
