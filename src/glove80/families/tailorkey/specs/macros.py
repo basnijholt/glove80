@@ -266,6 +266,13 @@ for macro in CURSOR_MACROS_MAC:
 
 MACRO_DEFS[MOD_TAB_V1.name] = MOD_TAB_V1
 
+MAC_CURSOR_MAP = {
+    "&cur_EXTEND_LINE_v1_TKZ": "&cur_EXTEND_LINE_macos_v1_TKZ",
+    "&cur_EXTEND_WORD_v1_TKZ": "&cur_EXTEND_WORD_macos_v1_TKZ",
+    "&cur_SELECT_LINE_v1_TKZ": "&cur_SELECT_LINE_macos_v1_TKZ",
+    "&cur_SELECT_WORD_v1_TKZ": "&cur_SELECT_WORD_macos_v1_TKZ",
+}
+
 
 MOD_CLEAR_SEQUENCE = (
     kp("LSHFT"),
@@ -327,122 +334,80 @@ for meta in FINGERS:
     )
 
 
+_BILATERAL_FINGER_SEQUENCE = (
+    ("left", "index"),
+    ("left", "middy"),
+    ("left", "pinky"),
+    ("left", "ring"),
+    ("right", "index"),
+    ("right", "middy"),
+    ("right", "pinky"),
+    ("right", "ring"),
+)
+
+
+def _bilateral_macro_names() -> list[str]:
+    names: list[str] = []
+    for hand, finger in _BILATERAL_FINGER_SEQUENCE:
+        names.append(f"&HRM_{hand}_{finger}_hold_v1B_TKZ")
+        names.append(f"&HRM_{hand}_{finger}_tap_v1B_TKZ")
+    return names
+
+
+_BILATERAL_MACRO_NAMES = _bilateral_macro_names()
+
+
+def _with_mac_cursor_macros(sequence: list[str]) -> list[str]:
+    ordered: list[str] = []
+    for name in sequence:
+        mac_name = MAC_CURSOR_MAP.get(name)
+        if mac_name:
+            ordered.append(mac_name)
+        ordered.append(name)
+    return ordered
+
+
+WINDOWS_MACRO_TEMPLATE = [
+    "&AS_Shifted_v1_TKZ",
+    "&AS_v1_TKZ",
+    "&cur_EXTEND_LINE_v1_TKZ",
+    "&cur_EXTEND_WORD_v1_TKZ",
+    "&cur_SELECT_LINE_v1_TKZ",
+    "&cur_SELECT_NONE_v1_TKZ",
+    "&cur_SELECT_WORD_v1_TKZ",
+    "&mod_tab_chord_v2_TKZ",
+    "&mod_tab_v2_TKZ",
+    "&mstr1_v1_TKZ",
+    "&mstr2_v1_TKZ",
+    "&symb_dotdot_v1_TKZ",
+]
+
+
+def _windows_macro_order() -> list[str]:
+    return list(WINDOWS_MACRO_TEMPLATE)
+
+
+def _mac_macro_order() -> list[str]:
+    return _with_mac_cursor_macros(WINDOWS_MACRO_TEMPLATE)
+
+
+def _bilateral_macro_order(*, mac: bool) -> list[str]:
+    base = _mac_macro_order() if mac else _windows_macro_order()
+    ordered = list(base)
+    insert_at = ordered.index("&mod_tab_chord_v2_TKZ")
+    ordered[insert_at:insert_at] = _BILATERAL_MACRO_NAMES
+    if not mac:
+        insert_at = ordered.index("&mod_tab_v2_TKZ")
+        ordered.insert(insert_at, "&mod_tab_v1_TKZ")
+    return ordered
+
+
 MACRO_ORDER = {
-    "windows": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "mac": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "dual": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "bilateral_windows": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&HRM_left_index_hold_v1B_TKZ",
-        "&HRM_left_index_tap_v1B_TKZ",
-        "&HRM_left_middy_hold_v1B_TKZ",
-        "&HRM_left_middy_tap_v1B_TKZ",
-        "&HRM_left_pinky_hold_v1B_TKZ",
-        "&HRM_left_pinky_tap_v1B_TKZ",
-        "&HRM_left_ring_hold_v1B_TKZ",
-        "&HRM_left_ring_tap_v1B_TKZ",
-        "&HRM_right_index_hold_v1B_TKZ",
-        "&HRM_right_index_tap_v1B_TKZ",
-        "&HRM_right_middy_hold_v1B_TKZ",
-        "&HRM_right_middy_tap_v1B_TKZ",
-        "&HRM_right_pinky_hold_v1B_TKZ",
-        "&HRM_right_pinky_tap_v1B_TKZ",
-        "&HRM_right_ring_hold_v1B_TKZ",
-        "&HRM_right_ring_tap_v1B_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v1_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "bilateral_mac": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&HRM_left_index_hold_v1B_TKZ",
-        "&HRM_left_index_tap_v1B_TKZ",
-        "&HRM_left_middy_hold_v1B_TKZ",
-        "&HRM_left_middy_tap_v1B_TKZ",
-        "&HRM_left_pinky_hold_v1B_TKZ",
-        "&HRM_left_pinky_tap_v1B_TKZ",
-        "&HRM_left_ring_hold_v1B_TKZ",
-        "&HRM_left_ring_tap_v1B_TKZ",
-        "&HRM_right_index_hold_v1B_TKZ",
-        "&HRM_right_index_tap_v1B_TKZ",
-        "&HRM_right_middy_hold_v1B_TKZ",
-        "&HRM_right_middy_tap_v1B_TKZ",
-        "&HRM_right_pinky_hold_v1B_TKZ",
-        "&HRM_right_pinky_tap_v1B_TKZ",
-        "&HRM_right_ring_hold_v1B_TKZ",
-        "&HRM_right_ring_tap_v1B_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
+    "windows": _windows_macro_order(),
+    "mac": _mac_macro_order(),
+    "dual": _mac_macro_order(),
+    "bilateral_windows": _bilateral_macro_order(mac=False),
+    "bilateral_mac": _bilateral_macro_order(mac=True),
 }
 
 

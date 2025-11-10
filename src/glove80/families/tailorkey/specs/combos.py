@@ -103,57 +103,72 @@ def _layers(*names: str) -> tuple[LayerRef, ...]:
 WINDOWS_STICKY_DESC = 'sticky "hyper" modifiers (Win + Alt + Ctrl + Shift) - Use with Tab - TailorKey'
 WINDOWS_MEH_DESC = 'sticky "meh" modifiers (Alt + Ctrl + Shift) - Use with Tab - TailorKey'
 
-COMBO_DATA: dict[str, list[Combo]] = {
-    "windows": [
-        BASE_COMBOS["capslock_v1_TKZ"],
-        BASE_COMBOS["F11_v1_TKZ"],
-        BASE_COMBOS["F12_v1_TKZ"],
-        _with_description(BASE_COMBOS["sticky_hyp_rght_v1_TKZ"], WINDOWS_STICKY_DESC),
-        _with_description(BASE_COMBOS["sticky_meh_rght_v1_TKZ"], WINDOWS_MEH_DESC),
-        BASE_COMBOS["gaming_layer_v1_TKZ"],
-    ],
-}
+
+def _assign_layers(combo: Combo, layer_names: tuple[str, ...]) -> Combo:
+    if combo.layers == [-1]:
+        return combo
+    return _with_layers(combo, _layers(*layer_names))
+
+
+def _windows_combos() -> list[Combo]:
+    combos: list[Combo] = []
+    for name in ORDER:
+        combo = BASE_COMBOS[name]
+        if name == "sticky_hyp_rght_v1_TKZ":
+            combos.append(_with_description(combo, WINDOWS_STICKY_DESC))
+        elif name == "sticky_meh_rght_v1_TKZ":
+            combos.append(_with_description(combo, WINDOWS_MEH_DESC))
+        else:
+            combos.append(combo)
+    return combos
 
 
 def _variant_list(layer_names: tuple[str, ...]) -> list[Combo]:
     combos: list[Combo] = []
     for name in ORDER:
-        combo = BASE_COMBOS[name]
-        if combo.layers == [-1]:
-            combos.append(combo)
-        else:
-            combos.append(_with_layers(combo, _layers(*layer_names)))
+        combos.append(_assign_layers(BASE_COMBOS[name], layer_names))
     return combos
 
 
-COMBO_DATA["mac"] = [
-    _with_layers(BASE_COMBOS["F11_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-    _with_layers(BASE_COMBOS["F12_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-    _with_layers(BASE_COMBOS["sticky_hyp_rght_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-    _with_layers(BASE_COMBOS["capslock_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-    _with_layers(BASE_COMBOS["sticky_meh_rght_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-    BASE_COMBOS["gaming_layer_v1_TKZ"],
-]
+def _mac_combos() -> list[Combo]:
+    sequence = (
+        "F11_v1_TKZ",
+        "F12_v1_TKZ",
+        "sticky_hyp_rght_v1_TKZ",
+        "capslock_v1_TKZ",
+        "sticky_meh_rght_v1_TKZ",
+        "gaming_layer_v1_TKZ",
+    )
+    return [_assign_layers(BASE_COMBOS[name], ("HRM_macOS", "Autoshift")) for name in sequence]
 
-COMBO_DATA["dual"] = _variant_list(("HRM_macOS", "HRM_WinLinx", "Autoshift"))
 
-COMBO_DATA["bilateral_windows"] = [
-    BASE_COMBOS["capslock_v1_TKZ"],
-    BASE_COMBOS["F11_v1_TKZ"],
-    BASE_COMBOS["F12_v1_TKZ"],
-    BASE_COMBOS["sticky_hyp_rght_v1_TKZ"],
-    BASE_COMBOS["sticky_meh_rght_v1_TKZ"],
-    BASE_COMBOS["gaming_layer_v1_TKZ"],
-]
+def _bilateral_windows_combos() -> list[Combo]:
+    return [BASE_COMBOS[name] for name in ORDER]
 
-COMBO_DATA["bilateral_mac"] = [
-    BASE_COMBOS["gaming_layer_v1_TKZ"],
-    _with_layers(BASE_COMBOS["F12_v1_TKZ"], _layers("Autoshift", "HRM_macOS")),
-    _with_layers(BASE_COMBOS["sticky_hyp_rght_v1_TKZ"], _layers("Autoshift", "HRM_macOS")),
-    _with_layers(BASE_COMBOS["F11_v1_TKZ"], _layers("Autoshift", "HRM_macOS")),
-    _with_layers(BASE_COMBOS["sticky_meh_rght_v1_TKZ"], _layers("Autoshift", "HRM_macOS")),
-    _with_layers(BASE_COMBOS["capslock_v1_TKZ"], _layers("HRM_macOS", "Autoshift")),
-]
+
+def _bilateral_mac_combos() -> list[Combo]:
+    sequence = (
+        "gaming_layer_v1_TKZ",
+        "F12_v1_TKZ",
+        "sticky_hyp_rght_v1_TKZ",
+        "F11_v1_TKZ",
+        "sticky_meh_rght_v1_TKZ",
+        "capslock_v1_TKZ",
+    )
+    combos: list[Combo] = []
+    for name in sequence:
+        layers = ("HRM_macOS", "Autoshift") if name == "capslock_v1_TKZ" else ("Autoshift", "HRM_macOS")
+        combos.append(_assign_layers(BASE_COMBOS[name], layers))
+    return combos
+
+
+COMBO_DATA: dict[str, list[Combo]] = {
+    "windows": _windows_combos(),
+    "mac": _mac_combos(),
+    "dual": _variant_list(("HRM_macOS", "HRM_WinLinx", "Autoshift")),
+    "bilateral_windows": _bilateral_windows_combos(),
+    "bilateral_mac": _bilateral_mac_combos(),
+}
 
 
 for _variant in TAILORKEY_VARIANTS:

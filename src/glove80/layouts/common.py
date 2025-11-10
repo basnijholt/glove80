@@ -27,8 +27,6 @@ BASE_COMMON_FIELDS = {
     "layout_parameters": {},
 }
 
-ALLOW_SERIALIZED_LAYERREF = True
-
 
 def build_layout_payload(
     common_fields: Mapping[str, Any],
@@ -152,7 +150,7 @@ def _resolve_referenced_fields(
         obj = resolve_layer_refs(obj, layer_indices)
         # Fallback: resolve serialized LayerRef dicts of shape {"name": str}
         if isinstance(obj, dict):
-            if ALLOW_SERIALIZED_LAYERREF and set(obj.keys()) == {"name"} and isinstance(obj.get("name"), str):
+            if set(obj.keys()) == {"name"} and isinstance(obj.get("name"), str):
                 name = obj["name"]
                 return layer_indices[name]
             return {k: _resolve(v) for k, v in obj.items()}
