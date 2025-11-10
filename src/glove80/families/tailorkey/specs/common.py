@@ -5,36 +5,30 @@ from glove80.layouts.common import build_common_fields
 
 COMMON_FIELDS = build_common_fields(creator="moosy")
 
-LAYER_NAME_MAP = {
-    "windows": [
-        "HRM_WinLinx",
-        "Typing",
-        "Autoshift",
-        "Cursor",
-        "Symbol",
-        "Gaming",
-        "Lower",
-        "Mouse",
-        "MouseSlow",
-        "MouseFast",
-        "MouseWarp",
-        "Magic",
-    ],
-    "mac": [
-        "HRM_macOS",
-        "Typing",
-        "Autoshift",
-        "Cursor",
-        "Symbol",
-        "Gaming",
-        "Lower",
-        "Mouse",
-        "MouseSlow",
-        "MouseFast",
-        "MouseWarp",
-        "Magic",
-    ],
-    "dual": [
+_WINDOWS_ORDER = [
+    "HRM_WinLinx",
+    "Typing",
+    "Autoshift",
+    "Cursor",
+    "Symbol",
+    "Gaming",
+    "Lower",
+    "Mouse",
+    "MouseSlow",
+    "MouseFast",
+    "MouseWarp",
+    "Magic",
+]
+
+
+def _mac_order() -> list[str]:
+    order = list(_WINDOWS_ORDER)
+    order[0] = "HRM_macOS"
+    return order
+
+
+def _dual_order() -> list[str]:
+    return [
         "HRM_macOS",
         "HRM_WinLinx",
         "Typing",
@@ -49,51 +43,42 @@ LAYER_NAME_MAP = {
         "Gaming",
         "Lower",
         "Magic",
-    ],
-    "bilateral_windows": [
-        "HRM_WinLinx",
+    ]
+
+
+_BILATERAL_FINGERS = [
+    "LeftIndex",
+    "LeftMiddy",
+    "LeftRingy",
+    "LeftPinky",
+    "RightIndex",
+    "RightMiddy",
+    "RightRingy",
+    "RightPinky",
+]
+
+
+def _bilateral_order(*, mac: bool) -> list[str]:
+    order = [
+        "HRM_macOS" if mac else "HRM_WinLinx",
         "Typing",
         "Autoshift",
         "Cursor",
         "Symbol",
         "Gaming",
         "Lower",
-        "LeftIndex",
-        "LeftMiddy",
-        "LeftRingy",
-        "LeftPinky",
-        "RightIndex",
-        "RightMiddy",
-        "RightRingy",
-        "RightPinky",
-        "Mouse",
-        "MouseSlow",
-        "MouseFast",
-        "MouseWarp",
-        "Magic",
-    ],
-    "bilateral_mac": [
-        "HRM_macOS",
-        "Typing",
-        "Autoshift",
-        "Cursor",
-        "Symbol",
-        "Gaming",
-        "Lower",
-        "LeftIndex",
-        "LeftMiddy",
-        "LeftRingy",
-        "LeftPinky",
-        "RightIndex",
-        "RightMiddy",
-        "RightRingy",
-        "RightPinky",
-        "Mouse",
-        "MouseSlow",
-        "MouseFast",
-        "MouseWarp",
-        "Magic",
-    ],
+    ]
+    order.extend(_BILATERAL_FINGERS)
+    order.extend(["Mouse", "MouseSlow", "MouseFast", "MouseWarp", "Magic"])
+    return order
+
+
+LAYER_NAME_MAP = {
+    "windows": list(_WINDOWS_ORDER),
+    "mac": _mac_order(),
+    "dual": _dual_order(),
+    "bilateral_windows": _bilateral_order(mac=False),
+    "bilateral_mac": _bilateral_order(mac=True),
 }
 
 for variant in TAILORKEY_VARIANTS:

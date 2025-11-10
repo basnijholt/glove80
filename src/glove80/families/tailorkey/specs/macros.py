@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal, Sequence
+
 from glove80.families.tailorkey.alpha_layouts import TAILORKEY_VARIANTS, base_variant_for
 from glove80.layouts.schema import Macro
 from glove80.specs.utils import call, kp, ks, layer_param, mod
@@ -266,6 +268,17 @@ for macro in CURSOR_MACROS_MAC:
 
 MACRO_DEFS[MOD_TAB_V1.name] = MOD_TAB_V1
 
+BILATERAL_FINGER_SEQUENCE: Sequence[tuple[Literal["left", "right"], str]] = [
+    ("left", "index"),
+    ("left", "middy"),
+    ("left", "pinky"),
+    ("left", "ring"),
+    ("right", "index"),
+    ("right", "middy"),
+    ("right", "pinky"),
+    ("right", "ring"),
+]
+
 
 MOD_CLEAR_SEQUENCE = (
     kp("LSHFT"),
@@ -326,123 +339,74 @@ for meta in FINGERS:
         tapMs=0,
     )
 
+WINDOWS_MACRO_SEQUENCE = [
+    "&AS_Shifted_v1_TKZ",
+    "&AS_v1_TKZ",
+    "&cur_EXTEND_LINE_v1_TKZ",
+    "&cur_EXTEND_WORD_v1_TKZ",
+    "&cur_SELECT_LINE_v1_TKZ",
+    "&cur_SELECT_NONE_v1_TKZ",
+    "&cur_SELECT_WORD_v1_TKZ",
+    "&mod_tab_chord_v2_TKZ",
+    "&mod_tab_v2_TKZ",
+    "&mstr1_v1_TKZ",
+    "&mstr2_v1_TKZ",
+    "&symb_dotdot_v1_TKZ",
+]
+
+MAC_CURSOR_MAP = {
+    "&cur_EXTEND_LINE_v1_TKZ": "&cur_EXTEND_LINE_macos_v1_TKZ",
+    "&cur_EXTEND_WORD_v1_TKZ": "&cur_EXTEND_WORD_macos_v1_TKZ",
+    "&cur_SELECT_LINE_v1_TKZ": "&cur_SELECT_LINE_macos_v1_TKZ",
+    "&cur_SELECT_WORD_v1_TKZ": "&cur_SELECT_WORD_macos_v1_TKZ",
+}
+
+
+def _windows_macro_order() -> list[str]:
+    return list(WINDOWS_MACRO_SEQUENCE)
+
+
+def _mac_macro_order() -> list[str]:
+    order: list[str] = []
+    for name in WINDOWS_MACRO_SEQUENCE:
+        mac_name = MAC_CURSOR_MAP.get(name)
+        if mac_name:
+            order.append(mac_name)
+        order.append(name)
+    return order
+
+
+def _bilateral_macro_names() -> list[str]:
+    finger_lookup = {(meta.hand, meta.finger): meta for meta in FINGERS}
+    names: list[str] = []
+    for hand, finger in BILATERAL_FINGER_SEQUENCE:
+        meta = finger_lookup[(hand, finger)]
+        base = f"&HRM_{meta.hand}_{meta.finger}"
+        names.append(f"{base}_hold_v1B_TKZ")
+        names.append(f"{base}_tap_v1B_TKZ")
+    return names
+
+
+BILATERAL_MACRO_NAMES = _bilateral_macro_names()
+
+
+def _bilateral_macro_order(*, mac: bool) -> list[str]:
+    order = _mac_macro_order() if mac else _windows_macro_order()
+    order = list(order)
+    insert_at = order.index("&mod_tab_chord_v2_TKZ")
+    order[insert_at:insert_at] = BILATERAL_MACRO_NAMES
+    if not mac:
+        idx = order.index("&mod_tab_v2_TKZ")
+        order.insert(idx, "&mod_tab_v1_TKZ")
+    return order
+
 
 MACRO_ORDER = {
-    "windows": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "mac": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "dual": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "bilateral_windows": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&HRM_left_index_hold_v1B_TKZ",
-        "&HRM_left_index_tap_v1B_TKZ",
-        "&HRM_left_middy_hold_v1B_TKZ",
-        "&HRM_left_middy_tap_v1B_TKZ",
-        "&HRM_left_pinky_hold_v1B_TKZ",
-        "&HRM_left_pinky_tap_v1B_TKZ",
-        "&HRM_left_ring_hold_v1B_TKZ",
-        "&HRM_left_ring_tap_v1B_TKZ",
-        "&HRM_right_index_hold_v1B_TKZ",
-        "&HRM_right_index_tap_v1B_TKZ",
-        "&HRM_right_middy_hold_v1B_TKZ",
-        "&HRM_right_middy_tap_v1B_TKZ",
-        "&HRM_right_pinky_hold_v1B_TKZ",
-        "&HRM_right_pinky_tap_v1B_TKZ",
-        "&HRM_right_ring_hold_v1B_TKZ",
-        "&HRM_right_ring_tap_v1B_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v1_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
-    "bilateral_mac": [
-        "&AS_Shifted_v1_TKZ",
-        "&AS_v1_TKZ",
-        "&cur_EXTEND_LINE_macos_v1_TKZ",
-        "&cur_EXTEND_LINE_v1_TKZ",
-        "&cur_EXTEND_WORD_macos_v1_TKZ",
-        "&cur_EXTEND_WORD_v1_TKZ",
-        "&cur_SELECT_LINE_macos_v1_TKZ",
-        "&cur_SELECT_LINE_v1_TKZ",
-        "&cur_SELECT_NONE_v1_TKZ",
-        "&cur_SELECT_WORD_macos_v1_TKZ",
-        "&cur_SELECT_WORD_v1_TKZ",
-        "&HRM_left_index_hold_v1B_TKZ",
-        "&HRM_left_index_tap_v1B_TKZ",
-        "&HRM_left_middy_hold_v1B_TKZ",
-        "&HRM_left_middy_tap_v1B_TKZ",
-        "&HRM_left_pinky_hold_v1B_TKZ",
-        "&HRM_left_pinky_tap_v1B_TKZ",
-        "&HRM_left_ring_hold_v1B_TKZ",
-        "&HRM_left_ring_tap_v1B_TKZ",
-        "&HRM_right_index_hold_v1B_TKZ",
-        "&HRM_right_index_tap_v1B_TKZ",
-        "&HRM_right_middy_hold_v1B_TKZ",
-        "&HRM_right_middy_tap_v1B_TKZ",
-        "&HRM_right_pinky_hold_v1B_TKZ",
-        "&HRM_right_pinky_tap_v1B_TKZ",
-        "&HRM_right_ring_hold_v1B_TKZ",
-        "&HRM_right_ring_tap_v1B_TKZ",
-        "&mod_tab_chord_v2_TKZ",
-        "&mod_tab_v2_TKZ",
-        "&mstr1_v1_TKZ",
-        "&mstr2_v1_TKZ",
-        "&symb_dotdot_v1_TKZ",
-    ],
+    "windows": _windows_macro_order(),
+    "mac": _mac_macro_order(),
+    "dual": _mac_macro_order(),
+    "bilateral_windows": _bilateral_macro_order(mac=False),
+    "bilateral_mac": _bilateral_macro_order(mac=True),
 }
 
 
