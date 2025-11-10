@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 DEFAULT_REF_FIELDS = ("macros", "holdTaps", "combos", "inputListeners")
+ALLOW_SERIALIZED_LAYERREF = True
 
 BASE_COMMON_FIELDS = {
     "keyboard": "glove80",
@@ -150,7 +151,7 @@ def _resolve_referenced_fields(
         obj = resolve_layer_refs(obj, layer_indices)
         # Fallback: resolve serialized LayerRef dicts of shape {"name": str}
         if isinstance(obj, dict):
-            if set(obj.keys()) == {"name"} and isinstance(obj.get("name"), str):
+            if ALLOW_SERIALIZED_LAYERREF and set(obj.keys()) == {"name"} and isinstance(obj.get("name"), str):
                 name = obj["name"]
                 return layer_indices[name]
             return {k: _resolve(v) for k, v in obj.items()}
