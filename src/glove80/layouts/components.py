@@ -17,7 +17,7 @@ class LayoutFeatureComponents:
     """Small bundle of reusable layout pieces (macros, layers, etc.)."""
 
     macros: Sequence[Macro] = ()
-    macro_overrides: Mapping[str, Macro] = field(default_factory=dict)
+    macros_by_name: Mapping[str, Macro] = field(default_factory=dict)
     hold_taps: Sequence[HoldTap] = ()
     combos: Sequence[Combo] = ()
     input_listeners: Sequence[InputListener] = ()
