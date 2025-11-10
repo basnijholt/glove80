@@ -7,11 +7,15 @@ from glove80.base import (
     Layer,
     LayerSpec,
     PatchSpec,
-    apply_patch_if,
     build_layer_from_spec,
     copy_layer,
 )
 from glove80.families.tailorkey.alpha_layouts import base_variant_for
+from glove80.layouts.common_patches import (
+    apply_mac_morphs,
+    swap_right_ctrl_to_gui,
+    swap_right_gui_to_ctrl,
+)
 
 SYMBOL_SPEC = LayerSpec(
     overrides={
@@ -101,13 +105,14 @@ SYMBOL_SPEC = LayerSpec(
 _BASE_SYMBOL_LAYER: Layer = build_layer_from_spec(SYMBOL_SPEC)
 
 
-_MAC_PATCH: PatchSpec = {
-    30: KeySpec("&sk", (KeySpec("RGUI"),)),
-    32: KeySpec("&sk", (KeySpec("RCTRL"),)),
+_MAC_MORPHS: PatchSpec = {
+    30: swap_right_ctrl_to_gui(),
+    32: swap_right_gui_to_ctrl(),
 }
 
 
 def build_symbol_layer(variant: str) -> Layer:
     layer = copy_layer(_BASE_SYMBOL_LAYER)
-    apply_patch_if(layer, base_variant_for(variant) in {"mac", "bilateral_mac"}, _MAC_PATCH)
+    if base_variant_for(variant) in {"mac", "bilateral_mac"}:
+        apply_mac_morphs(layer, _MAC_MORPHS)
     return layer

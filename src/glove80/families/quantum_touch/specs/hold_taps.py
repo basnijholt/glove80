@@ -128,6 +128,3 @@ for meta in FINGERS:
 
 
 __all__ = ["HOLD_TAP_DEFS", "HOLD_TAP_ORDER"]
-REQUIRE_IDLE_OVERRIDES = {
-    "&BHRM_L_Ring_Index": 100,
-}

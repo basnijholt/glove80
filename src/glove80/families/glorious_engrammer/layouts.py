@@ -39,6 +39,17 @@ FIELD_ORDER: Sequence[str] = (
 
 
 def _order_layout_fields(layout: dict[str, Any]) -> dict[str, Any]:
+    layout_keys = set(layout)
+    field_set = set(FIELD_ORDER)
+    unexpected = sorted(layout_keys - field_set)
+    if unexpected:
+        msg = f"Unexpected layout fields: {unexpected}"
+        raise KeyError(msg)
+    missing = sorted(field_set - layout_keys)
+    if missing:
+        msg = f"Layout is missing fields: {missing}"
+        raise KeyError(msg)
+
     ordered: dict[str, Any] = {}
     for field in FIELD_ORDER:
         ordered[field] = layout[field]

@@ -7,11 +7,11 @@ from glove80.base import (
     Layer,
     LayerSpec,
     PatchSpec,
-    apply_patch_if,
     build_layer_from_spec,
     copy_layer,
 )
 from glove80.families.tailorkey.alpha_layouts import base_variant_for
+from glove80.layouts.common_patches import apply_indices_patch, apply_mac_morphs, command_binding
 
 CURSOR_SPEC = LayerSpec(
     overrides={
@@ -101,44 +101,52 @@ CURSOR_SPEC = LayerSpec(
 _BASE_CURSOR_LAYER: Layer = build_layer_from_spec(CURSOR_SPEC)
 
 
-_MAC_PATCH: PatchSpec = {
-    27: KeySpec("&kp", (KeySpec("LG", (KeySpec("X"),)),)),
-    28: KeySpec("&kp", (KeySpec("LG", (KeySpec("X"),)),)),
-    30: KeySpec("&kp", (KeySpec("LG", (KeySpec("Z"),)),)),
-    31: KeySpec("&kp", (KeySpec("LG", (KeySpec("LS", (KeySpec("Z"),)),)),)),
+_LS_Z = KeySpec("LS", (KeySpec("Z"),))
+_LS_G = KeySpec("LS", (KeySpec("G"),))
+
+_MAC_CURSOR_COMMANDS: PatchSpec = {
+    27: command_binding("X"),
+    28: command_binding("X"),
+    30: command_binding("Z"),
+    31: command_binding(_LS_Z),
+    39: command_binding("C"),
+    40: command_binding("C"),
+    46: command_binding("L"),
+    47: command_binding("A"),
+    50: command_binding("F"),
+    51: command_binding("V"),
+    58: command_binding("V"),
+    63: command_binding("L"),
+    64: command_binding("K"),
+    65: command_binding("Z"),
+    66: command_binding(_LS_Z),
+    67: command_binding(_LS_G),
+    68: command_binding("G"),
+    71: command_binding("F3"),
+    72: command_binding("A"),
+    75: command_binding("F"),
+    76: command_binding(_LS_G),
+    77: command_binding("G"),
+    79: command_binding("K"),
+}
+
+_MAC_CURSOR_CUSTOM_PATCH: PatchSpec = {
     35: KeySpec("&kp", (KeySpec("LCTRL"),)),
     37: KeySpec("&kp", (KeySpec("LGUI"),)),
-    39: KeySpec("&kp", (KeySpec("LG", (KeySpec("C"),)),)),
-    40: KeySpec("&kp", (KeySpec("LG", (KeySpec("C"),)),)),
-    46: KeySpec("&kp", (KeySpec("LG", (KeySpec("L"),)),)),
-    47: KeySpec("&kp", (KeySpec("LG", (KeySpec("A"),)),)),
     48: KeySpec("&cur_SELECT_LINE_macos_v1_TKZ"),
     49: KeySpec("&cur_SELECT_WORD_macos_v1_TKZ"),
-    50: KeySpec("&kp", (KeySpec("LG", (KeySpec("F"),)),)),
-    51: KeySpec("&kp", (KeySpec("LG", (KeySpec("V"),)),)),
     52: KeySpec("&mod_tab_v2_TKZ", (KeySpec("LGUI"),)),
     53: KeySpec("&mod_tab_v2_TKZ", (KeySpec("LALT"),)),
     56: KeySpec("&cur_EXTEND_LINE_macos_v1_TKZ"),
     57: KeySpec("&cur_EXTEND_WORD_macos_v1_TKZ"),
-    58: KeySpec("&kp", (KeySpec("LG", (KeySpec("V"),)),)),
-    63: KeySpec("&kp", (KeySpec("LG", (KeySpec("L"),)),)),
-    64: KeySpec("&kp", (KeySpec("LG", (KeySpec("K"),)),)),
-    65: KeySpec("&kp", (KeySpec("LG", (KeySpec("Z"),)),)),
-    66: KeySpec("&kp", (KeySpec("LG", (KeySpec("LS", (KeySpec("Z"),)),)),)),
-    67: KeySpec("&kp", (KeySpec("LG", (KeySpec("LS", (KeySpec("G"),)),)),)),
-    68: KeySpec("&kp", (KeySpec("LG", (KeySpec("G"),)),)),
-    71: KeySpec("&kp", (KeySpec("LG", (KeySpec("F3"),)),)),
-    72: KeySpec("&kp", (KeySpec("LG", (KeySpec("A"),)),)),
     73: KeySpec("&cur_SELECT_LINE_macos_v1_TKZ"),
     74: KeySpec("&cur_SELECT_WORD_macos_v1_TKZ"),
-    75: KeySpec("&kp", (KeySpec("LG", (KeySpec("F"),)),)),
-    76: KeySpec("&kp", (KeySpec("LG", (KeySpec("LS", (KeySpec("G"),)),)),)),
-    77: KeySpec("&kp", (KeySpec("LG", (KeySpec("G"),)),)),
-    79: KeySpec("&kp", (KeySpec("LG", (KeySpec("K"),)),)),
 }
 
 
 def build_cursor_layer(variant: str) -> Layer:
     layer = copy_layer(_BASE_CURSOR_LAYER)
-    apply_patch_if(layer, base_variant_for(variant) in {"mac", "bilateral_mac"}, _MAC_PATCH)
+    if base_variant_for(variant) in {"mac", "bilateral_mac"}:
+        apply_mac_morphs(layer, _MAC_CURSOR_COMMANDS)
+        apply_indices_patch(layer, _MAC_CURSOR_CUSTOM_PATCH)
     return layer

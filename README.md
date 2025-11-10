@@ -11,6 +11,7 @@ Every release JSON under `layouts/*/releases` can be regenerated deterministical
 - A Typer-powered CLI (`glove80 generate …`) replaces ad-hoc scripts and keeps the regeneration workflow uniform across layouts.
 - Release artifacts are grouped under `layouts/<layout>/releases`, keeping the repo root clean while preserving the published JSON verbatim.
 - Reusable "feature" helpers under `glove80.features` (e.g., `bilateral_home_row_components`) bundle macros plus ready-made layers so you can drop complex behaviors into custom layouts without spelunking through family internals.
+- Third-party packages can register additional families via the `glove80.layouts` entry-point group, so custom specs integrate without forking this repo.
 
 ## Quick Start
 1. Install dependencies (the repo uses [uv](https://github.com/astral-sh/uv)):
@@ -64,6 +65,7 @@ apply_feature(layout, bilateral_home_row_components("windows"))
 - Validate any layout JSON: `glove80 validate path/to.json`
 - Override output destination: `glove80 generate --layout tailorkey --variant windows --out /tmp/out.json`
 - Families list: `glove80 families`
+- Scaffold a starter spec file: `glove80 scaffold src/glove80/families/custom/specs.py --layout custom --variant beta`
 
 Notes:
 - The CLI accepts `glorious-engrammer` as an alias for `glorious_engrammer`.

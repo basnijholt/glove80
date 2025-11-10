@@ -12,6 +12,12 @@ from glove80.base import (
     copy_layers_map,
 )
 from glove80.families.tailorkey.alpha_layouts import base_variant_for
+from glove80.layouts.common_patches import (
+    apply_mac_morphs,
+    command_binding,
+    swap_right_ctrl_to_gui,
+    swap_right_gui_to_ctrl,
+)
 from glove80.layers.mouse_helpers import build_transparent_mouse_layer
 
 MOUSE_LAYER_SPECS: dict[str, LayerSpec] = {
@@ -107,12 +113,12 @@ for transparent in ("MouseSlow", "MouseFast", "MouseWarp"):
     _BASE_MOUSE_LAYERS[transparent] = build_transparent_mouse_layer(transparent)
 
 
-_MAC_MOUSE_PATCH: PatchSpec = {
-    30: KeySpec("&sk", (KeySpec("RGUI"),)),
-    32: KeySpec("&sk", (KeySpec("RCTRL"),)),
-    55: KeySpec("&kp", (KeySpec("LG", (KeySpec("X"),)),)),
-    56: KeySpec("&kp", (KeySpec("LG", (KeySpec("C"),)),)),
-    57: KeySpec("&kp", (KeySpec("LG", (KeySpec("V"),)),)),
+_MAC_MOUSE_MORPHS: PatchSpec = {
+    30: swap_right_ctrl_to_gui(),
+    32: swap_right_gui_to_ctrl(),
+    55: command_binding("X"),
+    56: command_binding("C"),
+    57: command_binding("V"),
 }
 
 _DUAL_MOUSE_PATCH: PatchSpec = {
@@ -139,7 +145,7 @@ def build_mouse_layers(variant: str) -> dict[str, Layer]:
     base_variant = base_variant_for(variant)
 
     if base_variant in {"mac", "bilateral_mac"}:
-        apply_patch(mouse, _MAC_MOUSE_PATCH)
+        apply_mac_morphs(mouse, _MAC_MOUSE_MORPHS)
 
     if base_variant == "dual":
         apply_patch(mouse, _DUAL_MOUSE_PATCH)
