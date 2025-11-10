@@ -18,6 +18,8 @@ class LayoutFeatureComponents:
 
     macros: Sequence[Macro] = ()
     macro_overrides: Mapping[str, Macro] = field(default_factory=dict)
+    # New optional form: direct map by macro name; preferred when provided.
+    macros_by_name: Mapping[str, Macro] | None = None
     hold_taps: Sequence[HoldTap] = ()
     combos: Sequence[Combo] = ()
     input_listeners: Sequence[InputListener] = ()

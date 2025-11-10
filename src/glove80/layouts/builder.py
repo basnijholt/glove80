@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from .common import compose_layout
+from .merge import merge_components
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -47,7 +48,6 @@ class LayoutBuilder:
         variant: str,
         common_fields: Mapping[str, Any],
         layer_names: Sequence[str] | None = None,
-        resolve_refs: bool = True,
         mouse_layers_provider: Callable[[str], LayerMap] | None = None,
         cursor_layers_provider: Callable[[str], LayerMap] | None = None,
         home_row_provider: Callable[[str], LayoutFeatureComponents] | None = None,
@@ -55,7 +55,6 @@ class LayoutBuilder:
         self.metadata_key = metadata_key
         self.variant = variant
         self._common_fields: Mapping[str, Any] = dict(common_fields)
-        self._resolve_refs = resolve_refs
         self._sections = _Sections(layer_names=_unique_sequence(layer_names or ()))
         self._mouse_layers_provider = mouse_layers_provider
         self._cursor_layers_provider = cursor_layers_provider
@@ -223,7 +222,6 @@ class LayoutBuilder:
             hold_taps=self._sections.hold_taps,
             combos=self._sections.combos,
             input_listeners=self._sections.input_listeners,
-            resolve_refs=self._resolve_refs,
         )
 
     # ------------------------------------------------------------------
@@ -285,21 +283,28 @@ class LayoutBuilder:
         insert_after: str | None = None,
         insert_before: str | None = None,
     ) -> None:
-        macros_section = self._sections.macros
+        # Delegate merge of non-layer sections to the shared helper to
+        # maintain a single behavior surface with runtime feature application.
+        shadow_layout: dict[str, Any] = {
+            "macros": list(self._sections.macros.values()),
+            "holdTaps": list(self._sections.hold_taps),
+            "combos": list(self._sections.combos),
+            "inputListeners": list(self._sections.input_listeners),
+        }
+        merge_components(shadow_layout, components)
 
-        def _set_macro(macro_obj: Any) -> None:
-            name = _macro_name(macro_obj)
-            macros_section[name] = macro_obj
+        # Reconcile back into builder sections, preserving order.
+        updated_macros: "OrderedDict[str, Any]" = OrderedDict()
+        for macro in shadow_layout["macros"]:
+            name = _macro_name(macro)
+            updated_macros[name] = macro
+        self._sections.macros = updated_macros
+        self._sections.hold_taps = list(shadow_layout["holdTaps"])
+        self._sections.combos = list(shadow_layout["combos"])
+        self._sections.input_listeners = list(shadow_layout["inputListeners"])
 
-        for macro in components.macros:
-            _set_macro(macro)
-        for macro in components.macro_overrides.values():
-            _set_macro(macro)
-
-        self.add_hold_taps(components.hold_taps)
-        self.add_combos(components.combos)
-        self.add_input_listeners(components.input_listeners)
-
+        # Layers participate in ordered insertion; use builder's add_layers to
+        # honor anchors while still reusing the shared merge for other pieces.
         if components.layers:
             self.add_layers(
                 components.layers,
