@@ -10,12 +10,13 @@ This project keeps every part of the Glove80 layout toolchain in version control
 - **Metadata (`src/glove80/families/<family>/metadata.json`)** stores the immutable release information checked in by the original layout authors (UUIDs, parent UUIDs, titles, tags, notes, and the relative output path). Packaging the metadata keeps CLI invocations and library imports perfectly aligned.
 
 ## Generation Flow
-1. `glove80 generate` loads the metadata for each registered layout family via `glove80.metadata`.
-2. `glove80.layouts.family` registers every family at import time; `glove80.layouts.generator` iterates that registry, builds the layouts, augments them with metadata, and writes the JSON into `layouts/<family>/releases`.
+1. Discovery derives from a single source of truth: `glove80.metadata.LAYOUT_METADATA_PACKAGES`.
+   For each package value (e.g., `glove80.families.tailorkey`), the generator imports its `.layouts` module to register the family.
+2. `glove80.layouts.generator` iterates the registry, builds each variant, augments it with metadata, and writes JSON to `layouts/<family>/releases`.
 3. Re-running the command is idempotent: if the serialized JSON already matches the generated payload, the file is left untouched.
 
 ## Shared Helpers
-`glove80/layouts/common.py` and the higher-level `glove80.layouts.LayoutBuilder` codify the shared logic between layout families: resolving `LayerRef` placeholders, assembling the ordered layer list, and injecting metadata fields. Layout authors can now compose whole layouts by instantiating the builder, feeding it layer providers, and calling `.build()`—the same workflow used inside the built-in families. The builder exposes ergonomics-focused helpers such as `add_mouse_layers()`, `add_cursor_layer()`, and `add_home_row_mods()`; you wire in the concrete providers (e.g., `build_mouse_layers`) once and then script against those high-level methods for both library and CLI workflows.
+`glove80/layouts/common.py` and the higher-level `glove80.layouts.LayoutBuilder` codify the shared logic between layout families: resolving `LayerRef` placeholders (always-on), assembling the ordered layer list, and injecting metadata fields. You can compose layouts directly via `compose_layout()` (simple cases) or use the builder (advanced ordering and feature insertion). The builder exposes ergonomics-focused helpers such as `add_mouse_layers()`, `add_cursor_layer()`, and `add_home_row_mods()`.
 
 ```python
 from glove80.layouts import LayoutBuilder
@@ -44,6 +45,20 @@ payload = builder.build()
 ```
 
 The helper methods guarantee that the required macros, combos, input listeners, and layer indices stay in sync each time the feature is applied, so TailorKey, Default, QuantumTouch, Glorious Engrammer, and any user scripts all share one consistent pipeline.
+
+### Feature Merging (single implementation)
+Runtime feature application and builder feature insertion both use a single shared helper: `glove80.layouts.merge.merge_components`. This eliminates drift between the two code paths.
+
+### CLI Notes
+- `glove80 validate <file>` is a friendlier alias for `typed-parse`.
+- `glove80 generate --out <path>` overrides the destination path when `--layout` and `--variant` are provided.
+- The CLI accepts `glorious-engrammer` as an alias for `glorious_engrammer`.
+
+### Top-level API
+For simple scripting, import from `glove80` directly:
+```python
+from glove80 import list_families, build_layout, apply_feature, bilateral_home_row_components
+```
 
 ## Tests & CI
 - Layer-focused tests under `tests/tailorkey/` lock down every specialized factory (HRM, cursor, mouse, etc.).

@@ -13,8 +13,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from glove80.layouts.family import REGISTRY, LayoutFamily
-from glove80.metadata import MetadataByVariant, VariantMetadata, load_metadata
+from glove80.layouts.family import REGISTRY, LayoutFamily, canonical_family_name
+from glove80.metadata import (
+    LAYOUT_METADATA_PACKAGES,
+    MetadataByVariant,
+    VariantMetadata,
+    load_metadata,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -22,18 +27,21 @@ if TYPE_CHECKING:
 META_FIELDS = ("title", "uuid", "parent_uuid", "date", "notes", "tags")
 
 
-# Ensure all families are registered by importing their layouts modules.
-_FAMILY_LAYOUT_MODULES = (
-    "glove80.families.default.layouts",
-    "glove80.families.glorious_engrammer.layouts",
-    "glove80.families.quantum_touch.layouts",
-    "glove80.families.tailorkey.layouts",
-)
-
-
 def _register_families() -> None:
-    for module_path in _FAMILY_LAYOUT_MODULES:
-        import_module(module_path)
+    """Import each family's layouts module to trigger registry side-effects.
+
+    Discovery derives solely from the source of truth in
+    :data:`LAYOUT_METADATA_PACKAGES`. For every package path in that mapping,
+    we import its ``.layouts`` submodule. This removes the need to keep a
+    parallel, hard-coded list here and avoids desynchronization.
+    """
+    for pkg in LAYOUT_METADATA_PACKAGES.values():
+        module_path = f"{pkg}.layouts"
+        try:
+            import_module(module_path)
+        except ModuleNotFoundError as exc:  # pragma: no cover - exercised via error path
+            msg = f"Failed to import '{module_path}' while registering families (from {pkg!r})"
+            raise ModuleNotFoundError(msg) from exc
 
 
 _register_families()
@@ -59,8 +67,8 @@ def _normalize_layout_name(layout: str | None) -> Iterable[tuple[str, LayoutFami
     if layout is None:
         return [(registered.name, registered.family) for registered in registered_families]
     try:
-        family = REGISTRY.get(layout)
-        return [(layout, family)]
+        family = REGISTRY.get(canonical_family_name(layout))
+        return [(canonical_family_name(layout), family)]
     except KeyError as exc:  # pragma: no cover
         msg = f"Unknown layout '{layout}'. Available: {available_layouts()}"
         raise KeyError(msg) from exc
@@ -104,13 +112,17 @@ def generate_layouts(
     variant: str | None = None,
     metadata_path: Path | None = None,
     dry_run: bool = False,
+    out: Path | None = None,
 ) -> list[GenerationResult]:
     """Generate layouts and write (or check) their release artifacts."""
+    if out is not None and (layout is None or variant is None):  # pragma: no cover - validated by CLI
+        msg = "'out' requires both --layout and --variant to be specified"
+        raise ValueError(msg)
     results: list[GenerationResult] = []
     for layout_name, family in _normalize_layout_name(layout):
         metadata = load_metadata(layout=layout_name, path=metadata_path)
         for variant_name, meta in _iter_variants(layout_name, metadata, variant):
-            destination = Path(meta["output"])
+            destination = Path(meta["output"]) if out is None else Path(out)
             layout_payload = family.build(variant_name)
             _augment_layout_with_metadata(layout_payload, meta)
 

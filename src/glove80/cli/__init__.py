@@ -66,13 +66,26 @@ def generate(
         help="Optional path to a metadata JSON file (useful for layout experiments).",
     ),
     dry_run: bool = typer.Option(False, help="Only compare outputs; do not rewrite files."),
+    out: Path | None = typer.Option(
+        None,
+        help="Override destination path (requires --layout and --variant). If provided with --metadata, only the destination is overridden.",
+    ),
 ) -> None:
     """Regenerate release JSON artifacts from the canonical sources."""
     if metadata is not None and layout is None:
         msg = "--metadata requires --layout to be specified"
         raise typer.BadParameter(msg)
 
-    results = generate_layouts(layout=layout, variant=variant, metadata_path=metadata, dry_run=dry_run)
+    if out is not None and (layout is None or variant is None):
+        raise typer.BadParameter("--out requires both --layout and --variant")
+
+    results = generate_layouts(
+        layout=layout,
+        variant=variant,
+        metadata_path=metadata,
+        dry_run=dry_run,
+        out=out,
+    )
     if not results:
         available = ", ".join(available_layouts())
         console.print(f"[bold yellow]⚠️  No results generated.[/] Known layouts: [cyan]{available}[/]")
@@ -105,3 +118,12 @@ def typed_parse(
     console.print(table)
 
     console.print("[green]Validation OK[/] — sections parsed into typed models.")
+
+
+# Friendly alias for typed-parse
+@app.command("validate")
+def validate(
+    path: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Path to a layout JSON file."),
+) -> None:
+    """Alias for ``typed-parse`` with a more descriptive name."""
+    typed_parse(path)

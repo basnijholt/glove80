@@ -64,6 +64,19 @@ def build_layout(family: str, variant: str) -> dict[str, Any]:
     return get_family(family).build(variant)
 
 
+# ----------------------------- name aliasing -----------------------------
+# Cosmetic alias for CLI ergonomics and friendlier UX.
+# Keep canonical registry names unchanged.
+ALIAS_TO_CANONICAL: dict[str, str] = {
+    "glorious-engrammer": "glorious_engrammer",
+}
+
+
+def canonical_family_name(name: str) -> str:
+    """Return the canonical registry key for a possibly-aliased name."""
+    return ALIAS_TO_CANONICAL.get(name, name)
+
+
 __all__ = [
     "REGISTRY",
     "LayoutFamily",
@@ -72,4 +85,5 @@ __all__ = [
     "build_layout",
     "get_family",
     "list_families",
+    "canonical_family_name",
 ]

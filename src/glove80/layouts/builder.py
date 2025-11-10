@@ -2,32 +2,37 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Literal, MutableMapping, MutableSequence
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from .common import compose_layout
-from .merge import (
-    insert_layer_names,
-    macro_name,
-    merge_layers_with_order,
-    merge_macros_in_place,
-    merge_sections_except_layers,
-    unique_sequence,
-)
+from .merge import merge_components
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Iterable, Mapping, Sequence
 
     from glove80.base import LayerMap
     from glove80.layouts.components import LayoutFeatureComponents
     from glove80.layouts.schema import Combo, HoldTap, InputListener, Macro
 
 
+def _unique_sequence(values: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        ordered.append(value)
+    return ordered
+
+
 @dataclass
 class _Sections:
     layer_names: list[str] = field(default_factory=list)
     layers: LayerMap = field(default_factory=dict)
-    macros: list["Macro"] = field(default_factory=list)
+    macros: OrderedDict[str, "Macro"] = field(default_factory=OrderedDict)
     hold_taps: list["HoldTap"] = field(default_factory=list)
     combos: list["Combo"] = field(default_factory=list)
     input_listeners: list["InputListener"] = field(default_factory=list)
@@ -43,7 +48,6 @@ class LayoutBuilder:
         variant: str,
         common_fields: Mapping[str, Any],
         layer_names: Sequence[str] | None = None,
-        resolve_refs: bool = True,
         mouse_layers_provider: Callable[[str], LayerMap] | None = None,
         cursor_layers_provider: Callable[[str], LayerMap] | None = None,
         home_row_provider: Callable[[str], LayoutFeatureComponents] | None = None,
@@ -51,8 +55,7 @@ class LayoutBuilder:
         self.metadata_key = metadata_key
         self.variant = variant
         self._common_fields: Mapping[str, Any] = dict(common_fields)
-        self._resolve_refs = resolve_refs
-        self._sections = _Sections(layer_names=unique_sequence(layer_names or ()))
+        self._sections = _Sections(layer_names=_unique_sequence(layer_names or ()))
         self._mouse_layers_provider = mouse_layers_provider
         self._cursor_layers_provider = cursor_layers_provider
         self._home_row_provider = home_row_provider
@@ -61,7 +64,7 @@ class LayoutBuilder:
     # Base section wiring
     # ------------------------------------------------------------------
     def set_layer_order(self, layer_names: Sequence[str]) -> LayoutBuilder:
-        self._sections.layer_names = unique_sequence(layer_names)
+        self._sections.layer_names = _unique_sequence(layer_names)
         return self
 
     def add_layers(
@@ -86,7 +89,7 @@ class LayoutBuilder:
                 msg = f"Layer '{name}' missing from provided mapping"
                 raise KeyError(msg)
             self._sections.layers[name] = layers[name]
-        insert_layer_names(self._sections.layer_names, order, after=insert_after, before=insert_before)
+        self._insert_layer_names(order, after=insert_after, before=insert_before)
         return self
 
     def update_layer(self, name: str, layer_data: Any) -> LayoutBuilder:
@@ -104,15 +107,22 @@ class LayoutBuilder:
         if not macros:
             return self
 
+        existing = self._sections.macros
         if prepend:
-            leading: list["Macro"] = []
-            merge_macros_in_place(leading, macros, None, transform=None)
-            incoming_names = {macro_name(macro) for macro in leading}
-            trailing = [macro for macro in self._sections.macros if macro_name(macro) not in incoming_names]
-            self._sections.macros = leading + trailing
+            # Build a new ordered dict that places the incoming macros up front.
+            updated = OrderedDict()
+            for macro in macros:
+                name = _macro_name(macro)
+                updated[name] = macro
+            for name, macro in existing.items():
+                if name not in updated:
+                    updated[name] = macro
+            self._sections.macros = updated
             return self
 
-        merge_macros_in_place(self._sections.macros, macros, None, transform=None)
+        for macro in macros:
+            name = _macro_name(macro)
+            existing[name] = macro
         return self
 
     def add_hold_taps(self, hold_taps: Sequence["HoldTap"]) -> LayoutBuilder:
@@ -208,16 +218,64 @@ class LayoutBuilder:
             generated_layers=self._sections.layers,
             metadata_key=self.metadata_key,
             variant=self.variant,
-            macros=list(self._sections.macros),
+            macros=list(self._sections.macros.values()),
             hold_taps=self._sections.hold_taps,
             combos=self._sections.combos,
             input_listeners=self._sections.input_listeners,
-            resolve_refs=self._resolve_refs,
         )
 
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
+    def _insert_layer_names(
+        self,
+        names: Sequence[str],
+        *,
+        after: str | None = None,
+        before: str | None = None,
+    ) -> None:
+        if not names:
+            return
+        if after is not None and before is not None:
+            msg = "Specify only one of 'after' or 'before'"
+            raise ValueError(msg)
+
+        names = _unique_sequence(names)
+        current = self._sections.layer_names
+
+        if after is None and before is None:
+            for name in names:
+                if name not in current:
+                    current.append(name)
+            return
+
+        filtered = [name for name in current if name not in names]
+
+        if before is not None:
+            try:
+                anchor_index = filtered.index(before)
+            except ValueError:
+                msg = f"Layer '{before}' is not present in the order"
+                raise ValueError(msg) from None
+            updated = (
+                filtered[:anchor_index] + [name for name in names if name not in filtered] + filtered[anchor_index:]
+            )
+            self._sections.layer_names = updated
+            return
+
+        if after is not None:
+            try:
+                anchor_index = filtered.index(after)
+            except ValueError:
+                msg = f"Layer '{after}' is not present in the order"
+                raise ValueError(msg) from None
+            updated = (
+                filtered[: anchor_index + 1]
+                + [name for name in names if name not in filtered]
+                + filtered[anchor_index + 1 :]
+            )
+            self._sections.layer_names = updated
+
     def _merge_feature_components(
         self,
         components: LayoutFeatureComponents,
@@ -225,25 +283,60 @@ class LayoutBuilder:
         insert_after: str | None = None,
         insert_before: str | None = None,
     ) -> None:
-        sections_view: MutableMapping[str, MutableSequence[Any]] = {
-            "macros": self._sections.macros,
-            "holdTaps": self._sections.hold_taps,
-            "combos": self._sections.combos,
-            "inputListeners": self._sections.input_listeners,
+        # Delegate merge of non-layer sections to the shared helper to
+        # maintain a single behavior surface with runtime feature application.
+        shadow_layout: dict[str, Any] = {
+            "macros": list(self._sections.macros.values()),
+            "holdTaps": list(self._sections.hold_taps),
+            "combos": list(self._sections.combos),
+            "inputListeners": list(self._sections.input_listeners),
         }
-        merge_sections_except_layers(sections_view, components)
+        merge_components(shadow_layout, components)
 
-        merge_layers_with_order(
-            self._sections.layer_names,
-            self._sections.layers,
-            components,
-            insert_after=insert_after,
-            insert_before=insert_before,
-            explicit_order=list(components.layers.keys()),
-        )
+        # Reconcile back into builder sections, preserving order.
+        updated_macros: "OrderedDict[str, Any]" = OrderedDict()
+        for macro in shadow_layout["macros"]:
+            name = _macro_name(macro)
+            updated_macros[name] = macro
+        self._sections.macros = updated_macros
+        self._sections.hold_taps = list(shadow_layout["holdTaps"])
+        self._sections.combos = list(shadow_layout["combos"])
+        self._sections.input_listeners = list(shadow_layout["inputListeners"])
+
+        # Layers participate in ordered insertion; use builder's add_layers to
+        # honor anchors while still reusing the shared merge for other pieces.
+        if components.layers:
+            self.add_layers(
+                components.layers,
+                insert_after=insert_after,
+                insert_before=insert_before,
+                explicit_order=list(components.layers.keys()),
+            )
 
     # No dict/model coercion helpers in the builder: we carry models through
     # and normalize to dicts in compose_layout just before payload validation.
+
+
+def _macro_name(macro: Any) -> str:
+    # Support pydantic model attribute access or mapping lookup
+    if hasattr(macro, "name") and not isinstance(macro, dict):
+        name = getattr(macro, "name")
+    else:
+        try:
+            from collections.abc import Mapping
+
+            if isinstance(macro, Mapping):
+                name = cast("Mapping[str, Any]", macro)["name"]
+            else:
+                # Last resort: hope it behaves like a dict
+                name = cast("Any", macro)["name"]
+        except Exception as exc:  # pragma: no cover - enforced via tests
+            msg = "Macro definitions must include a 'name'"
+            raise KeyError(msg) from exc
+    if not isinstance(name, str):  # pragma: no cover - sanity guard
+        msg = "Macro name must be a string"
+        raise TypeError(msg)
+    return name
 
 
 __all__ = ["LayoutBuilder"]

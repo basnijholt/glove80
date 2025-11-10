@@ -61,7 +61,6 @@ def compose_layout(
     hold_taps: Sequence["HoldTap"] | None = None,
     combos: Sequence["Combo"] | None = None,
     input_listeners: Sequence["InputListener"] | None = None,
-    resolve_refs: bool = True,
     ref_fields: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Compose a full layout payload given common metadata and generated layers."""
@@ -75,12 +74,11 @@ def compose_layout(
     )
     # Always normalize section items to dictionaries for JSON stability.
     _normalize_sections_to_dicts(layout, fields=ref_fields or DEFAULT_REF_FIELDS)
-    if resolve_refs:
-        _resolve_referenced_fields(
-            layout,
-            layer_names=layer_names,
-            fields=ref_fields or DEFAULT_REF_FIELDS,
-        )
+    _resolve_referenced_fields(
+        layout,
+        layer_names=layer_names,
+        fields=ref_fields or DEFAULT_REF_FIELDS,
+    )
     layout["layers"] = _assemble_layers(layer_names, generated_layers, variant=variant)
     _attach_variant_metadata(layout, variant=variant, layout_key=metadata_key)
     # Validate final payload and normalize away None values.

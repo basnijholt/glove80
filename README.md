@@ -36,16 +36,37 @@ Every release JSON under `layouts/*/releases` can be regenerated deterministical
 The public API lives on the root package:
 
 ```python
-from glove80 import build_layout, list_families
-from glove80.features import apply_feature, bilateral_home_row_components
+from glove80 import (
+    build_layout,
+    list_families,
+    apply_feature,
+    bilateral_home_row_components,
+)
 
 print(list_families())  # ['default', 'tailorkey', 'quantum_touch', 'glorious_engrammer']
 layout = build_layout("tailorkey", "mac")
-components = bilateral_home_row_components("mac", platform="mac", remap=True)
+components = bilateral_home_row_components("mac")
 apply_feature(layout, components)
 ```
 
-`build_layout(<family>, <variant>)` always returns the same dictionary that the CLI would write into `layouts/<family>/releases/…`.
+`build_layout(<family>, <variant>)` returns the same dictionary that the CLI writes into `layouts/<family>/releases/…`.
+
+### Minimal Example (<10 lines)
+```python
+from glove80 import build_layout, apply_feature, bilateral_home_row_components
+
+layout = build_layout("tailorkey", "windows")
+apply_feature(layout, bilateral_home_row_components("windows"))
+# now `layout` contains the merged macros/layers and can be serialized
+```
+
+### CLI Tips
+- Validate any layout JSON: `glove80 validate path/to.json`
+- Override output destination: `glove80 generate --layout tailorkey --variant windows --out /tmp/out.json`
+- Families list: `glove80 families`
+
+Notes:
+- The CLI accepts `glorious-engrammer` as an alias for `glorious_engrammer`.
 
 ## Repository Layout
 ```
