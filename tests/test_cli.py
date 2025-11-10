@@ -160,3 +160,38 @@ def test_cli_generate_out_requires_single_target(tmp_path: Path) -> None:
     result = RUNNER.invoke(app, ["generate", "--layout", "tailorkey", "--out", str(dest), "--dry-run"])
     assert result.exit_code != 0
     assert "requires both --layout and --variant" in _strip_ansi(result.output)
+
+
+def test_cli_scaffold_writes_template(tmp_path: Path) -> None:
+    dest = tmp_path / "custom" / "specs.py"
+    result = RUNNER.invoke(
+        app,
+        [
+            "scaffold",
+            str(dest),
+            "--layout",
+            "my_layout",
+            "--variant",
+            "beta",
+            "--creator",
+            "Ada",
+        ],
+    )
+    assert result.exit_code == 0
+    content = dest.read_text()
+    assert 'LAYOUT_KEY = "my_layout"' in content
+    assert 'VARIANT = "beta"' in content
+    assert 'creator="Ada"' in content
+
+
+def test_cli_scaffold_respects_force(tmp_path: Path) -> None:
+    dest = tmp_path / "spec.py"
+    dest.write_text("original")
+
+    result = RUNNER.invoke(app, ["scaffold", str(dest)])
+    assert result.exit_code != 0
+    assert "already exists" in _strip_ansi(result.output)
+
+    result = RUNNER.invoke(app, ["scaffold", str(dest), "--force"])
+    assert result.exit_code == 0
+    assert "Starter spec" in dest.read_text()

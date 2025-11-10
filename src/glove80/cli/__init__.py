@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+import textwrap
+from string import Template
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -8,8 +12,6 @@ from rich.table import Table
 from glove80.layouts.family import REGISTRY
 from glove80.layouts.generator import GenerationResult, available_layouts, generate_layouts
 from glove80.layouts.parse import parse_typed_sections
-
-from pathlib import Path
 
 app = typer.Typer(help="Utilities for working with Glove80 layouts.")
 console = Console()
@@ -92,6 +94,105 @@ def generate(
         raise typer.Exit(code=1)
 
     _print_results(results)
+
+
+_SCAFFOLD_TEMPLATE = Template(
+    textwrap.dedent(
+        """
+        \"\"\"Starter spec for the $layout layout ($variant variant).
+
+        Generated via ``glove80 scaffold``. Move this file into your project (for
+        example ``src/glove80/families/$layout/specs.py``), update
+        ``metadata.json`` so it knows about ``$variant``, and then fill in the
+        sections below.
+        \"\"\"
+
+        from __future__ import annotations
+
+        from typing import Any
+
+        from glove80.base import KeySpec, LayerSpec, build_layer_from_spec
+        from glove80.layouts.common import build_common_fields, compose_layout
+        from glove80.layouts.schema import Combo, HoldTap, InputListener, Macro
+
+
+        LAYOUT_KEY = "$layout"
+        VARIANT = "$variant"
+
+        COMMON_FIELDS = build_common_fields(
+            creator="$creator",
+            # TODO: keep metadata.json in sync with these fields.
+        )
+
+        LAYER_NAMES = ("Base",)
+        LAYER_SPECS = {
+            "Base": LayerSpec(
+                overrides={
+                    # 0: KeySpec("ESC"),
+                    # 1: KeySpec("Q"),
+                    # TODO: define the rest of the overrides for this layer.
+                },
+            ),
+        }
+
+        MACROS: list[Macro] = []
+        HOLD_TAPS: list[HoldTap] = []
+        COMBOS: list[Combo] = []
+        INPUT_LISTENERS: list[InputListener] = []
+
+
+        def build_layers() -> dict[str, list[dict[str, Any]]]:
+            \"\"\"Expand LayerSpec definitions into firmware-friendly layers.\"\"\"
+
+            return {name: build_layer_from_spec(spec) for name, spec in LAYER_SPECS.items()}
+
+
+        def build_layout_payload() -> dict[str, Any]:
+            \"\"\"Compose the layout dictionary the CLI would normally emit.\"\"\"
+
+            return compose_layout(
+                common_fields=COMMON_FIELDS,
+                layer_names=LAYER_NAMES,
+                generated_layers=build_layers(),
+                metadata_key=LAYOUT_KEY,
+                variant=VARIANT,
+                macros=MACROS,
+                hold_taps=HOLD_TAPS,
+                combos=COMBOS,
+                input_listeners=INPUT_LISTENERS,
+            )
+        """
+    ).strip(),
+)
+
+
+def _render_scaffold_template(*, layout: str, variant: str, creator: str) -> str:
+    return _SCAFFOLD_TEMPLATE.substitute(layout=layout, variant=variant, creator=creator)
+
+
+@app.command("scaffold")
+def scaffold(
+    destination: Path = typer.Argument(
+        ...,
+        file_okay=True,
+        dir_okay=False,
+        help="Where to write the generated spec (e.g. src/glove80/families/custom/specs.py)",
+    ),
+    layout: str = typer.Option("custom_layout", help="Name of the layout family/metadata key."),
+    variant: str = typer.Option("default", help="Variant identifier to pre-fill in the template."),
+    creator: str = typer.Option("Your Name", help="Creator field stored in common metadata."),
+    force: bool = typer.Option(False, "--force", help="Overwrite the destination if it already exists."),
+) -> None:
+    """Generate a starter Python spec for a new family/variant."""
+
+    if destination.exists() and not force:
+        msg = f"{destination} already exists (use --force to overwrite)"
+        raise typer.BadParameter(msg)
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    content = _render_scaffold_template(layout=layout, variant=variant, creator=creator)
+    destination.write_text(content, encoding="utf-8")
+    console.print(f"[green]✨ Wrote starter spec to[/] [cyan]{destination}[/]")
 
 
 __all__ = ["app"]

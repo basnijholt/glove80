@@ -10,8 +10,11 @@ This project keeps every part of the Glove80 layout toolchain in version control
 - **Metadata (`src/glove80/families/<family>/metadata.json`)** stores the immutable release information checked in by the original layout authors (UUIDs, parent UUIDs, titles, tags, notes, and the relative output path). Packaging the metadata keeps CLI invocations and library imports perfectly aligned.
 
 ## Generation Flow
-1. Discovery derives from a single source of truth: `glove80.metadata.LAYOUT_METADATA_PACKAGES`.
-   For each package value (e.g., `glove80.families.tailorkey`), the generator imports its `.layouts` module to register the family.
+1. Discovery derives from a single source of truth: `glove80.metadata.layout_metadata_packages()`.
+   Built-in families live in `glove80.families.*`, and additional packages can
+   register themselves via the `glove80.layouts` entry-point group. For each
+   package value (e.g., `glove80.families.tailorkey`), the generator imports its `.layouts`
+   module to register the family.
 2. `glove80.layouts.generator` iterates the registry, builds each variant, augments it with metadata, and writes JSON to `layouts/<family>/releases`.
 3. Re-running the command is idempotent: if the serialized JSON already matches the generated payload, the file is left untouched.
 
@@ -52,7 +55,22 @@ Runtime feature application and builder feature insertion both use a single shar
 ### CLI Notes
 - `glove80 validate <file>` is a friendlier alias for `typed-parse`.
 - `glove80 generate --out <path>` overrides the destination path when `--layout` and `--variant` are provided.
+- `glove80 scaffold src/glove80/families/custom/specs.py --layout custom --variant beta` writes a starter Python spec with placeholders for layers, macros, and metadata.
 - The CLI accepts `glorious-engrammer` as an alias for `glorious_engrammer`.
+
+### Third-party layout discovery
+External packages can contribute families without editing this repo by
+declaring an entry point in `pyproject.toml`:
+
+```toml
+[project.entry-points."glove80.layouts"]
+custom = "my_package.families.custom"
+```
+
+Each entry maps a layout key (`custom`) to the module path that contains both
+`metadata.json` and the corresponding `layouts` module. During `glove80
+generate`, these packages are imported alongside the built-in families, so the
+CLI and Python API discover them automatically.
 
 ### Top-level API
 For simple scripting, import from `glove80` directly:
