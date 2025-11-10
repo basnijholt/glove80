@@ -85,3 +85,40 @@ def test_cli_generate_writes_output_with_custom_metadata(tmp_path: Path) -> None
     )
     assert result.exit_code == 0
     assert custom_output.exists()
+
+
+def test_cli_validate_alias_parses_release_file() -> None:
+    # Use an existing release artifact for quick validation
+    # TailorKey releases are present in the repo
+    release_dir = REPO_ROOT / "layouts/tailorkey/releases"
+    # Pick any file in the directory
+    sample = next(p for p in release_dir.iterdir() if p.suffix == ".json")
+    result = RUNNER.invoke(app, ["validate", str(sample)])
+    assert result.exit_code == 0
+    assert "Validation OK" in _strip_ansi(result.stdout)
+
+
+def test_cli_generate_out_writes_to_custom_path(tmp_path: Path) -> None:
+    dest = tmp_path / "tailorkey-windows.json"
+    result = RUNNER.invoke(
+        app,
+        [
+            "generate",
+            "--layout",
+            "tailorkey",
+            "--variant",
+            "windows",
+            "--out",
+            str(dest),
+        ],
+    )
+    assert result.exit_code == 0
+    assert dest.exists()
+
+
+def test_cli_generate_out_requires_single_target(tmp_path: Path) -> None:
+    # Missing --variant should error when --out is provided
+    dest = tmp_path / "out.json"
+    result = RUNNER.invoke(app, ["generate", "--layout", "tailorkey", "--out", str(dest), "--dry-run"])
+    assert result.exit_code != 0
+    assert "requires both --layout and --variant" in _strip_ansi(result.output)

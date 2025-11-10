@@ -112,13 +112,17 @@ def generate_layouts(
     variant: str | None = None,
     metadata_path: Path | None = None,
     dry_run: bool = False,
+    out: Path | None = None,
 ) -> list[GenerationResult]:
     """Generate layouts and write (or check) their release artifacts."""
+    if out is not None and (layout is None or variant is None):  # pragma: no cover - validated by CLI
+        msg = "'out' requires both --layout and --variant to be specified"
+        raise ValueError(msg)
     results: list[GenerationResult] = []
     for layout_name, family in _normalize_layout_name(layout):
         metadata = load_metadata(layout=layout_name, path=metadata_path)
         for variant_name, meta in _iter_variants(layout_name, metadata, variant):
-            destination = Path(meta["output"])
+            destination = Path(meta["output"]) if out is None else Path(out)
             layout_payload = family.build(variant_name)
             _augment_layout_with_metadata(layout_payload, meta)
 
