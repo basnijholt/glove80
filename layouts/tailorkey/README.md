@@ -34,3 +34,6 @@ The code in `src/glove80/families/tailorkey` captures the entire layout in decla
 ## Testing Expectations
 - For incremental changes, add or update a targeted test under `tests/tailorkey/` (mouse, HRM, etc.) to lock in the new expectations.
 - The layout parity tests ensure the full JSON matches the generated structure, so intentional diffs must be checked in alongside code changes.
+
+## Known Issues
+- **Mouse layer paste binding (Windows-derived variants):** index 57 on the Mouse layer currently emits `LC(LC(V))`, i.e., Control pressed twice before `V`. This is a historical slip in `layers/mouse.py` and can make the paste shortcut unreliable on Windows/Linux. The fix is simply to reduce the nesting to a single `LC(V)`, but doing so changes every TailorKey release JSON derived from the Windows template. Until we’re ready to regenerate those releases, the bug is left in place so the shipped JSON stays byte-identical.
