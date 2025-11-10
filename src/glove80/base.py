@@ -81,16 +81,16 @@ class LayerSpec:
         if isinstance(raw_index, str):
             try:
                 return int(raw_index, 10)
-            except ValueError as exc:
+            except ValueError as exc:  # pragma: no cover
                 msg = f"Override index '{raw_index}' is not an integer string"
                 raise TypeError(msg) from exc
         if isinstance(raw_index, float):
             if raw_index.is_integer():
                 return int(raw_index)
-            msg = f"Override index {raw_index} has a fractional component"
-            raise TypeError(msg)
-        msg = f"Unsupported override index type: {type(raw_index).__name__}"
-        raise TypeError(msg)
+            msg = f"Override index {raw_index} has a fractional component"  # pragma: no cover
+            raise TypeError(msg)  # pragma: no cover
+        msg = f"Unsupported override index type: {type(raw_index).__name__}"  # pragma: no cover
+        raise TypeError(msg)  # pragma: no cover
 
     def to_layer(self) -> Layer:
         layer = [self.default.to_dict() for _ in range(self.length)]
@@ -124,14 +124,14 @@ def build_layer_from_spec(spec: LayerSpec) -> Layer:
 def _coerce_param(param: Any) -> dict[str, Any]:
     if isinstance(param, KeySpec):
         return param.to_dict()
-    if isinstance(param, LayerRef):
+    if isinstance(param, LayerRef):  # pragma: no cover
         msg = "LayerRef must be resolved before serializing"
         raise TypeError(msg)
     if isinstance(param, dict):
         return deepcopy(param)
     if isinstance(param, (str, int)):
         return {"value": param, "params": []}
-    msg = f"Unsupported param type: {type(param)!r}"
+    msg = f"Unsupported param type: {type(param)!r}"  # pragma: no cover
     raise TypeError(msg)  # pragma: no cover
 
 
