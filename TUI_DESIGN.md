@@ -4,6 +4,8 @@ This document is the single source of truth for the upcoming Textual (Python) TU
 
 > **Instructions for agents**: Before making changes, read this file end-to-end, follow its requirements, and record any new decisions, deviations, or discoveries back into this document (append brief dated notes in the relevant section). Treat it as a living blueprint.
 
+> **Progress note (2025-11-11)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector) and the first slice of the Features tab now drives Home Row Mods via the new BuilderBridge service.
+
 IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`!
 
 ## 1. Source-of-Truth Context & Guarantees
@@ -33,6 +35,7 @@ IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`
    - **Layer Sidebar** (left) – Renders `layer_names[]`, supports drag/drop reorder, duplicate, rename, hide/show, “pick up & drop” interactions, and badges showing feature provenance (HRM/mouse/cursor/custom). Layer actions update references (`LayerRef`) everywhere.
    - **Key Canvas** (center) – 80-key grid per layer (tailored to Glove80 geometry). Click or navigate via keyboard to inspect/modify key behaviors; multi-layer split view available for copy/drop operations.
    - **Inspector Tabs** (right) – Context-aware forms: Key, Macro, Hold Tap, Combo, Listener, Features (builder toggles), Advanced (custom behaviors/device tree/config/layout parameters), Metadata.
+     - _Note (2025-11-11): Key tab + validation/autocomplete are implemented, and a minimal Features tab now previews/applies HRM bundles via BuilderBridge; the remaining tabs are still stubs._
 3. **Status & Logs (Footer)** – Shows dirty flag, active layer, validation counts, background task progress (e.g., regen, CLI validation), and streaming logs.
 
 ### 3.2 Secondary Surfaces
@@ -120,6 +123,7 @@ The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Sch
   - `add_home_row_mods(target_layer=…, position=…)`
   - `add_cursor_layer(insert_after=…)`
   - `add_mouse_layers(insert_after=…)`
+  - _Note (2025-11-11): HRM preview/apply is implemented (w/ CLI parity tests); cursor + mouse bundles still outstanding._
 - The Features tab shows a diff preview (layers/macros/hold taps/combos/input listeners) before applying a bundle.
 - Internally, builder bridge produces a shadow layout, calls `merge_components`, and then reconciles changes back into the TUI store—mirroring the runtime feature application path documented in `docs/architecture.md`.
 
