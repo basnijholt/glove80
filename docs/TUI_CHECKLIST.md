@@ -2,6 +2,8 @@
 
 Single source of truth for implementing `TUI_DESIGN.md`. Each section groups explicit and implicit requirements plus measurable acceptance criteria. Revisit this checklist before coding and update it whenever the design doc evolves.
 
+_Progress snapshot (2025-11-11): Milestones 1–3 are live (Layer Sidebar, KeyCanvas navigation/copy, validated Key Inspector). BuilderBridge + Features tab currently ship the HRM preview/apply path; the remaining checklist items (cursor/mouse bundles, macro/hold-tap/combo studios, regen/saving flows, palette/search, accessibility polish) are still outstanding._
+
 ## Source-of-Truth Guarantees
 
 - **Schema parity first** — Every edit flows through `LayoutPayload` (Pydantic) + `docs/layout_payload.schema.json`.
@@ -34,6 +36,7 @@ Single source of truth for implementing `TUI_DESIGN.md`. Each section groups exp
   - Acceptance criteria:
     - Sidebar mutations rewrite `layer_names`, `layers`, and any `LayerRef` usage deterministically.
     - Canvas enforces layer length == 80 and highlights active selection across split view.
+  - _Status 2025-11-11: Sidebar + Key Canvas + Key tab are implemented (incl. selection + HRM copy gestures). Macro/HoldTap/Combo/Listener/Advanced/Metadata tabs remain TODO; Features tab currently exposes only HRM preview/apply._
 - **Status & Logs Footer** — Dirty flag, active layer, validation counts, async task progress/log stream.
   - Acceptance criteria:
     - Background workers report progress + cancellation states without freezing the UI.
@@ -163,4 +166,3 @@ Inner-loop checklist after *every* meaningful change:
 - **Diff granularity in Regen Preview** — Section-by-section diff is required, but tooling (e.g., textual diff viewer) is unspecified. Need to evaluate existing diff widgets vs. custom implementation.
 - **Devicetree lint integration** — `dtc` hook is optional; confirm whether to bundle `dtc`, shell out, or offer best-effort lint with graceful failure.
 - **Schema refresh cadence** — Document instructs refreshing schema when models change; decide whether TUI triggers this automatically or prompts the user.
-

@@ -2,6 +2,8 @@
 
 This plan operationalizes `TUI_DESIGN.md` and `docs/TUI_CHECKLIST.md` into a concrete Textual architecture, phased delivery milestones, and a scoped testing strategy. It synthesizes the agent surveys (repository map, validation loop, CLI hook guidance, testing strategy) to keep implementation aligned with the existing Glove80 toolchain.
 
+_Progress snapshot (2025-11-11): Milestones 1–3 complete (foundation, editing core, Key Inspector). Workstream 1 of Milestone 5 (BuilderBridge + HRM preview/apply) is also shipped. Remaining milestones—studios, cursor/mouse bundles, validation/regen/save flow, command palette/search, accessibility polish—are pending._
+
 ## 1. Module Architecture (src/glove80/tui)
 
 | Module / Path | Responsibilities | Checklist & Design Alignment |
@@ -53,30 +55,37 @@ Each milestone is intentionally narrow to support the “commit/push whenever te
 1. **Foundation & Ribbon (Milestone 1)**
    - Deliverables: project scaffolding, `Glove80TuiApp`, `state/store` hydration, Project Ribbon with picker + stubbed actions, footer shell.
    - Acceptance: `glove80 tui` launches read-only view of default layout; ribbon buttons render; `uv run pytest tests/tui/test_foundation.py` passes.
+   - _Status 2025-11-11: ✅ Complete (landed with initial Textual scaffold)._ 
 
 2. **Layer Sidebar & Undo Core (Milestone 2)**
    - Deliverables: `LayerSidebar` with rename/reorder/duplicate/pick-up/drop, undo/redo stack, provenance badges.
    - Acceptance: Layer rename updates all `LayerRef` references; undo/redo collapses composite actions; tests `tests/tui/test_sidebar.py` cover ref rewrites + history.
+   - _Status 2025-11-11: ✅ Complete (sidebar + undo live)._ 
 
 3. **Key Canvas & Inspector Key Tab (Milestone 3)**
    - Deliverables: 80-key canvas with keyboard/pointer navigation, Key inspector tab with presets + raw JSON editor, focus outlines, footer selection info.
    - Acceptance: Shortcuts (`arrow/hjkl`, `Enter`, `.`, `[`, `]`, `P/D`) work; schema-driven editor enforces constraints; unit + pilot tests (`test_canvas.py`, `test_key_tab.py`) pass.
+   - _Status 2025-11-11: ✅ Complete (current build satisfies these acceptance tests)._ 
 
 4. **Studios & Command Surfaces (Milestone 4)**
    - Deliverables: Macro/Hold Tap/Combo/Listener tabs, command palette, Search/Jump panel, cross-linking (jump from key to macro, etc.).
    - Acceptance: CRUD for each entity with uniqueness and validation; palette actions trigger store mutations; tests `test_macro_tab.py`, `test_palette.py` cover flows.
+   - _Status 2025-11-11: 🚧 Not started._
 
 5. **Feature Bundles & Builder Bridge (Milestone 5)**
    - Deliverables: `services/builder_bridge`, Features tab diff preview, Layer provenance badges autopopulated, action log inspector.
    - Acceptance: Toggling HRM/mouse/cursor layers produces diffs identical to `LayoutBuilder`; diff preview must be accepted before commit; builder bridge tests compare outputs to known fixtures.
+   - _Status 2025-11-11: ✅ HRM preview/apply shipped (BuilderBridge + Features tab); cursor/mouse bundles + provenance + action log inspector still pending._
 
 6. **Validation, Regen Preview & Save Flow (Milestone 6)**
    - Deliverables: Debounced schema + semantic validators, CLI Validate/Regen buttons, Regen Preview screen with accept/skip, Save/Save-As plus optional auto-validate, CLI command wiring.
    - Acceptance: `uv run glove80 generate --layout … --variant … --dry-run` is invoked via CLI runner; regen diffs show per section; acceptance updates store; integration tests `test_regen_preview.py`, `test_validation_messaging.py` pass; README updated.
+   - _Status 2025-11-11: 🚧 Not started._
 
 7. **Polish & Accessibility (Milestone 7)**
    - Deliverables: Theme switcher (light/dark/high-contrast/ASCII), font scaling, focus outlines, advanced tab (custom behaviors, devicetree, config/layout parameters, metadata), final documentation updates.
    - Acceptance: Accessibility checklist satisfied; final `just ci` + `just regen` green; `docs/TUI_CHECKLIST.md` cross-checked with implementation.
+   - _Status 2025-11-11: 🚧 Not started._
 
 ## 3. Focused Testing Strategy
 
@@ -133,4 +142,3 @@ Tracking these questions early ensures we extend the plan without violating dete
 ---
 
 With this architecture, milestone map, and testing strategy in place, we can proceed into Milestone 1 immediately: scaffold the `tui` package, integrate the `glove80 tui` command, and land the foundation tests in rapid, test-backed commits.
-

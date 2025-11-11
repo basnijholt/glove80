@@ -3,6 +3,8 @@
 ## Overview
 Minimal, Textual-friendly feedback for two high-frequency actions: **layer switching** and **key copying**.
 
+_Status (2025-11-11): Implemented – FooterBar + KeyCanvas copy notifications behave as specified; doc retained for future UX tweaks._
+
 ---
 
 ## Footer Display
