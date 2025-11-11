@@ -12,10 +12,10 @@ def test_editor_renders_core_widgets() -> None:
         app = Glove80TuiApp()
         async with app.run_test() as pilot:
             await pilot.pause()
-            ribbon = pilot.app.query_one(ProjectRibbon)
-            sidebar = pilot.app.query_one(LayerSidebar)
-            canvas = pilot.app.query_one(KeyCanvas)
-            inspector = pilot.app.query_one(KeyInspector)
+            ribbon = pilot.app.screen.query_one(ProjectRibbon)
+            sidebar = pilot.app.screen.query_one(LayerSidebar)
+            canvas = pilot.app.screen.query_one(KeyCanvas)
+            inspector = pilot.app.screen.query_one(KeyInspector)
 
             assert "Glove80" in str(ribbon.render())
             assert sidebar.children, "Sidebar should list layers"
@@ -30,7 +30,7 @@ def test_layer_switch_updates_store_selection() -> None:
         app = Glove80TuiApp()
         async with app.run_test() as pilot:
             await pilot.pause()
-            canvas = pilot.app.query_one(KeyCanvas)
+            canvas = pilot.app.screen.query_one(KeyCanvas)
             canvas.action_next_layer()
             await pilot.pause()
 

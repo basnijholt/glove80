@@ -24,8 +24,8 @@ def test_key_canvas_moves_selection_and_focuses_inspector() -> None:
     async def _run() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:  # type: Pilot
-            canvas = pilot.app.query_one(KeyCanvas)
-            inspector = pilot.app.query_one(KeyInspector)
+            canvas = pilot.app.screen.query_one(KeyCanvas)
+            inspector = pilot.app.screen.query_one(KeyInspector)
 
             canvas.focus()
             await pilot.pause()
@@ -46,7 +46,7 @@ def test_edit_key_value_round_trip() -> None:
     async def _run() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:
-            inspector = pilot.app.query_one(KeyInspector)
+            inspector = pilot.app.screen.query_one(KeyInspector)
             await pilot.pause()
 
             inspector.apply_value_for_test("&kp", ["TAB"])
@@ -68,7 +68,7 @@ def test_layer_switch_shortcuts_wrap() -> None:
     async def _run() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:
-            canvas = pilot.app.query_one(KeyCanvas)
+            canvas = pilot.app.screen.query_one(KeyCanvas)
             canvas.focus()
             await pilot.pause()
 
@@ -93,7 +93,7 @@ def test_copy_shortcut_copies_between_layers() -> None:
     async def _run() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:
-            canvas = pilot.app.query_one(KeyCanvas)
+            canvas = pilot.app.screen.query_one(KeyCanvas)
             canvas.focus()
             await pilot.pause()
 

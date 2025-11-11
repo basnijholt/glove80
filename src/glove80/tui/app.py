@@ -44,6 +44,7 @@ class Glove80TuiApp(App[None]):
     }
 
     .key-canvas {
+        width: 1fr;
         border: solid $surface 10%;
         padding: 1;
         min-height: 20;
@@ -90,14 +91,14 @@ class Glove80TuiApp(App[None]):
         base_payload = copy.deepcopy(payload) if payload is not None else copy.deepcopy(DEFAULT_SAMPLE_LAYOUT)
         self.store = LayoutStore.from_payload(base_payload)
 
-    def compose(self) -> ComposeResult:
-        """Mount the primary editor screen."""
-
-        yield EditorScreen(
+    def on_mount(self) -> None:
+        """Push the editor screen on startup."""
+        editor_screen = EditorScreen(
             store=self.store,
             initial_layout=self._initial_layout,
             initial_variant=self._initial_variant,
         )
+        self.push_screen(editor_screen)
 
     def action_palette(self) -> None:  # pragma: no cover - placeholder binding
         self.notify("Command palette will arrive in a later milestone.")

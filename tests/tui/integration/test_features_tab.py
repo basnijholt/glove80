@@ -11,14 +11,14 @@ def test_features_tab_preview_and_apply() -> None:
     async def _run() -> None:
         app = Glove80TuiApp()
         async with app.run_test() as pilot:
-            preview_button = pilot.app.query_one("#preview-hrm", Button)
+            preview_button = pilot.app.screen.query_one("#preview-hrm", Button)
             preview_button.press()
             await pilot.pause()
 
-            summary = pilot.app.query_one("#feature-summary", Static)
+            summary = pilot.app.screen.query_one("#feature-summary", Static)
             assert "HRM →" in str(summary.render())
 
-            apply_button = pilot.app.query_one("#apply-hrm", Button)
+            apply_button = pilot.app.screen.query_one("#apply-hrm", Button)
             apply_button.press()
             await pilot.pause()
             assert "HRM_WinLinx" in pilot.app.store.layer_names

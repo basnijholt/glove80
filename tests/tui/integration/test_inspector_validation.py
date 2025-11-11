@@ -22,7 +22,7 @@ def test_key_inspector_validation_flow() -> None:
     async def _run() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:  # type: Pilot
-            inspector = pilot.app.query_one(KeyInspector)
+            inspector = pilot.app.screen.query_one(KeyInspector)
             await pilot.pause()
 
             inspector.apply_value_for_test("&unknown", [])
