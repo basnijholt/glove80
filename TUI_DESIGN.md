@@ -4,6 +4,8 @@ This document is the single source of truth for the upcoming Textual (Python) TU
 
 > **Instructions for agents**: Before making changes, read this file end-to-end, follow its requirements, and record any new decisions, deviations, or discoveries back into this document (append brief dated notes in the relevant section). Treat it as a living blueprint.
 
+IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`!
+
 ## 1. Source-of-Truth Context & Guarantees
 
 | Concern | Canonical Location | TUI Obligation |
