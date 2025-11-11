@@ -3,29 +3,32 @@
 from __future__ import annotations
 
 import json
-from typing import Sequence
+from typing import Literal, Sequence
 
 from textual import on
 from textual.containers import Vertical
 from textual.suggester import Suggester
 from textual.widgets import Button, Input, Label, Static
 
-from ..messages import SelectionChanged, StoreUpdated
+from ..messages import FooterMessage, SelectionChanged, StoreUpdated
 from ..state import LayoutStore, SelectionState
-from ..services import ValidationIssue, ValidationResult, ValidationService
+from ..services import BuilderBridge, FeatureDiff, ValidationIssue, ValidationResult, ValidationService
 
 
 class InspectorPanel(Vertical):
     """Wrapper that will eventually host multiple tabs."""
 
-    def __init__(self, *, store: LayoutStore) -> None:
+    def __init__(self, *, store: LayoutStore, variant: str) -> None:
         super().__init__(classes="inspector-panel")
         self.store = store
+        self._variant = variant
         self.key_inspector = KeyInspector(store=store)
+        self.features_tab = FeaturesTab(store=store, variant=variant)
 
     def compose(self):  # type: ignore[override]
         yield Static("Inspector", classes="inspector-heading")
         yield self.key_inspector
+        yield self.features_tab
 
 
 class KeyInspector(Vertical):
@@ -166,6 +169,7 @@ class KeyInspector(Vertical):
         self.post_message(StoreUpdated())
         self._load_from_store()
 
+
     # ------------------------------------------------------------------
     # Test helper -------------------------------------------------------
     def apply_value_for_test(self, value: str, params: Sequence[str] | None = None) -> None:
@@ -197,6 +201,117 @@ class KeyInspector(Vertical):
             widget.remove_class("input-error")
             label.update("")
             label.add_class("hidden")
+
+
+class FeaturesTab(Vertical):
+    """Minimal feature toggle surface for HRM bundles."""
+
+    def __init__(self, *, store: LayoutStore, variant: str) -> None:
+        super().__init__(classes="features-tab", id="features-tab")
+        self.store = store
+        self.bridge = BuilderBridge(store=store, variant=variant)
+        self._pending_request: tuple[str, Literal["before", "after"]] | None = None
+        self._diff: FeatureDiff | None = None
+        self._summary_text = "HRM preview pending."
+        self._has_pending_changes = False
+        self.summary = Static(self._summary_text, id="feature-summary")
+        self.preview_button = Button("Preview HRM", id="preview-hrm")
+        self.apply_button = Button("Apply HRM", id="apply-hrm", disabled=True)
+        self.clear_button = Button("Clear", id="clear-hrm", disabled=True)
+
+    @property
+    def current_summary(self) -> str:
+        return self._summary_text
+
+    @property
+    def has_pending_changes(self) -> bool:
+        return self._has_pending_changes
+
+    def on_mount(self) -> None:
+        # Ensure our handles reference the mounted widgets.
+        self.summary = self.query_one("#feature-summary", Static)
+        self.preview_button = self.query_one("#preview-hrm", Button)
+        self.apply_button = self.query_one("#apply-hrm", Button)
+        self.clear_button = self.query_one("#clear-hrm", Button)
+
+    def compose(self):  # type: ignore[override]
+        yield Static("Features", classes="features-heading")
+        yield self.preview_button
+        yield self.summary
+        yield self.apply_button
+        yield self.clear_button
+
+    @on(Button.Pressed)
+    def _handle_buttons(self, event: Button.Pressed) -> None:
+        if event.button.id == "preview-hrm":
+            self._preview_hrm()
+        elif event.button.id == "apply-hrm":
+            self._apply_hrm()
+        elif event.button.id == "clear-hrm":
+            self._clear_preview()
+
+    def _preview_hrm(self) -> None:
+        target = self._resolve_target_layer()
+        if target is None:
+            self.app.notify("No layers available")
+            return
+        try:
+            diff = self.bridge.preview_home_row_mods(target_layer=target)
+        except ValueError as exc:
+            self.app.notify(str(exc))
+            return
+        self._diff = diff
+        self._pending_request = (target, "after")
+        self._set_summary(f"HRM → {target}: {diff.summary()}")
+        has_changes = bool(
+            diff.layers_added
+            or diff.macros_added
+            or diff.hold_taps_added
+            or diff.combos_added
+            or diff.listeners_added
+        )
+        self._has_pending_changes = has_changes
+        self.apply_button.disabled = not has_changes
+        self.clear_button.disabled = False
+        self.post_message(FooterMessage(f"HRM preview · anchor={target} · {diff.summary()}"))
+
+    def _apply_hrm(self) -> None:
+        if self._pending_request is None:
+            return
+        target, position = self._pending_request
+        try:
+            diff = self.bridge.apply_home_row_mods(target_layer=target, position=position)
+        except ValueError as exc:
+            self.app.notify(str(exc))
+            return
+        self.post_message(StoreUpdated())
+        self._set_summary(f"HRM applied to {target}: {diff.summary()}")
+        self.post_message(FooterMessage(f"HRM applied · anchor={target} · {diff.summary()}"))
+        self.apply_button.disabled = True
+        self.clear_button.disabled = True
+        self._pending_request = None
+        self._diff = None
+        self._has_pending_changes = False
+
+    def _clear_preview(self) -> None:
+        self._pending_request = None
+        self._diff = None
+        self._set_summary("HRM preview pending.")
+        self.apply_button.disabled = True
+        self.clear_button.disabled = True
+        self.post_message(FooterMessage("HRM preview cleared"))
+        self._has_pending_changes = False
+
+    def _resolve_target_layer(self) -> str | None:
+        if self.store.selected_layer_name:
+            return self.store.selected_layer_name
+        if self.store.layer_names:
+            return self.store.layer_names[0]
+        return None
+
+    def _set_summary(self, text: str) -> None:
+        self._summary_text = text
+        self.summary.update(text)
 
 
 # ---------------------------------------------------------------------------

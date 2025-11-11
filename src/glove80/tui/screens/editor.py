@@ -31,7 +31,7 @@ class EditorScreen(Screen[None]):
         super().__init__()
         self.store = store
         self._initial_layout = initial_layout or "default"
-        self._initial_variant = initial_variant or "base"
+        self._initial_variant = initial_variant or "windows"
         self._sidebar: LayerSidebar | None = None
         self._canvas: KeyCanvas | None = None
         self._inspector: InspectorPanel | None = None
@@ -39,7 +39,7 @@ class EditorScreen(Screen[None]):
     def compose(self) -> ComposeResult:
         self._sidebar = LayerSidebar(store=self.store)
         self._canvas = KeyCanvas(store=self.store)
-        self._inspector = InspectorPanel(store=self.store)
+        self._inspector = InspectorPanel(store=self.store, variant=self._initial_variant)
 
         yield ProjectRibbon(current_layout=self._initial_layout, current_variant=self._initial_variant)
         yield Horizontal(self._sidebar, self._canvas, self._inspector, id="editor-workspace")

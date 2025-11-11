@@ -10,6 +10,8 @@ from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional,
 LayerPayload = List[Dict[str, Any]]
 ComboPayload = Dict[str, Any]
 ListenerPayload = Dict[str, Any]
+MacroPayload = Dict[str, Any]
+HoldTapPayload = Dict[str, Any]
 
 
 def _ensure_tuple(items: Iterable[Any]) -> Tuple[Any, ...]:
@@ -26,6 +28,8 @@ class LayerRecord:
 class LayoutState:
     layer_names: Tuple[str, ...]
     layers: Tuple[LayerRecord, ...]
+    macros: Tuple[MacroPayload, ...]
+    hold_taps: Tuple[HoldTapPayload, ...]
     combos: Tuple[ComboPayload, ...]
     listeners: Tuple[ListenerPayload, ...]
 
@@ -35,11 +39,15 @@ class LayoutState:
         layer_records = []
         for name, slots in zip(layer_names, payload.get("layers", [])):
             layer_records.append(LayerRecord(name=name, slots=_ensure_tuple(deepcopy(slots))))
+        macros = tuple(deepcopy(payload.get("macros", [])))
+        hold_taps = tuple(deepcopy(payload.get("holdTaps", [])))
         combos = tuple(deepcopy(payload.get("combos", [])))
         listeners = tuple(deepcopy(payload.get("inputListeners", [])))
         return LayoutState(
             layer_names=tuple(layer_names),
             layers=tuple(layer_records),
+            macros=macros,
+            hold_taps=hold_taps,
             combos=combos,
             listeners=listeners,
         )
@@ -62,6 +70,7 @@ class LayoutStore:
         self._redo_stack: List[LayoutState] = []
         self._clipboard: Optional[LayerRecord] = None
         self._selection = SelectionState(layer_index=0 if state.layers else -1, key_index=0 if state.layers else -1)
+        self._clamp_selection()
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, Any]) -> LayoutStore:
@@ -109,11 +118,15 @@ class LayoutStore:
             updated_slots = tuple(_rewrite_layer_refs(slot, rename_map) for slot in updated.slots)
             updated = replace(updated, slots=updated_slots)
             layers.append(updated)
+        macros = tuple(_rewrite_layer_refs(macro, rename_map) for macro in self._state.macros)
+        hold_taps = tuple(_rewrite_layer_refs(hold, rename_map) for hold in self._state.hold_taps)
         combos = tuple(_rewrite_layer_refs(combo, rename_map) for combo in self._state.combos)
         listeners = tuple(_rewrite_layer_refs(listener, rename_map) for listener in self._state.listeners)
         self._state = LayoutState(
             layer_names=layer_names,
             layers=tuple(layers),
+            macros=macros,
+            hold_taps=hold_taps,
             combos=combos,
             listeners=listeners,
         )
@@ -135,6 +148,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=tuple(names),
             layers=tuple(layers),
+            macros=self._state.macros,
+            hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -157,6 +172,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=tuple(layer_names),
             layers=tuple(layers),
+            macros=self._state.macros,
+            hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -188,6 +205,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=tuple(names),
             layers=tuple(layers),
+            macros=self._state.macros,
+            hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -261,6 +280,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=self._state.layer_names,
             layers=tuple(layers),
+            macros=self._state.macros,
+            hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -298,6 +319,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=self._state.layer_names,
             layers=tuple(layers),
+             macros=self._state.macros,
+             hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -313,6 +336,27 @@ class LayoutStore:
             params=params,
         )
 
+    def export_payload(self) -> Dict[str, Any]:
+        """Return a deep-copied payload representing the current state."""
+
+        layers = [[deepcopy(slot) for slot in record.slots] for record in self._state.layers]
+        return {
+            "layer_names": list(self._state.layer_names),
+            "layers": layers,
+            "macros": [deepcopy(macro) for macro in self._state.macros],
+            "holdTaps": [deepcopy(hold) for hold in self._state.hold_taps],
+            "combos": [deepcopy(combo) for combo in self._state.combos],
+            "inputListeners": [deepcopy(listener) for listener in self._state.listeners],
+        }
+
+    def replace_payload(self, payload: Mapping[str, Any]) -> None:
+        """Replace the current layout with *payload* (undoable)."""
+
+        self._record_snapshot()
+        self._state = LayoutState.from_payload(payload)
+        self._redo_stack.clear()
+        self._clamp_selection()
+
     # ------------------------------------------------------------------
     # Undo / Redo
     def undo(self) -> None:
@@ -320,12 +364,14 @@ class LayoutStore:
             return
         self._redo_stack.append(self._state)
         self._state = self._undo_stack.pop()
+        self._clamp_selection()
 
     def redo(self) -> None:
         if not self._redo_stack:
             return
         self._undo_stack.append(self._state)
         self._state = self._redo_stack.pop()
+        self._clamp_selection()
 
     # ------------------------------------------------------------------
     def _record_snapshot(self) -> None:
@@ -341,6 +387,19 @@ class LayoutStore:
         if not (0 <= key_index < slot_count):
             raise IndexError("Key index out of range")
         return key_index
+
+    def _clamp_selection(self) -> None:
+        if not self._state.layers:
+            self._selection = SelectionState(layer_index=-1, key_index=-1)
+            return
+        layer_index = self._selection.layer_index
+        if not (0 <= layer_index < len(self._state.layers)):
+            layer_index = 0
+        key_index = self._selection.key_index
+        slot_count = len(self._state.layers[layer_index].slots)
+        if not (0 <= key_index < slot_count):
+            key_index = 0
+        self._selection = SelectionState(layer_index=layer_index, key_index=key_index)
 
 
 def _increment_name(base: str, existing: Iterable[str]) -> str:
@@ -388,6 +447,8 @@ def _sample_layer_slots(binding: str) -> List[Dict[str, Any]]:
 DEFAULT_SAMPLE_LAYOUT: Dict[str, Any] = {
     "layer_names": ["Base", "Lower", "Raise"],
     "layers": [_sample_layer_slots("&kp A"), _sample_layer_slots("&kp B"), _sample_layer_slots("&kp C")],
+    "macros": [],
+    "holdTaps": [],
     "combos": [
         {
             "name": "LayerToggle",
