@@ -17,6 +17,7 @@ from ..state import LayoutStore, SelectionState
 class KeyCanvas(Widget):
     """Minimal 80-key grid with keyboard navigation."""
 
+    can_focus = True
     BINDINGS = [
         Binding("left", "move_left", "←", show=False),
         Binding("right", "move_right", "→", show=False),
@@ -127,8 +128,6 @@ class KeyCanvas(Widget):
 
     @on(SelectionChanged)
     def _handle_external_selection(self, event: SelectionChanged) -> None:
-        if event.sender is self:
-            return
         if event.layer_index < 0 or event.key_index < 0:
             return
         self._selection = SelectionState(layer_index=event.layer_index, key_index=event.key_index)

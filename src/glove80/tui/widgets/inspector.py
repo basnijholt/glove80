@@ -9,7 +9,7 @@ from textual import on
 from textual.containers import Vertical
 from textual.widgets import Button, Input, Label, Static
 
-from ..messages import InspectorFocusRequested, SelectionChanged, StoreUpdated
+from ..messages import SelectionChanged, StoreUpdated
 from ..state import LayoutStore, SelectionState
 
 
@@ -24,13 +24,6 @@ class InspectorPanel(Vertical):
     def compose(self):  # type: ignore[override]
         yield Static("Inspector", classes="inspector-heading")
         yield self.key_inspector
-
-    @on(InspectorFocusRequested)
-    def _handle_focus_request(self, event: InspectorFocusRequested) -> None:
-        if not self.key_inspector.visible:
-            return
-        self.key_inspector.focus_value_field()
-        event.stop()
 
 
 class KeyInspector(Vertical):

@@ -84,3 +84,34 @@ def test_pickup_drop_moves_layer(sample_payload: dict[str, object]) -> None:
     store.undo()
     assert store.layer_names == ("Base", "Lower", "Raise")
 
+
+def test_selection_defaults_and_updates(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+
+    assert store.selection.layer_index == 0
+    assert store.selection.key_index == 0
+
+    updated = store.set_selection(layer_index=1, key_index=10)
+    assert updated.layer_index == 1
+    assert updated.key_index == 10
+
+
+def test_update_selected_key_records_undo(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+    store.set_selection(layer_index=0, key_index=0)
+
+    store.update_selected_key(value="&kp TAB", params=["shift"])
+    assert store.state.layers[0].slots[0]["value"] == "&kp TAB"
+    assert store.state.layers[0].slots[0]["params"] == ["shift"]
+
+    store.undo()
+    assert store.state.layers[0].slots[0]["value"] == "&kp A"
+
+
+def test_invalid_key_index_raises(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+    with pytest.raises(IndexError):
+        store.set_selection(layer_index=0, key_index=99)
+
+    with pytest.raises(IndexError):
+        store.set_selected_key(100)
