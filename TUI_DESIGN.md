@@ -1,105 +1,238 @@
-# Glove80 Textual TUI Layout Editor Design (Repo-Aligned)
+# Glove80 Textual TUI Layout Editor Design (Canonical Plan)
 
-This plan targets the Python-first Glove80 toolchain that lives under `src/glove80`. Every interaction in the TUI is grounded in the same data the Typer CLI (`uv run glove80 generate …`) and release generator use today. All runtime edits eventually serialize back into the canonical `LayoutPayload` contract whose schema is exported at `docs/layout_payload.schema.json`.
+This document is the single source of truth for the upcoming Textual (Python) TUI that edits Glove80 layouts. It merges the original repo-grounded brief with the expanded planning notes from the follow-up AI review so that every coding agent can reference one file. Every requirement below is derived from the checked-in Python toolchain (`src/glove80`), the exported JSON schema at `docs/layout_payload.schema.json`, and the existing CLI workflows (`uv run glove80 …`, `just regen`, `just ci`).
 
-## 1. Source Context & Guarantees
-- **Authoritative inputs**: declarative specs and helpers in `src/glove80/families/*/specs`, feature bundles in `src/glove80/features`, and layer composition via `glove80.layouts.LayoutBuilder`.
-- **Builder orchestration**: `glove80.layouts.builder.LayoutBuilder` merges layers, macros, hold taps, combos, and input listeners before `glove80.layouts.generator` writes JSON to `layouts/<family>/releases`. The TUI consumes/produces this exact `LayoutPayload` struct so the CLI and tests (`tests/<family>/`) remain deterministic.
-- **Metadata**: `src/glove80/families/<family>/metadata.json` supplies UUIDs, titles, and release notes. The TUI must respect these fields (read-only unless author edits metadata via CLI).
-- **Schema export**: `scripts/export_layout_schema.py` regenerates `docs/layout_payload.schema.json`. The TUI ships with that schema for validation and auto-complete of behaviors, device-tree additions, and advanced config.
+## 1. Source-of-Truth Context & Guarantees
 
-## 2. Data Model Bridge
-
-| LayoutPayload Section | Repo Source | TUI Responsibilities |
+| Concern | Canonical Location | TUI Obligation |
 | --- | --- | --- |
-| `layer_names` + `layers[80]` | `LayoutBuilder.add_layers`, `LayerSpec` | Layer switcher, canvas rendering, reordering/moving/picking layers, renaming (updates `layer_names`, enforces 1:1 with `layers`). |
-| `macros[]` | `tailorkey/specs.py::MACRO_DEFS`, `MacroSpec` | Macro editor: create, clone, reorder, bind to keys, preview steps; ensures `name` uniqueness and references align with keys referencing `&macro`. |
-| `holdTaps[]` | `HOLD_TAP_DEFS` | Hold-tap composer forms: fields for term, flavor, idle, trigger positions. Auto-wire to keys via inspector; highlight conflicts. |
-| `combos[]` | `COMBO_DATA` | Combo builder with key picker, layer scoping, timeout editing. Prevent overlapping `keyPositions`. |
-| `inputListeners[]` | `INPUT_LISTENER_DATA`, `features/listeners.py` | Manage sensor + listener graph (tilt, encoders, HRM). Visualize nodes, allow adding custom processors referencing `custom_defined_behaviors`. |
-| `custom_defined_behaviors`, `custom_devicetree`, `config_parameters`, `layout_parameters` | `COMMON_FIELDS` + metadata | Advanced configuration editors: text editor with schema-backed snippets for custom behaviors/device tree overlays, structured form for config/layout parameters. |
+| Specs, macros, combos, hold taps | `src/glove80/families/<family>/specs/` | Never invent behavior shapes—read/write through the dataclasses already used to generate releases. |
+| Feature bundles (HRM, cursor, mouse, thumb layers) | `src/glove80/features/` + `glove80.layouts.components` | Invoke the same helpers (via `LayoutBuilder` or `merge_components`) so macros/combos/listeners stay in sync. |
+| Layout assembly + registry | `src/glove80/layouts/builder.py`, `.../generator.py`, `.../family.py` | Mirror the builder’s ordering rules, metadata injection, and dry-run comparison before writing JSON. |
+| Release artifacts | `layouts/<family>/releases/*.json` | Treat them as outputs only—never hand-edit; regenerate via the CLI after TUI changes. |
+| Schema | `docs/layout_payload.schema.json` exported by `scripts/export_layout_schema.py` | Validate and drive forms from this schema; refresh whenever models change. |
+| Tests | `tests/<family>/…`, `tests/test_builder.py`, etc. | Assume `just ci` enforces parity; TUI workflows must not introduce nondeterminism. |
 
-## 3. Design Pillars (Repo-Aware)
-1. **Schema parity first** – The TUI reads/writes `LayoutPayload` objects and validates against `docs/layout_payload.schema.json` before persisting via `glove80.layouts.generator` logic.
-2. **Spec introspection** – Surfaces the same helpers the families use (home-row mods, cursor, mouse, HRM layers) so the TUI can stitch features exactly like `LayoutBuilder.add_home_row_mods/add_mouse_layers`.
-3. **Full behavior coverage** – Clicking any key exposes its behavior type (`&kp`, `&mt`, HRM macros, etc.), underlying params, and references to macros/combos/listeners.
-4. **Layer manipulation fidelity** – Users can reorder, duplicate, rename, or move layers while keeping `layer_names` synced and layer indices updated across combos/listeners referencing `LayerRef`.
-5. **Advanced power tools** – Device tree editing, custom behavior definitions, hold taps, combos, macros, mouse emulation, custom behaviors, and metadata toggles live in dedicated panes with schema-aware validation.
+## 2. Design Principles (Repo-Aligned)
+1. **Schema parity first** – All edits flow through `LayoutPayload` (Pydantic) and the exported JSON schema; saves fail fast if validation fails.
+2. **Spec/build parity** – Any “smart” operation (mouse stack, HRM, cursor, thumb behavior, feature bundle) delegates to `LayoutBuilder` helpers or `LayoutFeatureComponents` so the TUI can never diverge from `glove80 generate`.
+3. **Deterministic round-trip** – “Regen Preview” shells out to `uv run glove80 generate --layout <family> --variant <variant> --dry-run` and shows per-section diffs before writing.
+4. **Keyboard-native UX** – Inspired by Textual’s strengths: command palette, shortcuts, focus outlines, and optional pointing device support.
+5. **Observable state** – Central store with undo/redo, action log, and debug inspectors so layout authors can audit every mutation.
+6. **Single doc, family-agnostic** – TailorKey, Default, QuantumTouch, Glorious Engrammer, and future families all use the same `LayoutPayload`; examples reference real data but the UI must remain generic.
 
-## 4. High-Level Architecture
+## 3. Information Architecture & Layout
 
-- **Runtime:** Python 3.11+, Textual >= 0.59, sharing virtualenv with existing `uv` workflow.
-- **Data ingestion:**
-  - Load layout via `glove80.build_layout(family, variant)` or by parsing existing release JSON under `layouts/<family>/releases`.
-  - Validate against `LayoutPayload` Pydantic model. On save/export, re-run validation, then hand result to CLI/regenerator.
-- **Core modules:**
-  - `tui/models.py` – wrappers around `LayoutPayload`, providing selectors for layers, macros, combos, hold taps, listeners.
-  - `tui/state/store.py` – event log + undo/redo referencing repo actions (e.g., `AddCombo`, `SetLayerKeyBehavior`).
-  - `tui/services/builder_bridge.py` – convenience layer to call `LayoutBuilder` for feature insertion (mouse layer stack, home-row mods, cursor). Ensures parity with existing helpers in `src/glove80/layouts` and `src/glove80/features`.
-  - `tui/services/schema.py` – loads `docs/layout_payload.schema.json`, builds JSON Pointer index to drive forms and auto-complete.
-  - `tui/io/adapters.py` – open/save: in-place edit of release JSON, export to custom path, integrate with `glove80 generate --layout … --variant … --out …` for deterministic re-gen.
-- **UI composition:**
-  - **Source ribbon** (top): pick family/variant (Default/TailorKey/QuantumTouch/Glorious Engrammer) or load arbitrary JSON path.
-  - **Layer sidebar** (left dock): list of `layer_names`, status badges (custom features, home-row, mouse, cursor). Supports reordering via drag or shortcuts, renaming, duplicating, toggling visibility. “Pick up layer” uses selection to reorder.
-  - **Key canvas** (center): visual grid of 80 positions; clicking shows inspector, displays behavior type, macros, hold/shift combos, mouse layers, etc. Multi-layer view to “pick up” entire layer states and drop onto other variants.
-  - **Inspector tabs** (right): `Key`, `Macro`, `Hold Tap`, `Combo`, `Listener`, `Mouse/Device tree`, `Metadata`. Each tab surfaces relevant forms with validation from schema.
-  - **Bottom status/log**: background tasks (validation, regen), warnings, dirty flag, active layer/layer order cues.
+### 3.1 Primary Surfaces
+1. **Project Ribbon (Header)** – Family/variant picker (`glove80.build_layout`), file loader, output path selector, primary actions (Validate, Regen Preview, Save, Undo/Redo, Theme, Command Palette). Mirrors CLI workflows from `README.md`.
+2. **Editor Workspace** – Three-pane layout:
+   - **Layer Sidebar** (left) – Renders `layer_names[]`, supports drag/drop reorder, duplicate, rename, hide/show, “pick up & drop” interactions, and badges showing feature provenance (HRM/mouse/cursor/custom). Layer actions update references (`LayerRef`) everywhere.
+   - **Key Canvas** (center) – 80-key grid per layer (tailored to Glove80 geometry). Click or navigate via keyboard to inspect/modify key behaviors; multi-layer split view available for copy/drop operations.
+   - **Inspector Tabs** (right) – Context-aware forms: Key, Macro, Hold Tap, Combo, Listener, Features (builder toggles), Advanced (custom behaviors/device tree/config/layout parameters), Metadata.
+3. **Status & Logs (Footer)** – Shows dirty flag, active layer, validation counts, background task progress (e.g., regen, CLI validation), and streaming logs.
 
-## 5. Core Interaction Flows
+### 3.2 Secondary Surfaces
+- **Regen Preview Screen** – Section-by-section diff between current TUI state and CLI dry-run output; user decides whether to accept generator results or keep edits per section.
+- **Command Palette (Ctrl/Cmd+K)** – Fuzzy action runner (add layer, go to macro, toggle HRM bundle, validate now, etc.).
+- **Search/Jump Panel** – Jump to key index (0–79), layer by name, macro/hold tap/combo by name, or listener node by code.
 
-### 5.1 Key & Layer Editing
-- Click/keyboard-select key → inspector shows:
-  - Behavior primitive (`value` field) and nested params; type-aware rendering (`&kp`, `&HRM_*`, `&mt`, macros, combos, custom behaviors).
-  - Buttons: “Jump to macro”, “Jump to hold tap”, “Entry in combos”, “Show mouse layer context”.
-- Layer toolbar actions: rename (updates `layer_names` + references), duplicate (copies 80-key arrays + dependent macros if chosen), reorder (drag/drop). “Pick up layer” stores selected layer order and drop location to match user request.
-- Layer switcher uses `LayerRef` resolver to keep combos/listeners updated after rename/reorder.
+### 3.3 ASCII Layout Sketch
+```
+┌──────────────────────────── Project Ribbon ─────────────────────────────┐
+│ Family/Variant ▾ | Path ▾ | Validate | Regen | Save | Undo/Redo | …     │
+├─────────────┬───────────────────────────┬───────────────────────────────┤
+│ Layer List  │        Key Canvas         │        Inspector Tabs        │
+│ (reorder,   │  (active layer grid with  │  [Key][Macro][HoldTap][…]    │
+│ rename,     │  key legends + selection) │  forms fed by JSON schema    │
+│ pick up)    │                           │                               │
+├─────────────┴───────────────────────────┴───────────────────────────────┤
+│ Status / Validation / Background Tasks / Log Stream                      │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-### 5.2 Macro Studio
-- Table listing `macros` with names, wait/tap timings, binding previews.
-- Detail editor replicates `MacroSpec` semantics: sequences of bindings, ability to insert `&kp`, `&text`, delays. Supports creation of macros referenced by keys or combos, ensuring names start with `&`.
+## 4. Widget Tree
+```
+App
+└─ MainScreen
+   ├─ HeaderBar
+   │  ├─ FamilyVariantPicker
+   │  ├─ PathSelector
+   │  └─ ActionButtons (Validate | Regen | Save | Undo/Redo | Theme | Palette)
+   ├─ Body (Horizontal)
+   │  ├─ LayerSidebar (ListView + Toolbar)
+   │  ├─ KeyCanvas (custom widget, selection model)
+   │  └─ Inspector (TabbedContent)
+   │     ├─ KeyTab (Behavior editor + references)
+   │     ├─ MacroTab (Table + detail pane)
+   │     ├─ HoldTapTab (Table + timing editor)
+   │     ├─ ComboTab (Builder + key picker)
+   │     ├─ ListenerTab (Graph view + processor forms)
+   │     ├─ FeaturesTab (HRM/Cursor/Mouse toggles)
+   │     ├─ AdvancedTab (custom behaviors/devicetree/config/layout params)
+   │     └─ MetadataTab (UUID/title/notes/tags)
+   └─ FooterBar (StatusLine + TaskProgress + ValidationBadge)
+```
 
-### 5.3 Hold Tap & Combo Editors
-- Hold Tap tab enumerates `holdTaps`. UI supplies typed fields for tapping term, flavor, idle requirement, quick tap, hold trigger pos; integrally cross-links to keys using that hold tap.
-- Combo builder: pick key positions from canvas, define binding behavior (macro, `&kp`, layer toggle). Provide layer scoping by referencing names or `LayerRef`. Validate positions unique and within 0–79.
+## 5. Data Model & Schema Bridge
 
-### 5.4 Mouse Emulation & Feature Bundles
-- Dedicated pane exposing `add_mouse_layers`, `add_cursor_layer`, `add_home_row_mods` flows from `LayoutBuilder`.
-- Provide toggles to re-run builder helpers based on selected variant. For instance, enabling mouse emulation inserts the standard mouse layers set for the variant; customizing HRM layers adds appropriate macros/combos produced by `LayoutFeatureComponents`.
+The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Schema exported to `docs/layout_payload.schema.json` is loaded at runtime to drive form generation, validation, and auto-complete.
 
-### 5.5 Custom Behaviors & Device Tree
-- `custom_defined_behaviors` editor with syntax-highlight text area, snippet insertion for frequently used definitions (HRM, thumb arcs, etc.).
-- `custom_devicetree` editor surfaces overlay nodes; includes validation hooks that parse device-tree (e.g., via tree-sitter or dtc) to catch structural issues before writing.
-- `config_parameters`/`layout_parameters` shown as editable tables; add/del entries with type detection (string/int/bool/JSON) according to schema.
+### 5.1 Section Responsibilities
 
-### 5.6 Advanced Configuration
-- Support custom-defined behaviors referencing macros, combos, hold taps.
-- Input listener graph view shows `inputListeners` and `ListenerNode` relationships; clicking nodes reveals sensors/encoders, allows editing `inputProcessors` and `layers` list.
-- Provide “Add behavior from snippet” palette referencing `src/glove80/features` so TUI uses canonical definitions.
+| LayoutPayload Fields | Notes from Schema | UI Responsibilities |
+| --- | --- | --- |
+| `keyboard`, `firmware_api_version`, `locale`, `unlisted` | Scalars | Exposed in Metadata tab (read-only defaults unless author overrides). |
+| `custom_defined_behaviors` | String blob | Syntax-highlight editor, snippet palette. |
+| `custom_devicetree` | String blob | DT-aware editor with optional `dtc` lint integration. |
+| `config_parameters[]` | Array of objects (`additionalProperties: true`) | Table editor with key/value typing. |
+| `layout_parameters{}` | Object map | JSON editor with inline validation. |
+| `layer_names[]` + `layers[][80]` | Each layer = 80 dict entries (`value`, `params[]`) | Layer sidebar + key canvas; ensure `len(layer_names) == len(layers)` and each layer length stays 80. |
+| `macros[]` (`$defs.Macro`) | `name`, optional `description`, `bindings[]`, `params[]`, `waitMs`, `tapMs` | Macro studio with sequence editor and reference checks. |
+| `holdTaps[]` (`$defs.HoldTap`) | `name`, `bindings[]`, timing fields, `flavor` enum, `holdTriggerKeyPositions[]` (0–79) | Hold-tap studio with validation and key linkage. |
+| `combos[]` (`$defs.Combo`) | `binding` object, `keyPositions[]`, `layers[]` (int or `LayerRef`), `timeoutMs?` | Combo builder with key picker and layer scope selection. |
+| `inputListeners[]` | `code`, `nodes[]`, `inputProcessors[]` | Listener graph showing sensors/encoders (e.g., mouse move/scroll scalers). |
+| Metadata (`uuid`, `parent_uuid`, `date`, `title`, `notes`, `tags`, `creator`) | Optional fields | Displayed for context; allow editing where appropriate (except immutable IDs unless CLI author decides otherwise). |
 
-### 5.7 Validation & Regen Integration
-- Continuous validation pipeline: (1) Pydantic check, (2) schema check via exported JSON schema, (3) semantic checks (duplicate macros, orphan combos, missing layers). Errors bubble into warnings panel tied to `Warnings` tab.
-- `Regen Preview` runs `uv run glove80 generate --layout … --variant … --dry-run` to compare TUI state with canonical generator output, showing diff per section before writing JSON.
+### 5.2 Behavior Editor
+- Each key entry is `{ "value": <behavior code>, "params": [ ... ] }`.
+- Provide common presets (`&kp(KEY)`, `&mo(LAYER)`, `&tog`, `&sk`, macros like `&AS_Shifted_v1_TKZ`, HRM bindings like `&HRM_left_index_v1_TKZ`).
+- Maintain a raw JSON editor fallback with schema-aware linting for arbitrary nesting.
+- Auto-complete sources: known behavior codes in current layout, known keycodes (via `glove80.keycodes`), layer names (offers writing `LayerRef` objects), macro/hold-tap names.
 
-## 6. Feature Coverage Checklist (per requirements)
-- ✅ Click keys to show behavior type and settings.
-- ✅ Create/edit macros, hold taps, combos, mouse/cursor/home-row feature layers, thumb behaviors, HRM macros.
-- ✅ Manage custom-defined behaviors, custom device-tree overlays, config/layout parameters.
-- ✅ Build hold-tap layers, combos, mouse emulation, HRM, macros referencing real repo helpers.
-- ✅ Switch layers, reorder/pick up/duplicate/rename layers; move layers across variants.
-- ✅ Support advanced features: custom behaviors referencing devicetree, advanced config editors, input listeners, sensors.
+### 5.3 Validators
+1. Schema validation (JSON Schema) on every save and major edit.
+2. Pydantic validation (LayoutPayload) before calling builder/generator helpers.
+3. Semantic checks:
+   - `len(layer_names) == len(layers)`; each layer has exactly 80 entries.
+   - Macro/HoldTap names unique and referenced keys resolve.
+   - Combo `keyPositions[]` unique per combo and stay in `[0,79]`; `layers[]` use `LayerRef` when possible and resolve to valid names.
+   - Listener nodes have non-empty `layers[]` and valid refs.
+   - Layer rename/reorder updates every `LayerRef` in combos/listeners/macros.
+   - Hold-tap timing fields non-negative; `holdTriggerKeyPositions` in range (matches schema guard).
 
-## 7. Implementation Roadmap (Textual)
-1. **Foundation**: load `LayoutPayload` via CLI, validate with Pydantic + schema, stub state store, render layer list + base canvas.
-2. **Inspector & Layer Ops**: implement key inspector, layer rename/reorder/move UI, integrate undo/redo.
-3. **Macro/Hold Tap/Combo Editors**: build dedicated screens, cross-link to keys, ensure schema validation.
-4. **Feature Bundles & Mouse Emulation**: integrate builder helpers, provide toggles, diff preview.
-5. **Custom Behavior + Device Tree Editors**: add schema-backed text editors, referencing `custom_defined_behaviors` and `custom_devicetree`.
-6. **Validation + Regen**: background validation, run `scripts/export_layout_schema.py` in CI to keep schema current, connect to `glove80 generate --dry-run` for parity.
-7. **Polish**: command palette, theming, multi-layout tabs, Git-friendly export status, autop-run tests via `just ci`.
+## 6. Feature Bundles & Builder Integration
 
-## 8. Deliverables & Handoff
-- Updated `docs/layout_payload.schema.json` via `scripts/export_layout_schema.py`.
-- This design doc (`TUI_DESIGN.md`) describing repo-aware plan.
-- Prompt (see separate section) for another AI referencing this doc and schema to flesh out UI implementation.
+- **Builder bridge (`tui/services/builder_bridge.py`)** wraps `LayoutBuilder` + `LayoutFeatureComponents` to apply or remove bundled features:
+  - `add_home_row_mods(target_layer=…, position=…)`
+  - `add_cursor_layer(insert_after=…)`
+  - `add_mouse_layers(insert_after=…)`
+- The Features tab shows a diff preview (layers/macros/hold taps/combos/input listeners) before applying a bundle.
+- Internally, builder bridge produces a shadow layout, calls `merge_components`, and then reconciles changes back into the TUI store—mirroring the runtime feature application path documented in `docs/architecture.md`.
 
-With these pieces the downstream AI designer can work directly against the canonical schema and code concepts, ensuring the Textual TUI mirrors the Glove80 generation pipeline instead of the unrelated legacy web app.
+## 7. Key Workflows
+
+### 7.1 Edit a Key
+1. Select a key on the canvas (keyboard arrows or mouse click).
+2. Key tab displays current `value` and `params[]` with context (macro, hold tap, HRM, etc.).
+3. Choose a new behavior via presets or raw JSON.
+4. Apply → Store logs `SetLayerKeyBehavior`; validators run; status bar reflects dirty flag.
+5. Quick links (“Jump to macro”, “Jump to hold tap”, “Highlight combos using this key”) help trace dependencies.
+
+### 7.2 Create & Bind a Macro
+1. Macro tab → “New” → provide `name` (must start with `&`), optional `description`, add `bindings[]`, `params[]`, `waitMs`, `tapMs`.
+2. Save macro → store enforces uniqueness.
+3. Return to Key tab → set behavior `value` to macro name (auto-complete ensures it exists).
+
+### 7.3 Compose a Hold Tap
+1. Hold Tap tab → “New” → enter `name`, `bindings[]`, pick `flavor` (enum), fill timing fields, optionally choose `holdTriggerKeyPositions[]` via key picker.
+2. Bind to keys exactly like macros (behavior value = hold tap name).
+
+### 7.4 Build a Combo
+1. Combo tab → “New” → click “Pick Keys” to select positions 0–79 on the canvas.
+2. Define `binding` via behavior editor, choose `layers[]` (prefer `LayerRef` names), optional `timeoutMs`.
+3. Save; table shows combos; selecting a combo highlights its keys/layers.
+
+### 7.5 Toggle Mouse/Cursor/HRM Features
+1. Features tab lists available bundles (based on variant metadata) with toggles.
+2. Toggling “Mouse stack” calls builder bridge to insert `Mouse`, `MouseSlow`, `MouseFast`, `MouseWarp` layers plus associated listeners (e.g., `&mmv_input_listener` nodes referencing `zip_xy_scaler`).
+3. Confirmation dialog shows diff (layers/macros/hold taps/combos/input listeners) before applying.
+
+### 7.6 Custom Behaviors & Device Tree
+1. Advanced tab provides two editors: Custom Behaviors (string) and Custom Devicetree (string) with syntax highlighting and lint buttons (calls optional `dtc`).
+2. Config/Layout parameters appear as editable tables with type auto-detection.
+
+### 7.7 Layer Operations
+- Rename: inline edit of sidebar entry; updates `layer_names` + all `LayerRef` references; warns if duplicates.
+- Reorder: drag/drop or shortcuts (`Alt+↑/↓`), rewriting both arrays; diff preview optional.
+- Duplicate: clones layer content and optional dependent macros; prompts for new name.
+- Pick up / Drop: `P` picks up current layer contents, `D` drops onto target layer; undoable transaction.
+
+## 8. Validation & Regeneration Flow
+
+```
+[Open Layout (family/variant or file)]
+        │
+        ▼
+LayoutPayload load + schema validation
+        │
+        ▼
+Store state  ←── Undo/Redo log
+        │
+        ▼
+User edits ──► Semantic validators (debounced)
+        │
+        ▼
+Schema + Pydantic validation on save
+        │
+        └── Regen Preview (optional)
+                │
+                ▼
+   `uv run glove80 generate --layout … --variant … --dry-run`
+                │
+                ▼
+      Diff viewer per section → Apply/Skip per section
+                │
+                ▼
+   Write JSON + (optional) `glove80 validate path/to.json`
+```
+
+All regen/validate subprocesses run via Textual workers so the UI remains responsive; logs stream to the footer panel.
+
+## 9. State Management, Commands & Accessibility
+
+- **Store** (`tui/state/store.py`): action log (`AddCombo`, `ApplyFeatureBundle`, `RenameLayer`, etc.), selectors (`active_layer()`, `get_key(layer, index)`, `list_macros()`), undo/redo stack.
+- **Background workers**: schema validation, CLI commands (`glove80 validate`, `glove80 generate --dry-run`), optional schema refresh via `scripts/export_layout_schema.py`.
+- **Commands / Key Bindings**:
+  - Global: `Ctrl/Cmd+K` (palette), `Ctrl/Cmd+S` (Save), `Ctrl/Cmd+Shift+S` (Save As), `F5` (Validate), `F6` (Regen Preview), `Ctrl/Cmd+Z` / `Shift+Ctrl/Cmd+Z` (Undo/Redo).
+  - Canvas: arrow keys/hjkl (navigation), `Enter` (open inspector), `.` (copy key to other layer), `[` / `]` (prev/next layer), `P` / `D` (pick up/drop layer).
+- **Accessibility & Theming**: Light/Dark/High-contrast themes, configurable font size, focus outlines, descriptive labels for keys/layers, optional ASCII fallback when colors limited.
+
+## 10. Sample Payload Snapshot (TailorKey v4.2h – macOS)
+
+Using `layouts/tailorkey/releases/eee91968-ac8e-4d6f-95a3-4a5e2f3b4b44_TailorKey v4.2h - macOS.json`:
+- `layer_names`: `["HRM_macOS", "Typing", "Autoshift", "Cursor", "Symbol", "Gaming", "Lower", "Mouse", "MouseSlow", "MouseFast", "MouseWarp", "Magic"]`.
+- Sample macro: `&AS_Shifted_v1_TKZ` (uses `waitMs`, `tapMs`, bindings stack) — Macro tab must render/allow editing of these fields.
+- Sample hold tap: `&AS_HT_v2_TKZ` — Hold-tap editor exposes tapping/quick tap/idle timings and `holdTriggerKeyPositions` (where provided).
+- Sample combo: `F11_v1_TKZ` — Shows `keyPositions`, `layers` referencing layer indices; UI should encourage storing as `LayerRef {"name": "Typing"}` for resilience.
+- Sample listener: `&mmv_input_listener` with nodes referencing `Mouse`, `MouseSlow`, `MouseFast`, `MouseWarp` layers; Listener tab visualizes nodes + processors (`zip_xy_scaler`, `zip_scroll_scaler`).
+
+This concrete payload should remain part of automated regression tests (load → mutate one key → save → reload → expect deterministic diff).
+
+## 11. Risks & Mitigations
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Drift from builder helpers when toggling features | Non-deterministic JSON vs. CLI | Route all feature toggles through builder bridge + `LayoutBuilder` so we reuse shared merge logic. |
+| Layer renames break `LayerRef` references | Combos/listeners fail | Prefer `LayerRef` writes; on rename, rewrite all references; warn if raw indices remain. |
+| Arbitrary behavior params confuse users | Bad bindings | Provide guided presets plus raw JSON; include lint + previews. |
+| Regen/validate blocking UI | Poor UX | Use Textual workers with streaming logs and cancel buttons. |
+| Schema changes break forms | Editor errors | Ship “Refresh schema” command that re-runs `scripts/export_layout_schema.py`; forms read schema dynamically. |
+| Terminal capability variance | Visual bugs | Provide compatibility theme + ASCII canvas fallback; test across major terminals. |
+| Macro/HoldTap name collisions | Runtime failures | Enforce uniqueness client-side, surface references, provide rename tools that update bindings. |
+
+## 12. Implementation Roadmap
+1. **Foundation** – Load any `LayoutPayload`, stand up store, render layer sidebar + read-only canvas.
+2. **Editing Core** – Key behavior editor, layer rename/reorder/duplicate/pickup, undo/redo wiring.
+3. **Studios** – Macro, Hold Tap, Combo, Listener screens with cross-linking from keys.
+4. **Feature Bundles** – Implement builder bridge and diff preview for HRM/cursor/mouse layers.
+5. **Advanced Editors** – Custom behaviors, device tree, config/layout parameter tables, metadata panel.
+6. **Validation & Regen** – Schema/Pydantic validators, background CLI calls, Regen Preview diff UI, Save/Export flows.
+7. **Polish & QA** – Command palette, theming, accessibility passes, regression tests (Textual pilot scripts), docs updates, screen recordings.
+
+## 13. Deliverables & Handoff
+- `docs/layout_payload.schema.json` kept fresh via `scripts/export_layout_schema.py` (already added).
+- This merged `TUI_DESIGN.md` as the authoritative design brief.
+- `docs/tui_ai_prompt.txt` referencing this doc + schema for future AI collaborations.
+- Recommendation: add a `just schema` helper wired to `scripts/export_layout_schema.py` (optional future work) and document the workflow in `README.md` when implementation begins.
+
+With these details merged, every contributor (human or AI) can follow a single, accurate plan that honors the existing Glove80 codebase while delivering a feature-complete Textual TUI.
