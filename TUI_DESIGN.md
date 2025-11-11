@@ -1,6 +1,6 @@
 # Glove80 Textual TUI Layout Editor Design (Canonical Plan)
 
-This document is the single source of truth for the upcoming Textual (Python) TUI that edits Glove80 layouts. It merges the original repo-grounded brief with the expanded planning notes from the follow-up AI review so that every coding agent can reference one file. Every requirement below is derived from the checked-in Python toolchain (`src/glove80`), the exported JSON schema at `docs/layout_payload.schema.json`, and the existing CLI workflows (`uv run glove80 …`, `just regen`, `just ci`).
+This document is the single source of truth for the upcoming Textual (Python) TUI that edits Glove80 layouts. Every requirement below is derived from the checked-in Python toolchain (`src/glove80`), the exported JSON schema at `docs/layout_payload.schema.json`, and the existing CLI workflows (`uv run glove80 …`, `just regen`, `just ci`).
 
 ## 1. Source-of-Truth Context & Guarantees
 
@@ -231,8 +231,8 @@ This concrete payload should remain part of automated regression tests (load →
 
 ## 13. Deliverables & Handoff
 - `docs/layout_payload.schema.json` kept fresh via `scripts/export_layout_schema.py` (already added).
-- This merged `TUI_DESIGN.md` as the authoritative design brief.
+- This `TUI_DESIGN.md` is the authoritative design brief.
 - `docs/tui_ai_prompt.txt` referencing this doc + schema for future AI collaborations.
-- Recommendation: add a `just schema` helper wired to `scripts/export_layout_schema.py` (optional future work) and document the workflow in `README.md` when implementation begins.
+- `just schema` helper (see `justfile`) runs `uv run python scripts/export_layout_schema.py` so agents can refresh the schema on demand.
 
-With these details merged, every contributor (human or AI) can follow a single, accurate plan that honors the existing Glove80 codebase while delivering a feature-complete Textual TUI.
+With these details in place, every contributor (human or AI) can follow a single, accurate plan that honors the existing Glove80 codebase while delivering a feature-complete Textual TUI.
