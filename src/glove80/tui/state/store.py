@@ -477,6 +477,149 @@ class LayoutStore:
         )
         self._redo_stack.clear()
 
+    # ------------------------------------------------------------------
+    # Hold-tap management API
+    def list_hold_taps(self) -> Tuple[HoldTapPayload, ...]:
+        return tuple(deepcopy(hold) for hold in self._state.hold_taps)
+
+    def find_hold_tap_references(self, name: str) -> Dict[str, Tuple[Dict[str, Any], ...]]:
+        references: Dict[str, List[Dict[str, Any]]] = {
+            "keys": [],
+            "macros": [],
+            "hold_taps": [],
+            "combos": [],
+            "listeners": [],
+        }
+
+        for layer_index, record in enumerate(self._state.layers):
+            for key_index, slot in enumerate(record.slots):
+                if slot.get("value") == name:
+                    references["keys"].append(
+                        {
+                            "layer_index": layer_index,
+                            "layer_name": record.name,
+                            "key_index": key_index,
+                        }
+                    )
+
+        for index, macro in enumerate(self._state.macros):
+            if _contains_string(macro, name):
+                references["macros"].append({"index": index, "name": macro.get("name")})
+
+        for index, hold in enumerate(self._state.hold_taps):
+            if hold.get("name") == name:
+                continue
+            if _contains_string(hold, name):
+                references["hold_taps"].append({"index": index, "name": hold.get("name")})
+
+        for index, combo in enumerate(self._state.combos):
+            if _contains_string(combo, name):
+                references["combos"].append({"index": index, "name": combo.get("name")})
+
+        for index, listener in enumerate(self._state.listeners):
+            if _contains_string(listener, name):
+                references["listeners"].append({"index": index, "code": listener.get("code")})
+
+        return {key: tuple(entries) for key, entries in references.items()}
+
+    def add_hold_tap(self, hold_tap: Mapping[str, Any]) -> None:
+        normalized = _normalize_hold_tap_payload(hold_tap)
+        name = normalized["name"]
+        self._ensure_hold_tap_name_available(name)
+        self._record_snapshot()
+        hold_taps = list(self._state.hold_taps)
+        hold_taps.append(normalized)
+        self._state = replace(self._state, hold_taps=tuple(hold_taps))
+        self._redo_stack.clear()
+
+    def update_hold_tap(self, *, name: str, payload: Mapping[str, Any]) -> None:
+        index = self._hold_tap_index(name)
+        normalized = _normalize_hold_tap_payload(payload)
+        new_name = normalized["name"]
+        rename_map: Dict[str, str] = {}
+        if new_name != name:
+            self._ensure_hold_tap_name_available(new_name)
+            rename_map = {name: new_name}
+
+        self._record_snapshot()
+        hold_taps = list(self._state.hold_taps)
+        hold_taps[index] = normalized
+        if rename_map:
+            hold_taps = [
+                normalized if idx == index else _replace_strings(hold, rename_map)
+                for idx, hold in enumerate(hold_taps)
+            ]
+
+        layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
+        macros = (
+            self._rewrite_sequence_with_macros(self._state.macros, rename_map)
+            if rename_map
+            else self._state.macros
+        )
+        combos = (
+            self._rewrite_sequence_with_macros(self._state.combos, rename_map)
+            if rename_map
+            else self._state.combos
+        )
+        listeners = (
+            self._rewrite_sequence_with_macros(self._state.listeners, rename_map)
+            if rename_map
+            else self._state.listeners
+        )
+
+        self._state = LayoutState(
+            layer_names=self._state.layer_names,
+            layers=layers,
+            macros=macros,
+            hold_taps=tuple(hold_taps),
+            combos=combos,
+            listeners=listeners,
+        )
+        self._redo_stack.clear()
+
+    def rename_hold_tap(self, *, old_name: str, new_name: str) -> None:
+        normalized_new = new_name if new_name.startswith("&") else f"&{new_name}"
+        index = self._hold_tap_index(old_name)
+        existing = deepcopy(self._state.hold_taps[index])
+        existing["name"] = normalized_new
+        self.update_hold_tap(name=old_name, payload=existing)
+
+    def delete_hold_tap(self, *, name: str, force: bool = False) -> None:
+        index = self._hold_tap_index(name)
+        references = self.find_hold_tap_references(name)
+        has_refs = any(references[key] for key in references)
+        if has_refs and not force:
+            raise ValueError(f"HoldTap '{name}' is referenced and cannot be deleted")
+
+        self._record_snapshot()
+        hold_taps = list(self._state.hold_taps)
+        hold_taps.pop(index)
+        if has_refs:
+            cleanup_map = {name: ""}
+            layers = self._rewrite_layers_with_macros(cleanup_map)
+            macros = self._rewrite_sequence_with_macros(self._state.macros, cleanup_map)
+            combos = self._rewrite_sequence_with_macros(self._state.combos, cleanup_map)
+            listeners = self._rewrite_sequence_with_macros(self._state.listeners, cleanup_map)
+            hold_taps = [
+                _replace_strings(hold, cleanup_map) if hold.get("name") != name else hold
+                for hold in hold_taps
+            ]
+        else:
+            layers = self._state.layers
+            macros = self._state.macros
+            combos = self._state.combos
+            listeners = self._state.listeners
+
+        self._state = LayoutState(
+            layer_names=self._state.layer_names,
+            layers=layers,
+            macros=macros,
+            hold_taps=tuple(hold_taps),
+            combos=combos,
+            listeners=listeners,
+        )
+        self._redo_stack.clear()
+
     def export_payload(self) -> Dict[str, Any]:
         """Return a deep-copied payload representing the current state."""
 
@@ -552,6 +695,17 @@ class LayoutStore:
                 return index
         raise ValueError(f"Macro '{name}' not found")
 
+    def _ensure_hold_tap_name_available(self, name: str) -> None:
+        if any(hold.get("name") == name for hold in self._state.hold_taps):
+            raise ValueError(f"HoldTap '{name}' already exists")
+
+    def _hold_tap_index(self, name: str) -> int:
+        normalized = name if name.startswith("&") else f"&{name}"
+        for index, hold_tap in enumerate(self._state.hold_taps):
+            if hold_tap.get("name") == normalized:
+                return index
+        raise ValueError(f"HoldTap '{normalized}' not found")
+
     def _rewrite_layers_with_macros(self, rename_map: Mapping[str, str]) -> Tuple[LayerRecord, ...]:
         if not rename_map:
             return self._state.layers
@@ -610,6 +764,65 @@ def _normalize_macro_payload(macro: Mapping[str, Any]) -> MacroPayload:
     normalized.setdefault("bindings", [])
     normalized.setdefault("params", [])
     return normalized
+
+
+def _normalize_hold_tap_payload(payload: Mapping[str, Any]) -> HoldTapPayload:
+    normalized: Dict[str, Any] = {}
+    name = str(payload.get("name", "")).strip()
+    if not name:
+        raise ValueError("HoldTap name cannot be empty")
+    if not name.startswith("&"):
+        name = f"&{name}"
+    normalized["name"] = name
+    description = payload.get("description")
+    if description:
+        normalized["description"] = str(description)
+    bindings = payload.get("bindings", [])
+    if not isinstance(bindings, Sequence) or isinstance(bindings, (str, bytes)):
+        raise ValueError("HoldTap bindings must be a list")
+    normalized["bindings"] = list(bindings)
+
+    for field in ("tappingTermMs", "quickTapMs", "requirePriorIdleMs"):
+        value = payload.get(field)
+        if value is None or value == "":
+            continue
+        int_value = int(value)
+        if int_value < 0:
+            raise ValueError(f"{field} must be ≥ 0")
+        normalized[field] = int_value
+
+    flavor = payload.get("flavor")
+    if flavor:
+        normalized["flavor"] = str(flavor)
+
+    hold_trigger_on_release = payload.get("holdTriggerOnRelease")
+    if hold_trigger_on_release not in (None, ""):
+        normalized["holdTriggerOnRelease"] = bool(hold_trigger_on_release)
+
+    positions = payload.get("holdTriggerKeyPositions")
+    if positions not in (None, ""):
+        normalized["holdTriggerKeyPositions"] = _normalize_hold_trigger_positions(positions)
+
+    return normalized
+
+
+def _normalize_hold_trigger_positions(value: Any) -> List[int]:
+    positions: List[int] = []
+    if isinstance(value, str):
+        tokens = [token.strip() for token in value.replace("[", "").replace("]", "").split(",") if token.strip()]
+        for token in tokens:
+            positions.append(int(token))
+    elif isinstance(value, Iterable):
+        for item in value:
+            positions.append(int(item))
+    else:
+        raise ValueError("holdTriggerKeyPositions must be iterable or comma-delimited string")
+
+    deduped = sorted(set(positions))
+    for pos in deduped:
+        if pos < 0 or pos >= 80:
+            raise ValueError("holdTriggerKeyPositions must be between 0 and 79")
+    return deduped
 
 
 def _contains_string(data: Any, target: str) -> bool:

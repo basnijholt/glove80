@@ -1,7 +1,7 @@
 """Widget exports for the Glove80 Textual TUI."""
 
 from .footer import FooterBar
-from .inspector import FeaturesTab, InspectorPanel, KeyInspector, MacroTab
+from .inspector import FeaturesTab, InspectorPanel, KeyInspector, MacroTab, HoldTapTab
 from .key_canvas import KeyCanvas
 from .layer_sidebar import LayerSidebar
 from .rename_modal import RenameLayerModal
@@ -13,6 +13,7 @@ __all__ = [
     "InspectorPanel",
     "KeyInspector",
     "MacroTab",
+    "HoldTapTab",
     "KeyCanvas",
     "LayerSidebar",
     "RenameLayerModal",

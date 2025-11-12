@@ -11,7 +11,7 @@ from textual.suggester import Suggester
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
 from ..messages import FooterMessage, SelectionChanged, StoreUpdated
-from ..state import LayoutStore, SelectionState, MacroPayload
+from ..state import LayoutStore, SelectionState, MacroPayload, HoldTapPayload
 from ..services import BuilderBridge, FeatureDiff, ValidationIssue, ValidationResult, ValidationService
 
 
@@ -24,12 +24,14 @@ class InspectorPanel(Vertical):
         self._variant = variant
         self.key_inspector = KeyInspector(store=store)
         self.macro_tab = MacroTab(store=store)
+        self.hold_tap_tab = HoldTapTab(store=store)
         self.features_tab = FeaturesTab(store=store, variant=variant)
 
     def compose(self):  # type: ignore[override]
         yield Static("Inspector", classes="inspector-heading")
         yield self.key_inspector
         yield self.macro_tab
+        yield self.hold_tap_tab
         yield self.features_tab
 
 
@@ -523,6 +525,235 @@ class _MacroListItem(ListItem):
         label = f"{name} [{ref_count}]"
         super().__init__(Static(label, classes="macro-item"))
         self.macro = macro
+
+
+class _HoldTapListItem(ListItem):
+    def __init__(self, hold_tap: HoldTapPayload, ref_count: int) -> None:
+        label = f"{hold_tap.get('name', '?')} [{ref_count}]"
+        super().__init__(Static(label, classes="macro-item"))
+        self.hold_tap = hold_tap
+
+
+# ---------------------------------------------------------------------------
+class HoldTapTab(Vertical):
+    """Hold-tap list and detail editor."""
+
+    def __init__(self, *, store: LayoutStore) -> None:
+        super().__init__(classes="holdtap-tab", id="holdtap-tab")
+        self.store = store
+        self._selected_name: Optional[str] = None
+        self._list = ListView(id="holdtap-list")
+        self.name_input = Input(placeholder="&hold_name", id="holdtap-name-input")
+        self.desc_input = Input(placeholder="Description", id="holdtap-desc-input")
+        self.bindings_input = Input(placeholder='Bindings JSON (e.g. ["&kp","A"])', id="holdtap-bindings-input")
+        self.flavor_input = Input(placeholder="flavor", id="holdtap-flavor-input")
+        self.tapping_input = Input(placeholder="tappingTermMs", id="holdtap-tapping-input", value="200")
+        self.quick_input = Input(placeholder="quickTapMs", id="holdtap-quick-input", value="0")
+        self.idle_input = Input(placeholder="requirePriorIdleMs", id="holdtap-idle-input", value="0")
+        self.trigger_positions_input = Input(placeholder="holdTriggerKeyPositions (e.g. 0, 5)", id="holdtap-trigger-input")
+        self.trigger_release_input = Input(placeholder="holdTriggerOnRelease (true/false)", id="holdtap-onrelease-input")
+        self.ref_label = Static("", classes="macro-refs", id="holdtap-ref-summary")
+        self.add_button = Button("Add", id="holdtap-add")
+        self.apply_button = Button("Apply", id="holdtap-apply", disabled=True)
+        self.delete_button = Button("Delete", id="holdtap-delete", disabled=True)
+
+    def compose(self):  # type: ignore[override]
+        yield Static("Hold Taps", classes="macro-heading")
+        yield self._list
+        yield Label("Name")
+        yield self.name_input
+        yield Label("Description")
+        yield self.desc_input
+        yield Label("Bindings (JSON array)")
+        yield self.bindings_input
+        yield Label("Flavor")
+        yield self.flavor_input
+        yield Label("Tapping term (ms)")
+        yield self.tapping_input
+        yield Label("Quick tap (ms)")
+        yield self.quick_input
+        yield Label("Require prior idle (ms)")
+        yield self.idle_input
+        yield Label("holdTriggerKeyPositions")
+        yield self.trigger_positions_input
+        yield Label("holdTriggerOnRelease")
+        yield self.trigger_release_input
+        yield self.ref_label
+        yield self.add_button
+        yield self.apply_button
+        yield self.delete_button
+
+    def on_mount(self) -> None:
+        self._refresh_list()
+
+    @on(StoreUpdated)
+    def _handle_store_update(self, _: StoreUpdated) -> None:
+        self._refresh_list(preferred=self._selected_name)
+
+    @on(ListView.Selected)
+    def _handle_list_select(self, event: ListView.Selected) -> None:
+        if event.list_view is not self._list:
+            return
+        if isinstance(event.item, _HoldTapListItem):
+            self._load_hold_tap(event.item.hold_tap)
+            event.stop()
+
+    @on(Button.Pressed)
+    def _handle_buttons(self, event: Button.Pressed) -> None:
+        if event.button.id == "holdtap-add":
+            self._create_hold_tap()
+        elif event.button.id == "holdtap-apply":
+            self._apply_hold_tap()
+        elif event.button.id == "holdtap-delete":
+            self._delete_hold_tap()
+
+    def _refresh_list(self, *, preferred: Optional[str] = None) -> None:
+        self.call_after_refresh(self._rebuild_list, preferred)
+
+    async def _rebuild_list(self, preferred: Optional[str]) -> None:
+        await self._list.clear()
+        hold_taps = list(self.store.list_hold_taps())
+        names = [str(entry.get("name", "")) for entry in hold_taps]
+        target = preferred if preferred in names else (names[0] if names else None)
+        items: list[ListItem] = []
+        for hold in hold_taps:
+            refs = self.store.find_hold_tap_references(hold.get("name", ""))
+            items.append(_HoldTapListItem(hold, _reference_count(refs)))
+        if items:
+            await self._list.mount(*items)
+            index = 0
+            if target:
+                for idx, entry in enumerate(names):
+                    if entry == target:
+                        index = idx
+                        break
+            self._list.index = index
+            selected = items[index]
+            if isinstance(selected, _HoldTapListItem):
+                self._load_hold_tap(selected.hold_tap)
+        else:
+            await self._list.mount(ListItem(Static("(no hold taps)", classes="macro-item")))
+            self._clear_form()
+
+    def _load_hold_tap(self, hold_tap: HoldTapPayload) -> None:
+        self._selected_name = str(hold_tap.get("name", ""))
+        self.name_input.value = self._selected_name
+        self.desc_input.value = str(hold_tap.get("description", ""))
+        self.bindings_input.value = json.dumps(hold_tap.get("bindings", []))
+        self.flavor_input.value = str(hold_tap.get("flavor", ""))
+        self.tapping_input.value = str(hold_tap.get("tappingTermMs", ""))
+        self.quick_input.value = str(hold_tap.get("quickTapMs", ""))
+        self.idle_input.value = str(hold_tap.get("requirePriorIdleMs", ""))
+        positions = hold_tap.get("holdTriggerKeyPositions")
+        if positions:
+            self.trigger_positions_input.value = ", ".join(str(pos) for pos in positions)
+        else:
+            self.trigger_positions_input.value = ""
+        release = hold_tap.get("holdTriggerOnRelease")
+        self.trigger_release_input.value = "true" if release else ""
+        refs = self.store.find_hold_tap_references(self._selected_name)
+        count = _reference_count(refs)
+        self.ref_label.update(f"Referenced {count} time(s)" if count else "No references")
+        self.apply_button.disabled = False
+        self.delete_button.disabled = bool(count)
+
+    def _clear_form(self) -> None:
+        self._selected_name = None
+        self.name_input.value = ""
+        self.desc_input.value = ""
+        self.bindings_input.value = ""
+        self.flavor_input.value = ""
+        self.tapping_input.value = "200"
+        self.quick_input.value = "0"
+        self.idle_input.value = "0"
+        self.trigger_positions_input.value = ""
+        self.trigger_release_input.value = ""
+        self.ref_label.update("")
+        self.apply_button.disabled = True
+        self.delete_button.disabled = True
+
+    def _create_hold_tap(self) -> None:
+        payload = self._build_payload_from_inputs()
+        if payload is None:
+            return
+        try:
+            self.store.add_hold_tap(payload)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Added hold tap {payload['name']}"))
+        self._refresh_list(preferred=payload["name"])
+
+    def _apply_hold_tap(self) -> None:
+        if self._selected_name is None:
+            return
+        payload = self._build_payload_from_inputs()
+        if payload is None:
+            return
+        try:
+            self.store.update_hold_tap(name=self._selected_name, payload=payload)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Updated hold tap {payload['name']}"))
+        self._selected_name = payload["name"]
+        self._refresh_list(preferred=self._selected_name)
+
+    def _delete_hold_tap(self) -> None:
+        if self._selected_name is None:
+            return
+        try:
+            self.store.delete_hold_tap(name=self._selected_name)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Deleted hold tap {self._selected_name}"))
+        self._selected_name = None
+        self._refresh_list()
+
+    def _build_payload_from_inputs(self) -> Optional[Dict[str, Any]]:
+        name = self.name_input.value.strip()
+        if not name:
+            self.post_message(FooterMessage("Name is required"))
+            return None
+        try:
+            bindings = json.loads(self.bindings_input.value or "[]")
+        except json.JSONDecodeError as exc:
+            self.post_message(FooterMessage(f"Invalid bindings JSON: {exc}"))
+            return None
+        payload: Dict[str, Any] = {
+            "name": name,
+            "description": self.desc_input.value.strip(),
+            "bindings": bindings,
+        }
+        for field, widget in (
+            ("tappingTermMs", self.tapping_input),
+            ("quickTapMs", self.quick_input),
+            ("requirePriorIdleMs", self.idle_input),
+        ):
+            text = widget.value.strip()
+            if text:
+                try:
+                    payload[field] = int(text)
+                except ValueError:
+                    self.post_message(FooterMessage(f"{field} must be an integer"))
+                    return None
+        flavor = self.flavor_input.value.strip()
+        if flavor:
+            payload["flavor"] = flavor
+        triggers = self.trigger_positions_input.value.strip()
+        if triggers:
+            payload["holdTriggerKeyPositions"] = triggers
+        on_release = self.trigger_release_input.value.strip().lower()
+        if on_release in {"true", "1", "yes", "on"}:
+            payload["holdTriggerOnRelease"] = True
+        elif on_release in {"false", "0", "no", "off"}:
+            payload["holdTriggerOnRelease"] = False
+        return payload
+
 
 
 # ---------------------------------------------------------------------------
