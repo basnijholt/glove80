@@ -82,8 +82,15 @@ class LayerStrip(Widget):
         if not self.store.layer_names:
             return
         index = index % len(self.store.layer_names)
-        self.store.set_active_layer(index)
+        selection = self.store.set_active_layer(index)
         self.post_message(StoreUpdated())
+        self.post_message(
+            SelectionChanged(
+                layer_index=selection.layer_index,
+                layer_name=self.store.selected_layer_name,
+                key_index=selection.key_index,
+            )
+        )
         self.refresh()
 
     # ------------------------------------------------------------------

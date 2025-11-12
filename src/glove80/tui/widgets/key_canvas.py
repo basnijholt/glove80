@@ -188,13 +188,19 @@ class KeyCanvas(Widget):
     # ------------------------------------------------------------------
     @on(StoreUpdated)
     def _handle_store_updated(self, _: StoreUpdated) -> None:
+        self._selection = self.store.selection
         self._refresh_caps()
 
     @on(SelectionChanged)
     def _handle_external_selection(self, event: SelectionChanged) -> None:
         if event.layer_index < 0 or event.key_index < 0:
             return
-        self._selection = SelectionState(layer_index=event.layer_index, key_index=event.key_index)
+        self.apply_selection(layer_index=event.layer_index, key_index=event.key_index)
+
+    def apply_selection(self, *, layer_index: int, key_index: int) -> None:
+        if layer_index < 0 or key_index < 0:
+            return
+        self._selection = SelectionState(layer_index=layer_index, key_index=key_index)
         self._refresh_caps()
 
     # ------------------------------------------------------------------

@@ -14,7 +14,7 @@ from ..widgets.inspector import InspectorDrawer
 from ..widgets.key_canvas import KeyCanvas
 from ..widgets.layer_strip import LayerStrip
 from ..widgets.ribbon import ProjectRibbon
-from ..messages import InspectorFocusRequested, InspectorToggleRequested
+from ..messages import InspectorFocusRequested, InspectorToggleRequested, SelectionChanged
 
 
 class EditorScreen(Screen[None]):
@@ -67,3 +67,11 @@ class EditorScreen(Screen[None]):
         self._inspector.toggle()
         if self._ribbon is not None:
             self._ribbon.set_inspector_expanded(self._inspector.expanded)
+
+    @on(SelectionChanged)
+    def _handle_selection_changed(self, event: SelectionChanged) -> None:
+        if event.layer_index < 0 or event.key_index < 0:
+            return
+        if self._canvas is None:
+            return
+        self._canvas.apply_selection(layer_index=event.layer_index, key_index=event.key_index)
