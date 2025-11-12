@@ -16,9 +16,7 @@ KEY_GRID_ROWS: tuple[tuple[int, ...], ...] = (
 )
 
 INDEX_TO_POSITION = {
-    index: (row, col)
-    for row, row_values in enumerate(KEY_GRID_ROWS)
-    for col, index in enumerate(row_values)
+    index: (row, col) for row, row_values in enumerate(KEY_GRID_ROWS) for col, index in enumerate(row_values)
 }
 POSITION_TO_INDEX = {position: index for index, position in INDEX_TO_POSITION.items()}
 

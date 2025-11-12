@@ -25,9 +25,7 @@ class FooterBar(Static):
         key_fragment = "--" if self._key_index is None else f"#{self._key_index:02d}"
         dirty_fragment = "yes" if self._dirty else "no"
         message_fragment = f" · {self._message}" if self._message else ""
-        self.update(
-            f"Layer: {self._layer_name} · Key: {key_fragment} · dirty={dirty_fragment}{message_fragment}"
-        )
+        self.update(f"Layer: {self._layer_name} · Key: {key_fragment} · dirty={dirty_fragment}{message_fragment}")
 
     @on(SelectionChanged)
     def _handle_selection(self, event: SelectionChanged) -> None:

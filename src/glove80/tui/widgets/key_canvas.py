@@ -266,35 +266,34 @@ class KeyCanvas(Widget):
     def _detail_lines(self, slots: Sequence[dict[str, object]]) -> list[str]:
         lines: list[str] = []
         if self._hover_index is not None:
-            lines.append(self._detail_text(slots, self._hover_index, prefix="Hover"))
+            lines.extend(self._detail_lines_for_slot(slots, self._hover_index, prefix="Hover"))
         if self._selection.key_index >= 0:
             prefix = "Focus" if self.has_focus else "Selected"
-            lines.append(self._detail_text(slots, self._selection.key_index, prefix=prefix))
+            lines.extend(self._detail_lines_for_slot(slots, self._selection.key_index, prefix=prefix))
         return lines
 
-    def _detail_text(self, slots: Sequence[dict[str, object]], index: int, *, prefix: str) -> str:
+    def _detail_lines_for_slot(self, slots: Sequence[dict[str, object]], index: int, *, prefix: str) -> list[str]:
         try:
             slot = slots[index]
         except (IndexError, TypeError):
-            return f"{prefix}: Key #{index:02d} (empty)"
+            return [f"{prefix}: Key #{index:02d} (empty)"]
         if not isinstance(slot, dict):
-            return f"{prefix}: Key #{index:02d} (empty)"
-        detail = self._slot_detail(slot)
-        return f"{prefix}: Key #{index:02d} {detail}"
+            return [f"{prefix}: Key #{index:02d} (empty)"]
 
-    def _slot_detail(self, slot: dict[str, object]) -> str:
-        value = str(slot.get("value", "")) or "(empty)"
-        params = slot.get("params")
-        return f"{value}{self._format_params(params)}"
+        lines = [f"{prefix}: Key #{index:02d} {slot.get('value', '(empty)') or '(empty)'}"]
+        params_text = self._format_params_list(slot.get("params"))
+        if params_text:
+            lines.append(f"    params: {params_text}")
+        return lines
 
-    def _format_params(self, params: Any) -> str:
+    def _format_params_list(self, params: Any) -> str:
         if not params:
             return ""
         if isinstance(params, (list, tuple)):
-            rendered = ", ".join(self._format_param_item(item) for item in params)
+            values = [self._format_param_item(item) for item in params]
         else:
-            rendered = self._format_param_item(params)
-        return f" params=[{rendered}]"
+            values = [self._format_param_item(params)]
+        return ", ".join(v for v in values if v)
 
     def _format_param_item(self, item: Any) -> str:
         if isinstance(item, dict):

@@ -24,16 +24,15 @@ def test_listener_tab_create_bind_rename_delete_with_undo() -> None:
             # Create a listener
             code_input.value = "listener_test"
             layers_input.value = '["Base"]'
-            processors_input.value = '[{"type": "scroller", "mode": "auto-layer"}]'
-            nodes_input.value = '[{"keyPositions": [0]}]'
+            processors_input.value = '[{"code": "&kp", "params": []}]'
+            nodes_input.value = (
+                '[{"code": "node_test", "layers": [0], "inputProcessors": [{"code": "&kp", "params": []}]}]'
+            )
 
             listener_tab.query_one("#listener-add", Button).press()
             await pilot.pause()
 
-            assert any(
-                listener["code"] == "listener_test"
-                for listener in pilot.app.store.list_listeners()
-            )
+            assert any(listener["code"] == "listener_test" for listener in pilot.app.store.list_listeners())
 
             # Wait for the listener to be selected
             for _ in range(5):
@@ -57,25 +56,14 @@ def test_listener_tab_create_bind_rename_delete_with_undo() -> None:
             listener_tab.query_one("#listener-apply", Button).press()
             await pilot.pause()
 
-            assert any(
-                listener["code"] == "listener_renamed"
-                for listener in pilot.app.store.list_listeners()
-            )
-            assert all(
-                listener["code"] != "listener_test"
-                for listener in pilot.app.store.list_listeners()
-            )
-            assert (
-                pilot.app.store.state.layers[0].slots[0]["value"] == "listener_renamed"
-            )
+            assert any(listener["code"] == "listener_renamed" for listener in pilot.app.store.list_listeners())
+            assert all(listener["code"] != "listener_test" for listener in pilot.app.store.list_listeners())
+            assert pilot.app.store.state.layers[0].slots[0]["value"] == "listener_renamed"
 
             # Attempt to delete while referenced (should be blocked)
             listener_tab.query_one("#listener-delete", Button).press()
             await pilot.pause()
-            assert any(
-                listener["code"] == "listener_renamed"
-                for listener in pilot.app.store.list_listeners()
-            )
+            assert any(listener["code"] == "listener_renamed" for listener in pilot.app.store.list_listeners())
 
             # Unbind the listener
             pilot.app.store.update_selected_key(value="&kp", params=["TAB"])
@@ -91,17 +79,11 @@ def test_listener_tab_create_bind_rename_delete_with_undo() -> None:
             listener_tab.query_one("#listener-delete", Button).press()
             await pilot.pause()
 
-            assert all(
-                listener["code"] != "listener_renamed"
-                for listener in pilot.app.store.list_listeners()
-            )
+            assert all(listener["code"] != "listener_renamed" for listener in pilot.app.store.list_listeners())
 
             # Undo the delete
             await pilot.press("ctrl+z")
             await pilot.pause()
-            assert any(
-                listener["code"] == "listener_renamed"
-                for listener in pilot.app.store.list_listeners()
-            )
+            assert any(listener["code"] == "listener_renamed" for listener in pilot.app.store.list_listeners())
 
     asyncio.run(_run())

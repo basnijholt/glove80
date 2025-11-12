@@ -38,12 +38,14 @@ def test_list_combos_returns_copy(sample_payload: dict[str, object]) -> None:
 
 def test_add_combo(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
-    store.add_combo({
-        "name": "&combo_new",
-        "binding": {"value": "&kp", "params": ["TAB"]},
-        "keyPositions": [2, 3],
-        "layers": [{"name": "Base"}],
-    })
+    store.add_combo(
+        {
+            "name": "&combo_new",
+            "binding": {"value": "&kp", "params": ["TAB"]},
+            "keyPositions": [2, 3],
+            "layers": [{"name": "Base"}],
+        }
+    )
     assert any(combo["name"] == "&combo_new" for combo in store.state.combos)
     store.undo()
     assert all(combo["name"] != "&combo_new" for combo in store.state.combos)
@@ -52,23 +54,27 @@ def test_add_combo(sample_payload: dict[str, object]) -> None:
 def test_add_combo_duplicate_name(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
     with pytest.raises(ValueError):
-        store.add_combo({
-            "name": "&combo_home",
-            "binding": {"value": "&kp"},
-            "keyPositions": [4, 5],
-            "layers": [{"name": "Base"}],
-        })
+        store.add_combo(
+            {
+                "name": "&combo_home",
+                "binding": {"value": "&kp"},
+                "keyPositions": [4, 5],
+                "layers": [{"name": "Base"}],
+            }
+        )
 
 
 def test_add_combo_rejects_unknown_layer(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
     with pytest.raises(ValueError):
-        store.add_combo({
-            "name": "&combo_bad_layer",
-            "binding": {"value": "&kp", "params": ["ESC"]},
-            "keyPositions": [2, 4],
-            "layers": [{"name": "Unknown"}],
-        })
+        store.add_combo(
+            {
+                "name": "&combo_bad_layer",
+                "binding": {"value": "&kp", "params": ["ESC"]},
+                "keyPositions": [2, 4],
+                "layers": [{"name": "Unknown"}],
+            }
+        )
 
 
 def test_update_combo_rename_rewrites_references(sample_payload: dict[str, object]) -> None:

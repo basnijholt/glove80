@@ -77,11 +77,13 @@ def test_list_listeners_returns_copy(sample_payload: dict[str, object]) -> None:
 
 def test_add_listener(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
-    store.add_listener({
-        "code": "&listener_new",
-        "nodes": [],
-        "inputProcessors": [],
-    })
+    store.add_listener(
+        {
+            "code": "&listener_new",
+            "nodes": [],
+            "inputProcessors": [],
+        }
+    )
     assert any(listener["code"] == "&listener_new" for listener in store.state.listeners)
     store.undo()
     assert all(listener["code"] != "&listener_new" for listener in store.state.listeners)

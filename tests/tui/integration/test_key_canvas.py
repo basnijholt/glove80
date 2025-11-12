@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 
-from textual.pilot import Pilot
 
 from glove80.tui.app import Glove80TuiApp
 from glove80.tui.widgets.inspector import KeyInspector
@@ -98,10 +97,7 @@ def test_copy_shortcut_copies_between_layers() -> None:
             await pilot.pause()
 
             # ensure Lower slot differs from Base
-            assert (
-                pilot.app.store.state.layers[1].slots[0]["params"][0]["value"]
-                == "B"
-            )
+            assert pilot.app.store.state.layers[1].slots[0]["params"][0]["value"] == "B"
 
             # switch to Lower (records previous Base selection)
             canvas.action_next_layer()

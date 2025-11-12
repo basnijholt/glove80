@@ -55,17 +55,17 @@ Each milestone is intentionally narrow to support the “commit/push whenever te
 1. **Foundation & Ribbon (Milestone 1)**
    - Deliverables: project scaffolding, `Glove80TuiApp`, `state/store` hydration, Project Ribbon with picker + stubbed actions, footer shell.
    - Acceptance: `glove80 tui` launches read-only view of default layout; ribbon buttons render; `uv run pytest tests/tui/test_foundation.py` passes.
-   - _Status 2025-11-11: ✅ Complete (landed with initial Textual scaffold)._ 
+   - _Status 2025-11-11: ✅ Complete (landed with initial Textual scaffold)._
 
 2. **Layer Sidebar & Undo Core (Milestone 2)**
    - Deliverables: `LayerSidebar` with rename/reorder/duplicate/pick-up/drop, undo/redo stack, provenance badges.
    - Acceptance: Layer rename updates all `LayerRef` references; undo/redo collapses composite actions; tests `tests/tui/test_sidebar.py` cover ref rewrites + history.
-   - _Status 2025-11-11: ✅ Complete (sidebar + undo live)._ 
+   - _Status 2025-11-11: ✅ Complete (sidebar + undo live)._
 
 3. **Key Canvas & Inspector Key Tab (Milestone 3)**
    - Deliverables: 80-key canvas with keyboard/pointer navigation, Key inspector tab with presets + raw JSON editor, focus outlines, footer selection info.
    - Acceptance: Shortcuts (`arrow/hjkl`, `Enter`, `.`, `[`, `]`, `P/D`) work; schema-driven editor enforces constraints; unit + pilot tests (`test_canvas.py`, `test_key_tab.py`) pass.
-   - _Status 2025-11-11: ✅ Complete (current build satisfies these acceptance tests)._ 
+   - _Status 2025-11-11: ✅ Complete (current build satisfies these acceptance tests)._
 
 4. **Studios & Command Surfaces (Milestone 4)**
    - Deliverables: Macro/Hold Tap/Combo/Listener tabs, command palette, Search/Jump panel, cross-linking (jump from key to macro, etc.).
@@ -75,7 +75,7 @@ Each milestone is intentionally narrow to support the “commit/push whenever te
      3. **Combo Studio – ✅ 2025‑11‑12**: CRUD enforces unique names + trigger chords, ensures `keyPositions` and `LayerRef` targets valid, and rename rewrites references. UI provides chord picker + layer scope chips. Tests `tests/tui/unit/test_combos.py` + `tests/tui/integration/test_combo_tab.py` cover conflicts, rename propagation, and undo/redo.
      4. **Listener Studio – ✅ 2025‑11‑12**: Store exposes listener CRUD/reference APIs with unique `code` validation and delete guard. Inspector ListenerTab lists listeners with ref counts, detail pane edits processors/nodes/layers, and pilot `tests/tui/integration/test_listener_tab.py` verifies create/edit/delete plus reference blocking.
      5. **Command Palette & Search/Jump – 🚧**: Global registry powers Ctrl/Cmd+K palette with commands for layer ops, studio focus, bundle toggles, validation/regen/save, undo/redo, and search launches Jump panel for keys/layers/macros/hold taps/combos/listeners. Palette/Jump actions must dispatch store mutations (or selection events), emit footer messages, and ship with integration tests (`test_command_palette.py`, `test_search_panel.py`).
-   - _Status 2025-11-12: 🚧 Command Palette & Search/Jump pending; studios ✅._ 
+   - _Status 2025-11-12: 🚧 Command Palette & Search/Jump pending; studios ✅._
 
 5. **Feature Bundles & Builder Bridge (Milestone 5)**
    - Deliverables: `services/builder_bridge`, Features tab diff preview, Layer provenance badges autopopulated, action log inspector.

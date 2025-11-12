@@ -38,12 +38,14 @@ def test_list_hold_taps_returns_copy(sample_payload: dict[str, object]) -> None:
 
 def test_add_hold_tap(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
-    store.add_hold_tap({
-        "name": "&hold_secondary",
-        "bindings": ["&kp", "B"],
-        "tappingTermMs": 150,
-        "holdTriggerKeyPositions": [0, 1],
-    })
+    store.add_hold_tap(
+        {
+            "name": "&hold_secondary",
+            "bindings": ["&kp", "B"],
+            "tappingTermMs": 150,
+            "holdTriggerKeyPositions": [0, 1],
+        }
+    )
     assert any(ht["name"] == "&hold_secondary" for ht in store.state.hold_taps)
 
     store.undo()
@@ -53,10 +55,12 @@ def test_add_hold_tap(sample_payload: dict[str, object]) -> None:
 def test_add_hold_tap_duplicate_name_raises(sample_payload: dict[str, object]) -> None:
     store = LayoutStore.from_payload(sample_payload)
     with pytest.raises(ValueError):
-        store.add_hold_tap({
-            "name": "&hold_primary",
-            "bindings": ["&kp"],
-        })
+        store.add_hold_tap(
+            {
+                "name": "&hold_primary",
+                "bindings": ["&kp"],
+            }
+        )
 
 
 def test_update_hold_tap_rename_rewrites_references(sample_payload: dict[str, object]) -> None:
@@ -95,11 +99,13 @@ def test_delete_hold_tap_after_unbinding(sample_payload: dict[str, object]) -> N
 def test_find_hold_tap_references(sample_payload: dict[str, object]) -> None:
     payload = copy.deepcopy(sample_payload)
     payload["layers"][0][2] = {"value": "&hold_primary", "params": []}
-    payload["macros"].append({
-        "name": "&macro_uses_hold",
-        "bindings": ["&hold_primary"],
-        "params": [],
-    })
+    payload["macros"].append(
+        {
+            "name": "&macro_uses_hold",
+            "bindings": ["&hold_primary"],
+            "params": [],
+        }
+    )
     store = LayoutStore.from_payload(payload)
 
     refs = store.find_hold_tap_references("&hold_primary")

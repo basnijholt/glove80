@@ -13,4 +13,3 @@ class ProjectRibbon(Static):
             f"Glove80 · layout={current_layout} · variant={current_variant} · Milestone 1 scaffold",
             classes="project-ribbon",
         )
-

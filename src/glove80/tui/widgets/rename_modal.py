@@ -44,4 +44,3 @@ class RenameLayerModal(ModalScreen[Optional[str]]):
         input_widget = self.query_one("#rename-input", Input)
         value = input_widget.value.strip()
         self.dismiss(value or None)
-

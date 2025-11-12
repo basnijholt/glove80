@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 import json
 from importlib import resources
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Literal, Sequence
 
 from glove80.keycodes import KeyOption, key_options_by_name
 
@@ -84,9 +84,7 @@ class ValidationService:
 
         behavior = self._behavior_map.get(normalized_value)
         if behavior is None:
-            issues.append(
-                ValidationIssue(field="value", message=f"Unknown behavior '{normalized_value}'")
-            )
+            issues.append(ValidationIssue(field="value", message=f"Unknown behavior '{normalized_value}'"))
             return ValidationResult(normalized_value, tuple(), tuple(issues))
 
         normalized_params: list[Any] = []
@@ -289,9 +287,7 @@ def _normalize_param(entry: Any) -> BehaviorParamSpec:
 
 @lru_cache(maxsize=1)
 def _load_behaviors() -> dict[str, BehaviorSpec]:
-    data = json.loads(
-        resources.files("glove80.keycodes").joinpath("zmk.json").read_text(encoding="utf-8")
-    )
+    data = json.loads(resources.files("glove80.keycodes").joinpath("zmk.json").read_text(encoding="utf-8"))
     mapping: dict[str, BehaviorSpec] = {}
     for entry in data:
         code = entry.get("code")

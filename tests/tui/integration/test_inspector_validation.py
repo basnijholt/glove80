@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 
-from textual.pilot import Pilot
 
 from glove80.tui.app import Glove80TuiApp
 from glove80.tui.widgets.inspector import KeyInspector

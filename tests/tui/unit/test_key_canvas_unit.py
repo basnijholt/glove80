@@ -36,7 +36,6 @@ def test_kp_slot_prefers_param_value() -> None:
 def test_detail_text_includes_params() -> None:
     canvas = _make_canvas()
     slot = {"value": "&kp", "params": ["A"]}
-    detail = canvas._detail_text((slot,), 0, prefix="Hover")
-    assert "&kp" in detail
-    assert "params=[A]" in detail
-    assert detail.startswith("Hover: Key #00")
+    detail_lines = canvas._detail_lines_for_slot((slot,), 0, prefix="Hover")
+    assert detail_lines[0].startswith("Hover: Key #00 &kp")
+    assert any("params: A" in line for line in detail_lines)

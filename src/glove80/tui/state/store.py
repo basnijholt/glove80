@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, replace
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 
 LayerPayload = List[Dict[str, Any]]
@@ -319,8 +319,8 @@ class LayoutStore:
         self._state = LayoutState(
             layer_names=self._state.layer_names,
             layers=tuple(layers),
-             macros=self._state.macros,
-             hold_taps=self._state.hold_taps,
+            macros=self._state.macros,
+            hold_taps=self._state.hold_taps,
             combos=self._state.combos,
             listeners=self._state.listeners,
         )
@@ -410,14 +410,11 @@ class LayoutStore:
         macros[index] = normalized
         if rename_map:
             macros = [
-                normalized if idx == index else _replace_strings(macro, rename_map)
-                for idx, macro in enumerate(macros)
+                normalized if idx == index else _replace_strings(macro, rename_map) for idx, macro in enumerate(macros)
             ]
         layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
         combos = (
-            self._rewrite_sequence_with_macros(self._state.combos, rename_map)
-            if rename_map
-            else self._state.combos
+            self._rewrite_sequence_with_macros(self._state.combos, rename_map) if rename_map else self._state.combos
         )
         hold_taps = (
             self._rewrite_sequence_with_macros(self._state.hold_taps, rename_map)
@@ -442,9 +439,7 @@ class LayoutStore:
     def delete_macro(self, *, name: str, force: bool = False) -> None:
         index = self._macro_index(name)
         references = self.find_macro_references(name)
-        has_refs = any(
-            references[key] for key in ("keys", "hold_taps", "combos", "listeners", "macros")
-        )
+        has_refs = any(references[key] for key in ("keys", "hold_taps", "combos", "listeners", "macros"))
         if has_refs and not force:
             raise ValueError(f"Macro '{name}' is referenced and cannot be deleted")
 
@@ -457,10 +452,7 @@ class LayoutStore:
             combos = self._rewrite_sequence_with_macros(self._state.combos, cleanup_map)
             hold_taps = self._rewrite_sequence_with_macros(self._state.hold_taps, cleanup_map)
             listeners = self._rewrite_sequence_with_macros(self._state.listeners, cleanup_map)
-            macros = [
-                _replace_strings(macro, cleanup_map) if macro.get("name") != name else macro
-                for macro in macros
-            ]
+            macros = [_replace_strings(macro, cleanup_map) if macro.get("name") != name else macro for macro in macros]
         else:
             layers = self._state.layers
             combos = self._state.combos
@@ -546,20 +538,15 @@ class LayoutStore:
         hold_taps[index] = normalized
         if rename_map:
             hold_taps = [
-                normalized if idx == index else _replace_strings(hold, rename_map)
-                for idx, hold in enumerate(hold_taps)
+                normalized if idx == index else _replace_strings(hold, rename_map) for idx, hold in enumerate(hold_taps)
             ]
 
         layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
         macros = (
-            self._rewrite_sequence_with_macros(self._state.macros, rename_map)
-            if rename_map
-            else self._state.macros
+            self._rewrite_sequence_with_macros(self._state.macros, rename_map) if rename_map else self._state.macros
         )
         combos = (
-            self._rewrite_sequence_with_macros(self._state.combos, rename_map)
-            if rename_map
-            else self._state.combos
+            self._rewrite_sequence_with_macros(self._state.combos, rename_map) if rename_map else self._state.combos
         )
         listeners = (
             self._rewrite_sequence_with_macros(self._state.listeners, rename_map)
@@ -601,8 +588,7 @@ class LayoutStore:
             combos = self._rewrite_sequence_with_macros(self._state.combos, cleanup_map)
             listeners = self._rewrite_sequence_with_macros(self._state.listeners, cleanup_map)
             hold_taps = [
-                _replace_strings(hold, cleanup_map) if hold.get("name") != name else hold
-                for hold in hold_taps
+                _replace_strings(hold, cleanup_map) if hold.get("name") != name else hold for hold in hold_taps
             ]
         else:
             layers = self._state.layers
@@ -691,15 +677,12 @@ class LayoutStore:
         combos[index] = normalized
         if rename_map:
             combos = [
-                normalized if idx == index else _replace_strings(combo, rename_map)
-                for idx, combo in enumerate(combos)
+                normalized if idx == index else _replace_strings(combo, rename_map) for idx, combo in enumerate(combos)
             ]
 
         layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
         macros = (
-            self._rewrite_sequence_with_macros(self._state.macros, rename_map)
-            if rename_map
-            else self._state.macros
+            self._rewrite_sequence_with_macros(self._state.macros, rename_map) if rename_map else self._state.macros
         )
         hold_taps = (
             self._rewrite_sequence_with_macros(self._state.hold_taps, rename_map)
@@ -744,10 +727,7 @@ class LayoutStore:
             macros = self._rewrite_sequence_with_macros(self._state.macros, cleanup_map)
             hold_taps = self._rewrite_sequence_with_macros(self._state.hold_taps, cleanup_map)
             listeners = self._rewrite_sequence_with_macros(self._state.listeners, cleanup_map)
-            combos = [
-                _replace_strings(combo, cleanup_map) if combo.get("name") != name else combo
-                for combo in combos
-            ]
+            combos = [_replace_strings(combo, cleanup_map) if combo.get("name") != name else combo for combo in combos]
         else:
             layers = self._state.layers
             macros = self._state.macros
@@ -842,9 +822,7 @@ class LayoutStore:
 
         layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
         macros = (
-            self._rewrite_sequence_with_macros(self._state.macros, rename_map)
-            if rename_map
-            else self._state.macros
+            self._rewrite_sequence_with_macros(self._state.macros, rename_map) if rename_map else self._state.macros
         )
         hold_taps = (
             self._rewrite_sequence_with_macros(self._state.hold_taps, rename_map)
@@ -852,9 +830,7 @@ class LayoutStore:
             else self._state.hold_taps
         )
         combos = (
-            self._rewrite_sequence_with_macros(self._state.combos, rename_map)
-            if rename_map
-            else self._state.combos
+            self._rewrite_sequence_with_macros(self._state.combos, rename_map) if rename_map else self._state.combos
         )
 
         self._state = LayoutState(
@@ -888,10 +864,7 @@ class LayoutStore:
             macros = self._rewrite_sequence_with_macros(self._state.macros, cleanup_map)
             hold_taps = self._rewrite_sequence_with_macros(self._state.hold_taps, cleanup_map)
             combos = self._rewrite_sequence_with_macros(self._state.combos, cleanup_map)
-            listeners = [
-                _replace_strings(listener, cleanup_map)
-                for listener in listeners
-            ]
+            listeners = [_replace_strings(listener, cleanup_map) for listener in listeners]
         else:
             layers = self._state.layers
             macros = self._state.macros

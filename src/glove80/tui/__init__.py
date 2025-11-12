@@ -18,4 +18,3 @@ def run_tui(*, layout: Optional[str] = None, variant: Optional[str] = None, devt
 
     app = Glove80TuiApp(initial_layout=layout, initial_variant=variant, enable_devtools=devtools)
     app.run()
-
