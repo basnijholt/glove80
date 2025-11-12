@@ -31,16 +31,21 @@ class Glove80TuiApp(App[None]):
         padding: 1 2;
         background: $boost;
         color: $text;
+        height: 3;
+        border-bottom: heavy $surface 30%;
     }
 
     .project-ribbon .ribbon-pill {
         padding: 0 1;
         border: solid $surface 20%;
         margin-right: 1;
+        background: $surface 15%;
+        color: $text 80%;
     }
 
     .project-ribbon .ribbon-title {
         text-style: bold;
+        color: $accent;
     }
 
     .project-ribbon .ribbon-spacer {
@@ -80,6 +85,7 @@ class Glove80TuiApp(App[None]):
 
     .key-canvas {
         width: 1fr;
+        height: 1fr;
         border: solid $surface 10%;
         padding: 2;
         min-height: 24;
@@ -115,9 +121,11 @@ class Glove80TuiApp(App[None]):
     }
 
     .layer-strip {
-        padding: 1 2;
-        border-top: solid $surface 15%;
+        padding: 0 2;
+        border-top: heavy $surface 30%;
         color: $text 80%;
+        height: 3;
+        background: $surface 5%;
     }
 
     .footer-bar {
