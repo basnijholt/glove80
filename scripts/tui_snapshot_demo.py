@@ -11,10 +11,11 @@ from glove80.tui.app import Glove80TuiApp
 from glove80.tui.testing import capture_snapshot, save_snapshot
 
 
-async def _demo(output_dir: Path) -> None:
+async def _demo(output_dir: Path, width: int, height: int) -> None:
     app = Glove80TuiApp()
 
     async with app.run_test() as pilot:
+        await pilot.resize_terminal(width=width, height=height)
         await pilot.pause()
 
         before = capture_snapshot(app)
@@ -45,9 +46,21 @@ def main() -> None:
         default=Path("snapshots"),
         help="Directory where before/after snapshot.txt files are written",
     )
+    parser.add_argument(
+        "--width",
+        type=int,
+        default=140,
+        help="Snapshot terminal width (columns)",
+    )
+    parser.add_argument(
+        "--height",
+        type=int,
+        default=40,
+        help="Snapshot terminal height (rows)",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    asyncio.run(_demo(args.output_dir))
+    asyncio.run(_demo(args.output_dir, width=args.width, height=args.height))
 
 
 if __name__ == "__main__":
