@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Mapping, Optional, Sequence, Literal
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Literal
 
 from textual import on
+from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
 from textual.suggester import Suggester
+from textual.widget import Widget
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static, TabbedContent, TabPane
 
 from ..messages import FooterMessage, SelectionChanged, StoreUpdated
@@ -46,8 +48,7 @@ class InspectorPanel(Vertical):
                 with VerticalScroll(classes="inspector-scroll"):
                     yield self.macro_tab
             with TabPane("Hold Taps", id="tab-holdtaps"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.hold_tap_tab
+                yield self.hold_tap_tab
             with TabPane("Combos", id="tab-combos"):
                 with VerticalScroll(classes="inspector-scroll"):
                     yield self.combo_tab
@@ -93,6 +94,92 @@ class InspectorDrawer(Vertical):
 
     def _sync_state(self) -> None:
         self.set_class(not self._expanded, "collapsed")
+
+
+class InspectorOverlay(Vertical):
+    """Right-side slide-over overlay that reuses the inspector panel."""
+
+    BINDINGS = [Binding("escape", "close", "Close Inspector", show=False)]
+
+    def __init__(
+        self,
+        *,
+        store: LayoutStore,
+        variant: str,
+        focus_fallback: Callable[[], Widget | None] | None = None,
+        on_visibility_change: Callable[[bool], None] | None = None,
+    ) -> None:
+        super().__init__(id="inspector-overlay", classes="inspector-overlay")
+        self.panel = InspectorPanel(store=store, variant=variant)
+        self._visible = False
+        self._previous_focus: Widget | None = None
+        self._focus_fallback = focus_fallback
+        self._on_visibility_change = on_visibility_change
+
+    def compose(self):  # type: ignore[override]
+        yield self.panel
+
+    # ------------------------------------------------------------------
+    @property
+    def visible(self) -> bool:
+        return self._visible
+
+    def show(self, *, focus: bool = True) -> None:
+        if self._visible:
+            if focus:
+                self._focus_panel()
+            return
+        self._visible = True
+        self.add_class("visible")
+        self._notify_visibility()
+        if focus:
+            self._focus_panel()
+
+    def hide(self) -> None:
+        if not self._visible:
+            return
+        self._visible = False
+        self.remove_class("visible")
+        self._notify_visibility()
+        self._restore_focus()
+
+    def toggle(self) -> None:
+        if self._visible:
+            self.hide()
+        else:
+            self.show()
+
+    def focus_panel(self) -> None:
+        if not self._visible:
+            self.show()
+        self._focus_panel()
+
+    def action_close(self) -> None:  # noqa: D401 - Binding target
+        self.hide()
+
+    # ------------------------------------------------------------------
+    def _focus_panel(self) -> None:
+        self._previous_focus = self.screen.focused if self.screen else None
+
+        def _apply_focus() -> None:
+            self.panel.key_inspector.focus_value_field()
+
+        self.call_after_refresh(_apply_focus)
+
+    def _restore_focus(self) -> None:
+        target: Widget | None = self._previous_focus
+        self._previous_focus = None
+        if target is None and self._focus_fallback is not None:
+            target = self._focus_fallback() or None
+        if target is not None:
+            try:
+                target.focus()
+            except Exception:  # pragma: no cover - defensive
+                pass
+
+    def _notify_visibility(self) -> None:
+        if self._on_visibility_change is not None:
+            self._on_visibility_change(self._visible)
 
 
 class KeyInspector(Vertical):
@@ -1022,30 +1109,31 @@ class HoldTapTab(Vertical):
         self.delete_button = Button("Delete", id="holdtap-delete", disabled=True)
 
     def compose(self):  # type: ignore[override]
-        yield Static("Hold Taps", classes="macro-heading")
-        yield self._list
-        yield Label("Name")
-        yield self.name_input
-        yield Label("Description")
-        yield self.desc_input
-        yield Label("Bindings (JSON array)")
-        yield self.bindings_input
-        yield Label("Flavor")
-        yield self.flavor_input
-        yield Label("Tapping term (ms)")
-        yield self.tapping_input
-        yield Label("Quick tap (ms)")
-        yield self.quick_input
-        yield Label("Require prior idle (ms)")
-        yield self.idle_input
-        yield Label("holdTriggerKeyPositions")
-        yield self.trigger_positions_input
-        yield Label("holdTriggerOnRelease")
-        yield self.trigger_release_input
-        yield self.ref_label
-        yield self.add_button
-        yield self.apply_button
-        yield self.delete_button
+        with VerticalScroll(classes="inspector-scroll"):
+            yield Static("Hold Taps", classes="macro-heading")
+            yield self._list
+            yield Label("Name")
+            yield self.name_input
+            yield Label("Description")
+            yield self.desc_input
+            yield Label("Bindings (JSON array)")
+            yield self.bindings_input
+            yield Label("Flavor")
+            yield self.flavor_input
+            yield Label("Tapping term (ms)")
+            yield self.tapping_input
+            yield Label("Quick tap (ms)")
+            yield self.quick_input
+            yield Label("Require prior idle (ms)")
+            yield self.idle_input
+            yield Label("holdTriggerKeyPositions")
+            yield self.trigger_positions_input
+            yield Label("holdTriggerOnRelease")
+            yield self.trigger_release_input
+            yield self.ref_label
+            yield self.add_button
+            yield self.apply_button
+            yield self.delete_button
 
     def on_mount(self) -> None:
         self._refresh_list()

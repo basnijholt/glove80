@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from textual.widgets import Button
+
 from glove80.tui.app import Glove80TuiApp
 from glove80.tui.screens.editor import EditorScreen
 from glove80.tui.testing import capture_snapshot
@@ -25,11 +27,12 @@ async def _demo(output_dir: Path, width: int, height: int) -> None:
 
         before = await _capture_snapshot_with_chrome(app, pilot, output_dir / "before.txt")
 
-        # Try an obvious action: click the Key Inspector "Apply" button
+        # Open the inspector overlay so the "after" snapshot demonstrates the slide-over
         try:
-            await pilot.click("#apply-form")
+            ribbon = pilot.app.screen.query_one(ProjectRibbon)
+            toggle_button = ribbon.query_one("#toggle-inspector", Button)
+            toggle_button.press()
         except Exception:
-            # If the selector fails (e.g., layout changed), fall back to a harmless key press
             await pilot.press("tab")
         await _wait_for_editor_ready(app, pilot, width, height)
 

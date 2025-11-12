@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 
 from glove80.tui.app import Glove80TuiApp
-from glove80.tui.widgets import KeyCanvas, LayerStrip, ProjectRibbon
+from textual.widgets import Button
+
+from glove80.tui.widgets import InspectorOverlay, KeyCanvas, LayerStrip, ProjectRibbon
 from glove80.tui.widgets.inspector import KeyInspector
 from textual.widgets import Static
 
@@ -37,5 +39,26 @@ def test_layer_switch_updates_store_selection() -> None:
             await pilot.pause()
 
             assert pilot.app.store.selected_layer_name == "Lower"
+
+    asyncio.run(_run())
+
+
+def test_inspector_overlay_toggles_and_resets_focus() -> None:
+    async def _run() -> None:
+        app = Glove80TuiApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            overlay = pilot.app.screen.query_one(InspectorOverlay)
+
+            assert not overlay.visible
+
+            ribbon = pilot.app.screen.query_one(ProjectRibbon)
+            ribbon.query_one("#toggle-inspector", Button).press()
+            await pilot.pause()
+            assert overlay.visible
+
+            await pilot.press("escape")
+            await pilot.pause()
+            assert not overlay.visible
 
     asyncio.run(_run())

@@ -51,6 +51,7 @@ class Glove80TuiApp(App[None]):
         layout: vertical;
         background: $background;
         color: $text;
+        layers: base overlay;
     }
 
     .project-ribbon {
@@ -158,6 +159,26 @@ class Glove80TuiApp(App[None]):
     .footer-bar {
         padding: 0 2;
         background: $surface 10%;
+    }
+
+    #inspector-overlay {
+        layer: overlay;
+        dock: right;
+        min-width: 38;
+        width: 48;
+        max-width: 80;
+        height: 100%;
+        padding: 1 2;
+        background: $surface 8%;
+        border-left: heavy $surface 30%;
+        offset-x: 100%;
+        opacity: 0;
+        transition: offset 200ms in_out_cubic, opacity 150ms in_out_cubic;
+    }
+
+    #inspector-overlay.visible {
+        offset-x: 0;
+        opacity: 100%;
     }
     """
     BINDINGS = [

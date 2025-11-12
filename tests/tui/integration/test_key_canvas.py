@@ -4,6 +4,7 @@ import asyncio
 
 
 from glove80.tui.app import Glove80TuiApp
+from glove80.tui.widgets import InspectorOverlay
 from glove80.tui.widgets.inspector import KeyInspector
 from glove80.tui.widgets.key_canvas import KeyCanvas
 
@@ -24,7 +25,7 @@ def test_key_canvas_moves_selection_and_focuses_inspector() -> None:
         app = Glove80TuiApp(payload=_sample_payload())
         async with app.run_test() as pilot:  # type: Pilot
             canvas = pilot.app.screen.query_one(KeyCanvas)
-            inspector = pilot.app.screen.query_one(KeyInspector)
+            overlay = pilot.app.screen.query_one(InspectorOverlay)
 
             canvas.focus()
             await pilot.pause()
@@ -36,7 +37,8 @@ def test_key_canvas_moves_selection_and_focuses_inspector() -> None:
 
             canvas.action_inspect()
             await pilot.pause()
-            assert inspector.value_input.has_focus
+            assert overlay.visible
+            assert overlay.panel.key_inspector.value_input.has_focus
 
     asyncio.run(_run())
 
