@@ -199,6 +199,49 @@ The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Sch
      - Footer messages during validate/regen/save follow `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`.
    - Tests: CLI runner unit tests (mocked subprocess), pilot covering validation failure messaging, regen diff acceptance workflow, and Save/Save-As with dirty flag resets.
 
+## 8. Editor Layout Snapshot _(2025-11-12 refresh)_
+
+- **Goals**: Keep the physical keyboard dominant, surface primary actions without modal hopping, and let authors collapse non-essential surfaces when screen real estate is tight.
+- **Vertical stack** (`src/glove80/tui/screens/editor.py`):
+  - **ProjectRibbon** (`src/glove80/tui/widgets/ribbon.py`) spans the top with layout/variant pills, Save/Undo/Redo buttons, and an **Inspector toggle** button that posts `InspectorToggleRequested`.
+  - **InspectorDrawer** (`src/glove80/tui/widgets/inspector.py#InspectorDrawer`) lives directly under the ribbon; it can collapse to zero height but keeps tabs mounted for instant reopen.
+  - **KeyCanvas** (`src/glove80/tui/widgets/key_canvas.py`) owns the center column, stretching to `height: 1fr` so the 80-key grid is always the visual anchor.
+  - **LayerStrip** (`src/glove80/tui/widgets/layer_strip.py`) sits above the footer, rendering pill-style layer chips plus "+ Layer ▾" and "Inspector ▸" affordances.
+  - **FooterBar** shows selection + dirty state; it remains unchanged but benefits from the clearer chrome above.
+- **CSS hooks** (`src/glove80/tui/app.py:29-127`): ribbon and layer strip have fixed heights (3 rows), heavy separators, and muted pill backgrounds so the layout hierarchy is obvious even in plain-text snapshots.
+
+### 8.1 Interaction Model (KeyCanvas-centric)
+
+- **Navigation**: Arrow keys and `h/j/k/l` move within `KEY_GRID_ROWS` (§`src/glove80/tui/geometry.py`), `[`/`]` cycle layers; wrap-around keeps keyboard-only flows fluent.
+- **Selection propagation**: Every selection change posts `SelectionChanged` (layer index/name + key index). KeyCanvas listens to external events to stay in sync with sidebar/layer strip.
+- **Inspector focus**: `Enter` or `.` triggers `_request_inspector_focus()`, which emits `InspectorFocusRequested`; `EditorScreen` expands the drawer and focuses `KeyInspector.value_input`.
+- **Hover/tooltips**: Each `KeyCap` widget stores three lines (legend/behavior/params) and exposes `tooltip` text built from `_detail_text` so long behaviors remain discoverable without cluttering the grid.
+- **Shortcuts summary** (from `KeyCanvas.BINDINGS` / ribbon buttons):
+  - Canvas: `←/→/↑/↓`, `[`/`]`, `Enter`, `.`, `.` copy, `Ctrl+Z`/`Ctrl+Shift+Z` for undo/redo fall through to `Glove80TuiApp` actions.
+  - Ribbon: Save/Undo/Redo buttons call `App.action_save*`/`action_undo`/`action_redo`; Inspector toggle flips the drawer and updates button label (▸/▾).
+
+### 8.2 State & Messages
+
+- **`SelectionChanged`** (`src/glove80/tui/messages.py:10-18`): fired whenever `LayoutStore` updates the active layer/key; `ProjectRibbon`, `LayerStrip`, and `KeyInspector` subscribe to stay synchronized.
+- **`InspectorFocusRequested`** (`messages.py:20-26`): issued by KeyCanvas when the user wants to edit the focused key; `EditorScreen` expands the drawer and hands focus to the Key tab form.
+- **`InspectorToggleRequested`** (`messages.py:37-45`): sent by the ribbon toggle button; `EditorScreen` calls `InspectorDrawer.toggle()` and feeds the drawer’s `expanded` state back to the ribbon so the chevron matches reality.
+- **Store plumbing**: `LayoutStore` keeps `SelectionState`, drives undo/redo, and remains the single emitter of `StoreUpdated`; UI widgets respond via `@on(StoreUpdated)` handlers to refresh view state without pulling in business logic.
+
+### 8.3 Testing & Verification
+
+- **Integration pilots** (`tests/tui/integration/…`): `test_editor_rendering.py` now asserts the ribbon title and layer strip render; `test_key_canvas_hover.py` exercises tooltip text; `test_layer_sidebar.py` still covers rename/undo wiring.
+- **Snapshot guardrail**: the refreshed `scripts/tui_snapshot_demo.py` waits for `EditorScreen`, `ProjectRibbon`, and `LayerStrip` before dumping text, ensuring the captured chrome matches expectations.
+- **Coverage**: `uv run pytest tests/tui/integration` remains the primary gate; repo-wide coverage target is 85%, but the TUI-specific suites already assert the new layout behavior.
+
+### 8.4 Screenshot Workflow (quick reference)
+
+- Run `uv run python scripts/tui_snapshot_demo.py --output-dir docs/screenshots/$(git rev-parse --short HEAD)-baseline --width 140 --height 40` to capture the current commit; rerun with `…-after` for post-change artifacts.
+- The script resizes the terminal, waits ≤1.5 s for `EditorScreen` + ribbon + layer strip to mount, captures `before.txt`, clicks `#apply-form` (or tabs if missing), waits again, and captures `after.txt`.
+- Files land in `docs/screenshots/<hash>-baseline/{before,after}.txt` and `docs/screenshots/<hash>-after/{before,after}.txt`; use the existing `6a384f8-*` folders as examples.
+- Verify header presence with `grep "Glove80" docs/screenshots/<hash>-baseline/before.txt`; verify footer pills with `grep "+ Layer" …/before.txt`.
+- Diff snapshots (`diff before.txt after.txt`) to inspect state changes produced by the scripted click.
+- Commit both folders so reviewers can eyeball the ASCII render alongside the code diff.
+
 4. **Polish & Accessibility**
    - Acceptance criteria:
      - Theme switcher (light/dark/high-contrast/ASCII), font scaling, focus outlines, Advanced/Metadata tabs, and command log inspector ship together.
