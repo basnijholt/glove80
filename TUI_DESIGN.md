@@ -4,7 +4,7 @@ This document is the single source of truth for the upcoming Textual (Python) TU
 
 > **Instructions for agents**: Before making changes, read this file end-to-end, follow its requirements, and record any new decisions, deviations, or discoveries back into this document (append brief dated notes in the relevant section). Treat it as a living blueprint.
 
-> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro Studio shipped with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. HoldTap/Combo/Listener studios plus Command Palette/Search are next. Keep `docs/TUI_CHECKLIST.md` and `docs/TUI_IMPL_PLAN.md` in sync with any changes captured here.
+> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro and HoldTap studios now ship with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. Combo/Listener studios plus Command Palette/Search remain outstanding. Keep `docs/TUI_CHECKLIST.md` and `docs/TUI_IMPL_PLAN.md` in sync with any changes captured here.
 
 IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`!
 
@@ -34,8 +34,8 @@ IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`
 2. **Editor Workspace** – Three-pane layout:
    - **Layer Sidebar** (left) – Renders `layer_names[]`, supports drag/drop reorder, duplicate, rename, hide/show, “pick up & drop” interactions, and badges showing feature provenance (HRM/mouse/cursor/custom). Layer actions update references (`LayerRef`) everywhere.
    - **Key Canvas** (center) – 80-key grid per layer (tailored to Glove80 geometry). Click or navigate via keyboard to inspect/modify key behaviors; multi-layer split view available for copy/drop operations.
-   - **Inspector Tabs** (right) – Context-aware forms: Key, Macro, Hold Tap, Combo, Listener, Features (builder toggles), Advanced (custom behaviors/device tree/config/layout parameters), Metadata.
-     - _Note (2025-11-12): Key tab + validation/autocomplete are implemented, MacroTab is feature-complete (list/detail editor + pilot tests), and a minimal Features tab previews/applies HRM bundles via BuilderBridge; HoldTap/Combo/Listener/Advanced/Metadata tabs remain TODO._
+  - **Inspector Tabs** (right) – Context-aware forms: Key, Macro, Hold Tap, Combo, Listener, Features (builder toggles), Advanced (custom behaviors/device tree/config/layout parameters), Metadata.
+    - _Note (2025-11-12): Key tab + validation/autocomplete are implemented. MacroTab and HoldTapTab are feature-complete (list/detail editors wired to store CRUD with unit + pilot coverage). Features tab previews/applies HRM bundles via BuilderBridge. Combo/Listener/Advanced/Metadata tabs remain TODO._
 3. **Status & Logs (Footer)** – Shows dirty flag, active layer, validation counts, background task progress (e.g., regen, CLI validation), and streaming logs.
 
 ### 3.2 Secondary Surfaces
@@ -143,9 +143,11 @@ The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Sch
 4. **CRUD guarantees**: `LayoutStore.add_macro/update_macro/delete_macro/list_macros/find_macro_references` (see `src/glove80/tui/state/store.py`) always snapshot before mutation, rename rewrites every reference (`layers`, `macros`, `holdTaps`, `combos`, `inputListeners`), delete is blocked while references exist (unless forced cleanup), and undo/redo restores the previous payload byte-for-byte.
 5. Integration pilot (`tests/tui/integration/test_macro_tab.py`) covers create → bind → rename → undo; use it as reference for future studios.
 
-### 7.3 Compose a Hold Tap
+### 7.3 Compose a Hold Tap _(delivered 2025-11-12)_
 1. Hold Tap tab → “New” → enter `name`, `bindings[]`, pick `flavor` (enum), fill timing fields, optionally choose `holdTriggerKeyPositions[]` via key picker.
 2. Bind to keys exactly like macros (behavior value = hold tap name).
+3. **CRUD guarantees**: `LayoutStore.list/add/update/rename/delete/find_hold_tap_references` mirror macro semantics (timing fields ≥ 0, trigger positions deduped within 0–79, rename rewrites references across layers/macros/combos/listeners/holdTaps, delete blocked while referenced unless forced). See `src/glove80/tui/state/store.py` and `docs/STORE_API_COPY_KEY.md` (wrap/clamp guidance) for details.
+4. HoldTapTab emits `StoreUpdated` + `FooterMessage` (severity catalog in `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`) for Add/Apply/Delete. Pilot `tests/tui/integration/test_hold_tap_tab.py` covers create → bind → rename → delete/undo.
 
 ### 7.4 Build a Combo
 1. Combo tab → “New” → click “Pick Keys” to select positions 0–79 on the canvas.
@@ -262,9 +264,9 @@ _Milestone gates: see `docs/TUI_IMPL_PLAN.md` for per-feature test requirements 
 - **Combo Studio**: Enforce unique name + trigger chords, validate `LayerRef` targets, surface conflicts, snapshot mutations for undo/redo, and cover flows via store + pilot tests.
 - **Listener Studio**: Provide listener CRUD with unique `code`, node/processor validation, delete guard, reference summaries, and pilot tests for create/edit/delete.
 - **Command Palette/Search**: Registry-driven palette (Ctrl/Cmd+K) and Search/Jump panel must execute common commands, respect `enabled()` predicates, emit severity-coded footer/toast messages, and include integration coverage.
-- **Feature Bundles & Provenance**: Cursor/mouse bundles flow through BuilderBridge with diff preview parity; provenance badges/action log inspector surface origins for every layer/action.
-- **Validation/Regen/Save**: Debounced validators, Regen Preview CLI runner, Save/Save-As with optional auto-validate; all flows tested via unit + pilot suites.
-- **Polish & Accessibility**: Theme switcher (light/dark/high-contrast/ASCII), font scaling, Advanced tab, accessibility audit items, final documentation sign-off.
+- **Feature Bundles & Provenance (Milestone 5)**: Cursor/mouse bundles must flow through BuilderBridge with diff preview parity against `LayoutBuilder`; provenance badges/action log inspector surface origins for every layer/action. Acceptance + test gates enumerated in `docs/TUI_IMPL_PLAN.md` / `docs/TUI_CHECKLIST.md`.
+- **Validation/Regen/Save (Milestone 6)**: Debounced validators, Regen Preview CLI runner, Save/Save-As with optional auto-validate; CLI runner + diff UI require unit + pilot suites.
+- **Polish & Accessibility (Milestone 7)**: Command palette/search, theme switcher (light/dark/high-contrast/ASCII), font scaling, Advanced tab completion, accessibility audit, final docs sign-off. Severity-coded notifications per `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md` required for palette/search flows.
 
 ## 13. Deliverables & Handoff
 - `docs/layout_payload.schema.json` kept fresh via `scripts/export_layout_schema.py` (already added).
