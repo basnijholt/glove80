@@ -26,92 +26,98 @@ class Glove80TuiApp(App[None]):
         color: $text;
     }
 
-    #editor-workspace {
-        layout: horizontal;
-        height: 1fr;
-    }
-
     .project-ribbon {
+        layout: horizontal;
         padding: 1 2;
         background: $boost;
         color: $text;
     }
 
-    .layer-sidebar {
-        width: 28;
-        border: heavy $surface 10%;
+    .project-ribbon .ribbon-pill {
         padding: 0 1;
+        border: solid $surface 20%;
+        margin-right: 1;
+    }
+
+    .project-ribbon .ribbon-title {
+        text-style: bold;
+    }
+
+    .project-ribbon .ribbon-spacer {
+        width: 1fr;
+    }
+
+    .project-ribbon Button {
+        height: 1;
+    }
+
+    .inspector-drawer {
+        border-bottom: solid $surface 15%;
+        padding: 1 2;
+        overflow: hidden;
+    }
+
+    .inspector-panel {
+        border: solid $surface 10%;
+        padding: 1;
+        background: $surface 5%;
+    }
+
+    .inspector-panel Input {
+        width: 1fr;
+    }
+
+    .inspector-drawer.collapsed {
+        height: 0;
+        min-height: 0;
+        padding: 0 2;
+        border: none;
+    }
+
+    .inspector-drawer.collapsed .inspector-panel {
+        display: none;
     }
 
     .key-canvas {
         width: 1fr;
         border: solid $surface 10%;
-        padding: 1;
-        min-height: 20;
+        padding: 2;
+        min-height: 24;
+        margin: 1 2;
     }
 
-    .inspector-panel {
-        width: 42;
-        min-width: 36;
-        max-width: 52;
-        height: 1fr;
-        border: solid $surface 10%;
-        padding: 1;
-        overflow: hidden;
+    #key-grid {
+        padding: 1 0;
     }
 
-    .inspector-panel Input {
-        width: 38;
-        min-width: 32;
-        max-width: 48;
-    }
-
-    #inspector-tabs {
-        height: 1fr;
-    }
-
-    #inspector-tabs TabPane {
-        height: 1fr;
-        padding: 0;
-    }
-
-    .inspector-scroll {
-        height: 1fr;
-        overflow-y: auto;
-        padding-right: 1;
-    }
-
-    .macro-tab {
-        border-top: solid $surface 20%;
-        margin-top: 1;
-        padding-top: 1;
-    }
-
-    #macro-list {
-        height: 8;
-        border: solid $surface 10%;
-        margin-bottom: 1;
-    }
-
-    .macro-heading {
-        color: $accent;
-        text-style: bold;
-        margin-bottom: 1;
-    }
-
-    .macro-item {
+    .key-row {
         padding: 0 1;
     }
 
-    .macro-refs {
-        margin: 1 0;
-        color: $warning;
+    .key-hand-gap {
+        width: 3;
     }
 
-    .features-tab {
-        border-top: solid $surface 20%;
-        margin-top: 1;
-        padding-top: 1;
+    .key-cap {
+        min-width: 7;
+        width: 7;
+        height: 4;
+        border: solid $surface 25%;
+        padding: 0;
+        text-align: center;
+        margin: 0;
+    }
+
+    .key-cap.selected {
+        border: heavy $accent;
+        background: $accent 20%;
+        color: $text;
+    }
+
+    .layer-strip {
+        padding: 1 2;
+        border-top: solid $surface 15%;
+        color: $text 80%;
     }
 
     .footer-bar {

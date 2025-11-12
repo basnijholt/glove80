@@ -34,4 +34,14 @@ class FooterMessage(Message):
         self.text = text
 
 
-__all__ = ["StoreUpdated", "SelectionChanged", "InspectorFocusRequested", "FooterMessage"]
+class InspectorToggleRequested(Message):
+    """Signal that the inspector drawer should toggle visibility."""
+
+
+__all__ = [
+    "StoreUpdated",
+    "SelectionChanged",
+    "InspectorFocusRequested",
+    "InspectorToggleRequested",
+    "FooterMessage",
+]

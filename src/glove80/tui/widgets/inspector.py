@@ -59,6 +59,42 @@ class InspectorPanel(Vertical):
                     yield self.features_tab
 
 
+class InspectorDrawer(Vertical):
+    """Collapsible wrapper around the inspector stack."""
+
+    def __init__(self, *, store: LayoutStore, variant: str, expanded: bool = False) -> None:
+        super().__init__(classes="inspector-drawer")
+        self.panel = InspectorPanel(store=store, variant=variant)
+        self._expanded = expanded
+
+    def compose(self):  # type: ignore[override]
+        yield self.panel
+
+    def on_mount(self) -> None:
+        self._sync_state()
+
+    def toggle(self) -> None:
+        self._expanded = not self._expanded
+        self._sync_state()
+
+    def expand(self) -> None:
+        if not self._expanded:
+            self._expanded = True
+            self._sync_state()
+
+    def collapse(self) -> None:
+        if self._expanded:
+            self._expanded = False
+            self._sync_state()
+
+    @property
+    def expanded(self) -> bool:
+        return self._expanded
+
+    def _sync_state(self) -> None:
+        self.set_class(not self._expanded, "collapsed")
+
+
 class KeyInspector(Vertical):
     """Minimal form that edits a single key binding."""
 

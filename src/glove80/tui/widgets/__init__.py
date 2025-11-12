@@ -5,6 +5,7 @@ from .inspector import (
     ComboTab,
     FeaturesTab,
     InspectorPanel,
+    InspectorDrawer,
     KeyInspector,
     ListenerTab,
     MacroTab,
@@ -12,6 +13,7 @@ from .inspector import (
 )
 from .key_canvas import KeyCanvas
 from .layer_sidebar import LayerSidebar
+from .layer_strip import LayerStrip
 from .rename_modal import RenameLayerModal
 from .ribbon import ProjectRibbon
 
@@ -21,11 +23,13 @@ __all__ = [
     "ComboTab",
     "ListenerTab",
     "InspectorPanel",
+    "InspectorDrawer",
     "KeyInspector",
     "MacroTab",
     "HoldTapTab",
     "KeyCanvas",
     "LayerSidebar",
+    "LayerStrip",
     "RenameLayerModal",
     "ProjectRibbon",
 ]

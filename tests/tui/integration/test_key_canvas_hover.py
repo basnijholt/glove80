@@ -25,21 +25,15 @@ def test_key_canvas_truncates_and_reveals_detail() -> None:
         async with app.run_test() as pilot:
             canvas = pilot.app.screen.query_one(KeyCanvas)
 
-            grid_text = str(canvas.render())
-            first_line = grid_text.splitlines()[0]
-            start = first_line.find("[") + 1
-            end = first_line.find("]", start)
-            legend = first_line[start:end]
+            legend, _, _ = canvas.cap_lines_for_test(0)
             assert len(legend.strip()) <= KeyCanvas.MAX_LABEL_CHARS
             assert legend.strip().endswith("…")
 
-            await pilot.hover(KeyCanvas, offset=(1, 0))
-            await pilot.pause()
-            hover_text = str(canvas.render())
-            assert LONG_VALUE in hover_text
-            assert "params" in hover_text
+            tooltip = canvas.tooltip_for_test(0)
+            assert LONG_VALUE in tooltip
+            assert "ALPHA" in tooltip and "OMEGA" in tooltip
 
-            await pilot.click(KeyCanvas, offset=(1, 0))
+            await pilot.click("#key-0")
             await pilot.pause()
             assert pilot.app.store.selection.key_index == 0
 
@@ -57,14 +51,13 @@ def test_key_canvas_keyboard_selection_updates_hud() -> None:
 
             canvas.action_move_right()
             await pilot.pause()
-            not_long_text = str(canvas.render())
-            assert LONG_VALUE not in not_long_text
+            tooltip = canvas.tooltip_for_test(canvas.selected_index_for_test())
+            assert LONG_VALUE not in tooltip
 
             canvas.action_move_left()
             await pilot.pause()
-            hud_text = str(canvas.render())
-            assert LONG_VALUE in hud_text
-            assert "ALPHA" in hud_text
-            assert "OMEGA" in hud_text
+            tooltip = canvas.tooltip_for_test(canvas.selected_index_for_test())
+            assert LONG_VALUE in tooltip
+            assert "ALPHA" in tooltip and "OMEGA" in tooltip
 
     asyncio.run(_run())

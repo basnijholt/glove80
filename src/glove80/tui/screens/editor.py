@@ -6,16 +6,15 @@ from typing import Optional
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.screen import Screen
 
 from ..state import LayoutStore
 from ..widgets.footer import FooterBar
-from ..widgets.inspector import InspectorPanel
+from ..widgets.inspector import InspectorDrawer
 from ..widgets.key_canvas import KeyCanvas
-from ..widgets.layer_sidebar import LayerSidebar
+from ..widgets.layer_strip import LayerStrip
 from ..widgets.ribbon import ProjectRibbon
-from ..messages import InspectorFocusRequested
+from ..messages import InspectorFocusRequested, InspectorToggleRequested
 
 
 class EditorScreen(Screen[None]):
@@ -32,20 +31,39 @@ class EditorScreen(Screen[None]):
         self.store = store
         self._initial_layout = initial_layout or "default"
         self._initial_variant = initial_variant or "windows"
-        self._sidebar: LayerSidebar | None = None
         self._canvas: KeyCanvas | None = None
-        self._inspector: InspectorPanel | None = None
+        self._inspector: InspectorDrawer | None = None
+        self._layers: LayerStrip | None = None
+        self._ribbon: ProjectRibbon | None = None
 
     def compose(self) -> ComposeResult:
-        self._sidebar = LayerSidebar(store=self.store)
         self._canvas = KeyCanvas(store=self.store)
-        self._inspector = InspectorPanel(store=self.store, variant=self._initial_variant)
+        self._inspector = InspectorDrawer(store=self.store, variant=self._initial_variant)
+        self._layers = LayerStrip(store=self.store)
+        self._ribbon = ProjectRibbon(
+            store=self.store,
+            current_layout=self._initial_layout,
+            current_variant=self._initial_variant,
+        )
 
-        yield ProjectRibbon(current_layout=self._initial_layout, current_variant=self._initial_variant)
-        yield Horizontal(self._sidebar, self._canvas, self._inspector, id="editor-workspace")
+        yield self._ribbon
+        yield self._inspector
+        yield self._canvas
+        yield self._layers
         yield FooterBar()
 
     @on(InspectorFocusRequested)
     def _handle_focus_request(self, _: InspectorFocusRequested) -> None:
         if self._inspector is not None:
-            self._inspector.key_inspector.focus_value_field()
+            self._inspector.expand()
+            self._inspector.panel.key_inspector.focus_value_field()
+        if self._ribbon is not None:
+            self._ribbon.set_inspector_expanded(True)
+
+    @on(InspectorToggleRequested)
+    def _handle_inspector_toggle(self, _: InspectorToggleRequested) -> None:
+        if self._inspector is None:
+            return
+        self._inspector.toggle()
+        if self._ribbon is not None:
+            self._ribbon.set_inspector_expanded(self._inspector.expanded)

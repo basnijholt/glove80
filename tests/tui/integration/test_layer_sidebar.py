@@ -29,7 +29,8 @@ def test_sidebar_rename_updates_store():
     async def _run() -> None:
         app = Glove80TuiApp(payload=payload)
         async with app.run_test() as pilot:  # type: Pilot
-            sidebar = pilot.app.screen.query_one(LayerSidebar)
+            sidebar = LayerSidebar(store=pilot.app.store)
+            await pilot.app.screen.mount(sidebar)
             await pilot.pause()
             sidebar.index = 0
             sidebar.rename_selected_for_test("Main")
