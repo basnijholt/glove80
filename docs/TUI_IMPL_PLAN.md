@@ -2,7 +2,7 @@
 
 This plan operationalizes `TUI_DESIGN.md` and `docs/TUI_CHECKLIST.md` into a concrete Textual architecture, phased delivery milestones, and a scoped testing strategy. It synthesizes the agent surveys (repository map, validation loop, CLI hook guidance, testing strategy) to keep implementation aligned with the existing Glove80 toolchain.
 
-_Progress snapshot (2025-11-11): Milestones 1–3 complete (foundation, editing core, Key Inspector). Workstream 1 of Milestone 5 (BuilderBridge + HRM preview/apply) is also shipped. Remaining milestones—studios, cursor/mouse bundles, validation/regen/save flow, command palette/search, accessibility polish—are pending._
+_Progress snapshot (2025-11-12): Milestones 1–3 complete (foundation, editing core, Key Inspector). Macro Studio (Milestone 4) is delivered with full CRUD + pilot coverage, and Workstream 1 of Milestone 5 (BuilderBridge + HRM preview/apply) is also shipped. Remaining milestones—HoldTap/Combo/Listener studios, cursor/mouse bundles, validation/regen/save flow, command palette/search, accessibility polish—are pending._
 
 ## 1. Module Architecture (src/glove80/tui)
 
@@ -69,8 +69,13 @@ Each milestone is intentionally narrow to support the “commit/push whenever te
 
 4. **Studios & Command Surfaces (Milestone 4)**
    - Deliverables: Macro/Hold Tap/Combo/Listener tabs, command palette, Search/Jump panel, cross-linking (jump from key to macro, etc.).
-   - Acceptance: CRUD for each entity with uniqueness and validation; palette actions trigger store mutations; tests `test_macro_tab.py`, `test_palette.py` cover flows.
-   - _Status 2025-11-11: 🚧 Not started._
+   - Acceptance (ordered, each must land with unit + pilot coverage):
+     1. **Macro Studio – ✅ 2025‑11‑12**: `LayoutStore.list/add/update/rename/delete/find_macro_references` snapshot every mutation, rename rewrites all references, delete blocked unless forced cleanup. Inspector MacroTab (list + detail) emits `StoreUpdated`/`FooterMessage`, and `tests/tui/integration/test_macro_tab.py` exercises create → bind → rename → undo.
+     2. **HoldTap Studio**: CRUD parity with macros (timings ≥ 0, `holdTriggerKeyPositions` 0–79 deduped). Inspector tab mirrors MacroTab UX, includes key picker, and pilot `test_holdtap_tab.py` covers create → bind → rename → delete/undo. Store API must expose references and block delete while in use.
+     3. **Combo Studio**: CRUD enforces unique names + trigger chords, ensures `keyPositions` and `LayerRef` targets valid, and rename rewrites references. UI provides chord picker + layer scope chips. Tests `test_combo_store.py` + `test_combo_tab.py` cover conflicts, rename propagation, and undo/redo.
+     4. **Listener Studio**: Store gains listener CRUD/reference APIs with unique `code` validation and delete guard. Inspector ListenerTab lists listeners with type badges, detail pane edits processors/nodes, and pilot `test_listener_tab.py` verifies create/edit/delete plus reference blocking.
+     5. **Command Palette & Search/Jump**: Global registry powers Ctrl/Cmd+K palette with commands for layer ops, studio focus, bundle toggles, validation/regen, undo/redo, and search launches Jump panel for keys/layers/macros/hold taps/combos/listeners. Palette/Jump actions must dispatch store mutations (or selection events), emit Footer messages, and have integration tests (`test_command_palette.py`, `test_search_panel.py`).
+   - _Status 2025-11-12: 🚧 In progress (Macro Studio ✅; remaining studios + palette/search outstanding)._ 
 
 5. **Feature Bundles & Builder Bridge (Milestone 5)**
    - Deliverables: `services/builder_bridge`, Features tab diff preview, Layer provenance badges autopopulated, action log inspector.
