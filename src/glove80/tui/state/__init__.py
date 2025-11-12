@@ -6,6 +6,7 @@ from .store import (
     LayoutStore,
     MacroPayload,
     HoldTapPayload,
+    ComboPayload,
     SelectionState,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "LayoutStore",
     "MacroPayload",
     "HoldTapPayload",
+    "ComboPayload",
     "SelectionState",
 ]

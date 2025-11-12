@@ -620,6 +620,150 @@ class LayoutStore:
         )
         self._redo_stack.clear()
 
+    # ------------------------------------------------------------------
+    # Combo management API
+    def list_combos(self) -> Tuple[ComboPayload, ...]:
+        return tuple(deepcopy(combo) for combo in self._state.combos)
+
+    def find_combo_references(self, name: str) -> Dict[str, Tuple[Dict[str, Any], ...]]:
+        references: Dict[str, List[Dict[str, Any]]] = {
+            "keys": [],
+            "macros": [],
+            "hold_taps": [],
+            "combos": [],
+            "listeners": [],
+        }
+
+        for layer_index, record in enumerate(self._state.layers):
+            for key_index, slot in enumerate(record.slots):
+                if slot.get("value") == name:
+                    references["keys"].append(
+                        {
+                            "layer_index": layer_index,
+                            "layer_name": record.name,
+                            "key_index": key_index,
+                        }
+                    )
+
+        for index, macro in enumerate(self._state.macros):
+            if _contains_string(macro, name):
+                references["macros"].append({"index": index, "name": macro.get("name")})
+
+        for index, hold in enumerate(self._state.hold_taps):
+            if _contains_string(hold, name):
+                references["hold_taps"].append({"index": index, "name": hold.get("name")})
+
+        for index, combo in enumerate(self._state.combos):
+            if combo.get("name") == name:
+                continue
+            if _contains_string(combo, name):
+                references["combos"].append({"index": index, "name": combo.get("name")})
+
+        for index, listener in enumerate(self._state.listeners):
+            if _contains_string(listener, name):
+                references["listeners"].append({"index": index, "code": listener.get("code")})
+
+        return {key: tuple(entries) for key, entries in references.items()}
+
+    def add_combo(self, combo: Mapping[str, Any]) -> None:
+        normalized = _normalize_combo_payload(combo)
+        self._assert_combo_layers_valid(normalized.get("layers", ()))
+        name = normalized["name"]
+        self._ensure_combo_name_available(name)
+        self._record_snapshot()
+        combos = list(self._state.combos)
+        combos.append(normalized)
+        self._state = replace(self._state, combos=tuple(combos))
+        self._redo_stack.clear()
+
+    def update_combo(self, *, name: str, payload: Mapping[str, Any]) -> None:
+        index = self._combo_index(name)
+        normalized = _normalize_combo_payload(payload)
+        self._assert_combo_layers_valid(normalized.get("layers", ()))
+        new_name = normalized["name"]
+        rename_map: Dict[str, str] = {}
+        if new_name != name:
+            self._ensure_combo_name_available(new_name)
+            rename_map = {name: new_name}
+
+        self._record_snapshot()
+        combos = list(self._state.combos)
+        combos[index] = normalized
+        if rename_map:
+            combos = [
+                normalized if idx == index else _replace_strings(combo, rename_map)
+                for idx, combo in enumerate(combos)
+            ]
+
+        layers = self._rewrite_layers_with_macros(rename_map) if rename_map else self._state.layers
+        macros = (
+            self._rewrite_sequence_with_macros(self._state.macros, rename_map)
+            if rename_map
+            else self._state.macros
+        )
+        hold_taps = (
+            self._rewrite_sequence_with_macros(self._state.hold_taps, rename_map)
+            if rename_map
+            else self._state.hold_taps
+        )
+        listeners = (
+            self._rewrite_sequence_with_macros(self._state.listeners, rename_map)
+            if rename_map
+            else self._state.listeners
+        )
+
+        self._state = LayoutState(
+            layer_names=self._state.layer_names,
+            layers=layers,
+            macros=macros,
+            hold_taps=hold_taps,
+            combos=tuple(combos),
+            listeners=listeners,
+        )
+        self._redo_stack.clear()
+
+    def rename_combo(self, *, old_name: str, new_name: str) -> None:
+        normalized_new = new_name if new_name.startswith("&") else f"&{new_name}"
+        combo = deepcopy(self._state.combos[self._combo_index(old_name)])
+        combo["name"] = normalized_new
+        self.update_combo(name=old_name, payload=combo)
+
+    def delete_combo(self, *, name: str, force: bool = False) -> None:
+        index = self._combo_index(name)
+        references = self.find_combo_references(name)
+        has_refs = any(references[key] for key in references)
+        if has_refs and not force:
+            raise ValueError(f"Combo '{name}' is referenced and cannot be deleted")
+
+        self._record_snapshot()
+        combos = list(self._state.combos)
+        combos.pop(index)
+        if has_refs:
+            cleanup_map = {name: ""}
+            layers = self._rewrite_layers_with_macros(cleanup_map)
+            macros = self._rewrite_sequence_with_macros(self._state.macros, cleanup_map)
+            hold_taps = self._rewrite_sequence_with_macros(self._state.hold_taps, cleanup_map)
+            listeners = self._rewrite_sequence_with_macros(self._state.listeners, cleanup_map)
+            combos = [
+                _replace_strings(combo, cleanup_map) if combo.get("name") != name else combo
+                for combo in combos
+            ]
+        else:
+            layers = self._state.layers
+            macros = self._state.macros
+            hold_taps = self._state.hold_taps
+            listeners = self._state.listeners
+
+        self._state = LayoutState(
+            layer_names=self._state.layer_names,
+            layers=layers,
+            macros=macros,
+            hold_taps=hold_taps,
+            combos=tuple(combos),
+            listeners=listeners,
+        )
+        self._redo_stack.clear()
+
     def export_payload(self) -> Dict[str, Any]:
         """Return a deep-copied payload representing the current state."""
 
@@ -705,6 +849,55 @@ class LayoutStore:
             if hold_tap.get("name") == normalized:
                 return index
         raise ValueError(f"HoldTap '{normalized}' not found")
+
+    def _ensure_combo_name_available(self, name: str) -> None:
+        normalized = self._normalize_combo_name(name)
+        for combo in self._state.combos:
+            existing = self._normalize_combo_name(combo.get("name", ""))
+            if existing and existing == normalized:
+                raise ValueError(f"Combo '{name}' already exists")
+
+    def _combo_index(self, name: str) -> int:
+        literal = str(name).strip()
+        normalized = self._normalize_combo_name(literal)
+        for index, combo in enumerate(self._state.combos):
+            current = str(combo.get("name", ""))
+            if current == literal or self._normalize_combo_name(current) == normalized:
+                return index
+        target = literal or normalized
+        raise ValueError(f"Combo '{target}' not found")
+
+    @staticmethod
+    def _normalize_combo_name(name: Any) -> str:
+        text = str(name).strip()
+        if not text:
+            return ""
+        return text if text.startswith("&") else f"&{text}"
+
+    def _assert_combo_layers_valid(self, layers: Sequence[Any]) -> None:
+        if not layers:
+            return
+        total_layers = len(self._state.layer_names)
+        if total_layers == 0:
+            raise ValueError("No layers defined for combo assignment")
+        valid_names = set(self._state.layer_names)
+        for entry in layers:
+            if isinstance(entry, Mapping):
+                if "name" in entry:
+                    ref = str(entry["name"])
+                    if ref not in valid_names:
+                        raise ValueError(f"Unknown layer '{ref}' referenced by combo")
+                elif "index" in entry:
+                    idx = int(entry["index"])
+                    if not (0 <= idx < total_layers):
+                        raise ValueError(f"Layer index {idx} out of range")
+                else:
+                    raise ValueError("Combo layer mapping must include 'name' or 'index'")
+            elif isinstance(entry, int):
+                if not (0 <= entry < total_layers):
+                    raise ValueError(f"Layer index {entry} out of range")
+            else:
+                raise ValueError("Combo layers must be layer names or indices")
 
     def _rewrite_layers_with_macros(self, rename_map: Mapping[str, str]) -> Tuple[LayerRecord, ...]:
         if not rename_map:
@@ -823,6 +1016,89 @@ def _normalize_hold_trigger_positions(value: Any) -> List[int]:
         if pos < 0 or pos >= 80:
             raise ValueError("holdTriggerKeyPositions must be between 0 and 79")
     return deduped
+
+
+def _normalize_combo_payload(payload: Mapping[str, Any]) -> ComboPayload:
+    normalized: Dict[str, Any] = {}
+    name = str(payload.get("name", "")).strip()
+    if not name:
+        raise ValueError("Combo name cannot be empty")
+    if not name.startswith("&"):
+        name = f"&{name}"
+    normalized["name"] = name
+
+    description = payload.get("description")
+    if description:
+        normalized["description"] = str(description)
+
+    binding = payload.get("binding")
+    if not isinstance(binding, Mapping):
+        raise ValueError("Combo binding must be an object")
+    if "value" not in binding:
+        raise ValueError("Combo binding requires a 'value'")
+    normalized["binding"] = {
+        "value": str(binding["value"]),
+        "params": list(binding.get("params", [])),
+    }
+
+    key_positions = _normalize_key_positions(payload.get("keyPositions"))
+    normalized["keyPositions"] = key_positions
+
+    layers = payload.get("layers")
+    if layers is None:
+        normalized["layers"] = []
+    else:
+        normalized["layers"] = _normalize_combo_layers(layers)
+
+    timeout = payload.get("timeoutMs")
+    if timeout not in (None, ""):
+        timeout_int = int(timeout)
+        if timeout_int < 0:
+            raise ValueError("timeoutMs must be ≥ 0")
+        normalized["timeoutMs"] = timeout_int
+
+    return normalized
+
+
+def _normalize_key_positions(value: Any) -> List[int]:
+    if value is None:
+        raise ValueError("keyPositions are required")
+    positions: List[int] = []
+    if isinstance(value, str):
+        tokens = [token.strip() for token in value.replace("[", "").replace("]", "").split(",") if token.strip()]
+        for token in tokens:
+            positions.append(int(token))
+    elif isinstance(value, Iterable):
+        for item in value:
+            positions.append(int(item))
+    else:
+        raise ValueError("keyPositions must be iterable or comma-delimited string")
+    if not positions:
+        raise ValueError("keyPositions must contain at least one entry")
+    deduped = sorted(set(positions))
+    for pos in deduped:
+        if pos < 0 or pos >= 80:
+            raise ValueError("keyPositions must be between 0 and 79")
+    return deduped
+
+
+def _normalize_combo_layers(value: Any) -> List[Any]:
+    layers: List[Any] = []
+    if isinstance(value, str):
+        tokens = [token.strip() for token in value.split(",") if token.strip()]
+        for token in tokens:
+            layers.append({"name": token} if not token.isdigit() else int(token))
+    elif isinstance(value, Iterable):
+        for entry in value:
+            if isinstance(entry, Mapping):
+                layers.append(dict(entry))
+            elif isinstance(entry, str) and entry.isdigit():
+                layers.append(int(entry))
+            else:
+                layers.append({"name": str(entry)})
+    else:
+        raise ValueError("layers must be iterable or comma-delimited string")
+    return layers
 
 
 def _contains_string(data: Any, target: str) -> bool:

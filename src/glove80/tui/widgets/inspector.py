@@ -11,7 +11,7 @@ from textual.suggester import Suggester
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
 from ..messages import FooterMessage, SelectionChanged, StoreUpdated
-from ..state import LayoutStore, SelectionState, MacroPayload, HoldTapPayload
+from ..state import LayoutStore, SelectionState, MacroPayload, HoldTapPayload, ComboPayload
 from ..services import BuilderBridge, FeatureDiff, ValidationIssue, ValidationResult, ValidationService
 
 
@@ -25,6 +25,7 @@ class InspectorPanel(Vertical):
         self.key_inspector = KeyInspector(store=store)
         self.macro_tab = MacroTab(store=store)
         self.hold_tap_tab = HoldTapTab(store=store)
+        self.combo_tab = ComboTab(store=store)
         self.features_tab = FeaturesTab(store=store, variant=variant)
 
     def compose(self):  # type: ignore[override]
@@ -32,6 +33,7 @@ class InspectorPanel(Vertical):
         yield self.key_inspector
         yield self.macro_tab
         yield self.hold_tap_tab
+        yield self.combo_tab
         yield self.features_tab
 
 
@@ -532,6 +534,215 @@ class _HoldTapListItem(ListItem):
         label = f"{hold_tap.get('name', '?')} [{ref_count}]"
         super().__init__(Static(label, classes="macro-item"))
         self.hold_tap = hold_tap
+
+
+class _ComboListItem(ListItem):
+    def __init__(self, combo: ComboPayload, ref_count: int) -> None:
+        label = f"{combo.get('name', '?')} [{ref_count}]"
+        super().__init__(Static(label, classes="macro-item"))
+        self.combo = combo
+
+
+class ComboTab(Vertical):
+    """Combo list and detail editor mirroring Macro/HoldTap tabs."""
+
+    def __init__(self, *, store: LayoutStore) -> None:
+        super().__init__(classes="combo-tab", id="combo-tab")
+        self.store = store
+        self._selected_name: Optional[str] = None
+        self._list = ListView(id="combo-list")
+        self.name_input = Input(placeholder="&combo_name", id="combo-name-input")
+        self.desc_input = Input(placeholder="Description", id="combo-desc-input")
+        self.binding_input = Input(placeholder='{"value":"&kp","params":["ESC"]}', id="combo-binding-input")
+        self.positions_input = Input(placeholder="keyPositions (e.g. 0, 1)", id="combo-positions-input")
+        self.layers_input = Input(placeholder="layers (e.g. Base, Raise)", id="combo-layers-input")
+        self.timeout_input = Input(placeholder="timeoutMs", id="combo-timeout-input")
+        self.ref_label = Static("", classes="macro-refs", id="combo-ref-summary")
+        self.add_button = Button("Add", id="combo-add")
+        self.apply_button = Button("Apply", id="combo-apply", disabled=True)
+        self.delete_button = Button("Delete", id="combo-delete", disabled=True)
+
+    def compose(self):  # type: ignore[override]
+        yield Static("Combos", classes="macro-heading")
+        yield self._list
+        yield Label("Name")
+        yield self.name_input
+        yield Label("Description")
+        yield self.desc_input
+        yield Label("Binding (JSON)")
+        yield self.binding_input
+        yield Label("Key Positions")
+        yield self.positions_input
+        yield Label("Layers")
+        yield self.layers_input
+        yield Label("Timeout (ms)")
+        yield self.timeout_input
+        yield self.ref_label
+        yield self.add_button
+        yield self.apply_button
+        yield self.delete_button
+
+    def on_mount(self) -> None:
+        self._refresh_list()
+
+    @on(StoreUpdated)
+    def _handle_store_update(self, _: StoreUpdated) -> None:
+        self._refresh_list(preferred=self._selected_name)
+
+    @on(ListView.Selected)
+    def _handle_list_select(self, event: ListView.Selected) -> None:
+        if event.list_view is not self._list:
+            return
+        if isinstance(event.item, _ComboListItem):
+            self._load_combo(event.item.combo)
+            event.stop()
+
+    @on(Button.Pressed)
+    def _handle_buttons(self, event: Button.Pressed) -> None:
+        if event.button.id == "combo-add":
+            self._create_combo()
+        elif event.button.id == "combo-apply":
+            self._apply_combo()
+        elif event.button.id == "combo-delete":
+            self._delete_combo()
+
+    def _refresh_list(self, *, preferred: Optional[str] = None) -> None:
+        self.call_after_refresh(self._rebuild_list, preferred)
+
+    async def _rebuild_list(self, preferred: Optional[str]) -> None:
+        await self._list.clear()
+        combos = list(self.store.list_combos())
+        names = [str(entry.get("name", "")) for entry in combos]
+        target = preferred if preferred in names else (names[0] if names else None)
+        items: list[ListItem] = []
+        for combo in combos:
+            refs = self.store.find_combo_references(combo.get("name", ""))
+            items.append(_ComboListItem(combo, _reference_count(refs)))
+        if items:
+            await self._list.mount(*items)
+            index = 0
+            if target:
+                for idx, entry in enumerate(names):
+                    if entry == target:
+                        index = idx
+                        break
+            self._list.index = index
+            selected = items[index]
+            if isinstance(selected, _ComboListItem):
+                self._load_combo(selected.combo)
+        else:
+            await self._list.mount(ListItem(Static("(no combos)", classes="macro-item")))
+            self._clear_form()
+
+    def _load_combo(self, combo: ComboPayload) -> None:
+        self._selected_name = str(combo.get("name", ""))
+        self.name_input.value = self._selected_name
+        self.desc_input.value = str(combo.get("description", ""))
+        self.binding_input.value = json.dumps(combo.get("binding", {}))
+        self.positions_input.value = ", ".join(str(pos) for pos in combo.get("keyPositions", []))
+        layers = combo.get("layers", [])
+        if layers:
+            rendered = []
+            for entry in layers:
+                if isinstance(entry, dict) and "name" in entry:
+                    rendered.append(str(entry["name"]))
+                else:
+                    rendered.append(str(entry))
+            self.layers_input.value = ", ".join(rendered)
+        else:
+            self.layers_input.value = ""
+        timeout = combo.get("timeoutMs")
+        self.timeout_input.value = str(timeout) if timeout is not None else ""
+        refs = self.store.find_combo_references(self._selected_name)
+        count = _reference_count(refs)
+        self.ref_label.update(f"Referenced {count} time(s)" if count else "No references")
+        self.apply_button.disabled = False
+        self.delete_button.disabled = bool(count)
+
+    def _clear_form(self) -> None:
+        self._selected_name = None
+        self.name_input.value = ""
+        self.desc_input.value = ""
+        self.binding_input.value = ""
+        self.positions_input.value = ""
+        self.layers_input.value = ""
+        self.timeout_input.value = ""
+        self.ref_label.update("")
+        self.apply_button.disabled = True
+        self.delete_button.disabled = True
+
+    def _create_combo(self) -> None:
+        payload = self._build_payload_from_inputs()
+        if payload is None:
+            return
+        try:
+            self.store.add_combo(payload)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self._selected_name = payload["name"]
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Added combo {payload['name']}"))
+        self._refresh_list(preferred=self._selected_name)
+
+    def _apply_combo(self) -> None:
+        if self._selected_name is None:
+            return
+        payload = self._build_payload_from_inputs()
+        if payload is None:
+            return
+        try:
+            self.store.update_combo(name=self._selected_name, payload=payload)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Updated combo {payload['name']}"))
+        self._selected_name = payload["name"]
+        self._refresh_list(preferred=self._selected_name)
+
+    def _delete_combo(self) -> None:
+        if self._selected_name is None:
+            return
+        try:
+            self.store.delete_combo(name=self._selected_name)
+        except ValueError as exc:
+            self.post_message(FooterMessage(str(exc)))
+            return
+        self.post_message(StoreUpdated())
+        self.post_message(FooterMessage(f"Deleted combo {self._selected_name}"))
+        self._selected_name = None
+        self._refresh_list()
+
+    def _build_payload_from_inputs(self) -> Optional[Dict[str, Any]]:
+        name = self.name_input.value.strip()
+        if not name:
+            self.post_message(FooterMessage("Name is required"))
+            return None
+        try:
+            binding = json.loads(self.binding_input.value or "{}")
+        except json.JSONDecodeError as exc:
+            self.post_message(FooterMessage(f"Invalid binding JSON: {exc}"))
+            return None
+        positions = self.positions_input.value.strip()
+        if not positions:
+            self.post_message(FooterMessage("keyPositions are required"))
+            return None
+        payload: Dict[str, Any] = {
+            "name": name,
+            "description": self.desc_input.value.strip(),
+            "binding": binding,
+            "keyPositions": positions,
+            "layers": self.layers_input.value.strip(),
+        }
+        timeout = self.timeout_input.value.strip()
+        if timeout:
+            try:
+                payload["timeoutMs"] = int(timeout)
+            except ValueError:
+                self.post_message(FooterMessage("timeoutMs must be an integer"))
+                return None
+        return payload
 
 
 # ---------------------------------------------------------------------------
