@@ -4,7 +4,7 @@ This document is the single source of truth for the upcoming Textual (Python) TU
 
 > **Instructions for agents**: Before making changes, read this file end-to-end, follow its requirements, and record any new decisions, deviations, or discoveries back into this document (append brief dated notes in the relevant section). Treat it as a living blueprint.
 
-> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro Studio shipped with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. HoldTap/Combo/Listener studios plus Command Palette/Search are next.
+> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro Studio shipped with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. HoldTap/Combo/Listener studios plus Command Palette/Search are next. Keep `docs/TUI_CHECKLIST.md` and `docs/TUI_IMPL_PLAN.md` in sync with any changes captured here.
 
 IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`!
 
@@ -166,7 +166,7 @@ The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Sch
 - Reorder: drag/drop or shortcuts (`Alt+↑/↓`), rewriting both arrays; diff preview optional.
 - Duplicate: clones layer content and optional dependent macros; prompts for new name.
 - Pick up / Drop: `P` picks up current layer contents, `D` drops onto target layer; undoable transaction.
-- Navigation wrap-around: canvas layer navigation (`[`/`]`) and sidebar arrow keys wrap at boundaries (Raise → Base and vice versa) so keyboard-only users can keep moving without reversing direction.
+- Navigation wrap-around: canvas layer navigation (`[`/`]`) and sidebar arrow keys wrap at boundaries (Raise → Base and vice versa) so keyboard-only users can keep moving without reversing direction. The copy contract (`copy_key_to_layer`) that powers these shortcuts is spelled out in `docs/STORE_API_COPY_KEY.md`.
 
 ### 7.8 Studio & Command Surfaces Roadmap _(updated 2025-11-12)_
 - **HoldTap Studio**
@@ -213,6 +213,8 @@ Schema + Pydantic validation on save
 
 All regen/validate subprocesses run via Textual workers so the UI remains responsive; logs stream to the footer panel.
 
+> **Footer messaging & severity**: use the catalog in `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md` for all success/info/error notifications so Command Palette, studios, and CLI hooks emit consistent toast/footer output.
+
 ## 9. State Management, Commands & Accessibility
 
 - **Store** (`tui/state/store.py`): action log (`AddCombo`, `ApplyFeatureBundle`, `RenameLayer`, etc.), selectors (`active_layer()`, `get_key(layer, index)`, `list_macros()`), undo/redo stack.
@@ -248,11 +250,21 @@ This concrete payload should remain part of automated regression tests (load →
 ## 12. Implementation Roadmap
 1. **Foundation** – Load any `LayoutPayload`, stand up store, render layer sidebar + read-only canvas.
 2. **Editing Core** – Key behavior editor, layer rename/reorder/duplicate/pickup, undo/redo wiring.
-3. **Studios** – Macro, Hold Tap, Combo, Listener screens with cross-linking from keys.
-4. **Feature Bundles** – Implement builder bridge and diff preview for HRM/cursor/mouse layers.
+3. **Studios** – Macro (✅ 2025‑11‑12), Hold Tap, Combo, Listener screens with cross-linking from keys.
+4. **Feature Bundles** – Implement builder bridge and diff preview for HRM/cursor/mouse layers, provenance badges, action log inspector.
 5. **Advanced Editors** – Custom behaviors, device tree, config/layout parameter tables, metadata panel.
 6. **Validation & Regen** – Schema/Pydantic validators, background CLI calls, Regen Preview diff UI, Save/Export flows.
-7. **Polish & QA** – Command palette, theming, accessibility passes, regression tests (Textual pilot scripts), docs updates, screen recordings.
+7. **Polish & QA** – Command palette, Search/Jump, theming, accessibility passes, regression tests (Textual pilot scripts), docs updates, screen recordings.
+
+_Milestone gates: see `docs/TUI_IMPL_PLAN.md` for per-feature test requirements and `docs/TUI_CHECKLIST.md` for acceptance criteria. Highlights below summarize the blocking items:_
+
+- **HoldTap Studio**: Same CRUD guarantees as macros (rename rewrites references, delete blocked while referenced, timings ≥ 0, key positions 0–79). Inspector tab must reuse MacroTab ergonomics and ship unit + pilot tests.
+- **Combo Studio**: Enforce unique name + trigger chords, validate `LayerRef` targets, surface conflicts, snapshot mutations for undo/redo, and cover flows via store + pilot tests.
+- **Listener Studio**: Provide listener CRUD with unique `code`, node/processor validation, delete guard, reference summaries, and pilot tests for create/edit/delete.
+- **Command Palette/Search**: Registry-driven palette (Ctrl/Cmd+K) and Search/Jump panel must execute common commands, respect `enabled()` predicates, emit severity-coded footer/toast messages, and include integration coverage.
+- **Feature Bundles & Provenance**: Cursor/mouse bundles flow through BuilderBridge with diff preview parity; provenance badges/action log inspector surface origins for every layer/action.
+- **Validation/Regen/Save**: Debounced validators, Regen Preview CLI runner, Save/Save-As with optional auto-validate; all flows tested via unit + pilot suites.
+- **Polish & Accessibility**: Theme switcher (light/dark/high-contrast/ASCII), font scaling, Advanced tab, accessibility audit items, final documentation sign-off.
 
 ## 13. Deliverables & Handoff
 - `docs/layout_payload.schema.json` kept fresh via `scripts/export_layout_schema.py` (already added).
