@@ -4,7 +4,7 @@ This document is the single source of truth for the upcoming Textual (Python) TU
 
 > **Instructions for agents**: Before making changes, read this file end-to-end, follow its requirements, and record any new decisions, deviations, or discoveries back into this document (append brief dated notes in the relevant section). Treat it as a living blueprint.
 
-> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro and HoldTap studios now ship with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. Combo/Listener studios plus Command Palette/Search remain outstanding. Keep `docs/TUI_CHECKLIST.md` and `docs/TUI_IMPL_PLAN.md` in sync with any changes captured here.
+> **Progress note (2025-11-12)**: Milestones 1–3 are live in `tui/` (LayerSidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro, HoldTap, Combo, and Listener studios (all landed 2025‑11‑12) now ship with full CRUD, undo/redo, and Textual pilot coverage, and the Features tab previews/applies HRM bundles via the BuilderBridge service. Remaining surfaces: extend Features with cursor/mouse bundles + provenance UX, deliver Command Palette/Search, wire Validation/Regen/Save, and finish the polish/accessibility pass. Keep `docs/TUI_CHECKLIST.md` and `docs/TUI_IMPL_PLAN.md` in sync with any changes captured here.
 
 IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`!
 
@@ -35,7 +35,7 @@ IMPORTANT: Also make sure to commit often and run the tests with `uv run pytest`
    - **Layer Sidebar** (left) – Renders `layer_names[]`, supports drag/drop reorder, duplicate, rename, hide/show, “pick up & drop” interactions, and badges showing feature provenance (HRM/mouse/cursor/custom). Layer actions update references (`LayerRef`) everywhere.
    - **Key Canvas** (center) – 80-key grid per layer (tailored to Glove80 geometry). Click or navigate via keyboard to inspect/modify key behaviors; multi-layer split view available for copy/drop operations.
   - **Inspector Tabs** (right) – Context-aware forms: Key, Macro, Hold Tap, Combo, Listener, Features (builder toggles), Advanced (custom behaviors/device tree/config/layout parameters), Metadata.
-    - _Note (2025-11-12): Key tab + validation/autocomplete are implemented. MacroTab and HoldTapTab are feature-complete (list/detail editors wired to store CRUD with unit + pilot coverage). Features tab previews/applies HRM bundles via BuilderBridge. Combo/Listener/Advanced/Metadata tabs remain TODO._
+  - _Note (2025-11-12): Key/Macro/HoldTap/Combo/Listener tabs are feature-complete with unit + pilot coverage and continue to honor the copy contract documented in `docs/STORE_API_COPY_KEY.md`. Features tab currently exposes only HRM preview/apply (cursor/mouse bundles + provenance UX pending); Advanced/Metadata remain TODO._
 3. **Status & Logs (Footer)** – Shows dirty flag, active layer, validation counts, background task progress (e.g., regen, CLI validation), and streaming logs.
 
 ### 3.2 Secondary Surfaces
@@ -171,18 +171,39 @@ The TUI operates on `LayoutPayload` (see `glove80.layouts.schema`). The JSON Sch
 - Navigation wrap-around: canvas layer navigation (`[`/`]`) and sidebar arrow keys wrap at boundaries (Raise → Base and vice versa) so keyboard-only users can keep moving without reversing direction. The copy contract (`copy_key_to_layer`) that powers these shortcuts is spelled out in `docs/STORE_API_COPY_KEY.md`.
 
 ### 7.8 Studio & Command Surfaces Roadmap _(updated 2025-11-12)_
-- **HoldTap Studio**
-  - Store API mirrors macro CRUD (`list_hold_taps`, `add_hold_tap`, `update_hold_tap`, `rename_hold_tap`, `delete_hold_tap`, `find_hold_tap_references`), enforces `&`-prefixed unique names, rewrites references on rename, and blocks delete while referenced unless forced cleanup. Timing fields (`tappingTermMs`, `quickTapMs`, `requirePriorIdleMs`) must be ≥ 0; `holdTriggerKeyPositions[]` validated to 0–79 and de-duped. Undo/redo wraps every mutation.
-  - UI = MacroTab parity: list with reference counts + detail editor (name/description/bindings/timings/flavor/key picker). Inline validation and footer messaging before commits. Pilot test must create → bind → rename → delete/undo.
-- **Combo Studio**
-  - CRUD ensures combo names unique, trigger key positions unique per layout, `layers[]` resolve via `LayerRef`, and rename propagates to all dependent sections. Delete blocked when combos referenced by macros/other systems unless forced. Reference finder exposes key/layer contexts for warnings.
-  - UI includes chord picker (multi-key capture on KeyCanvas), layer scope selector, binding editor, timeout entry, and conflict badges when triggers overlap with hold taps or combos. Unit + pilot coverage required.
-- **Listener Studio**
-  - Store adds `add_listener/update_listener/delete_listener/list_listeners/find_listener_references`, validating unique `code`, required processors/nodes, and resolving all layer names. Delete is prohibited while bindings reference the listener; rename updates bindings and listener graphs.
-  - UI tab: left list of listeners with type badges (mouse/cursor/custom), right pane showing processors + per-layer nodes, plus modal editor for CRUD. Reference summary links back to offending layers. Events emit `StoreUpdated` and `FooterMessage` for every mutation.
-- **Command Palette & Search Panel**
-  - Command registry (Ctrl/Cmd+K) exposes at least: layer add/rename/delete, jump to Macro/HoldTap/Combo/Listener, toggle bundles, run validation, open Search/Jump, undo/redo. Commands respect `enabled()` predicates (e.g., delete disabled when only one layer remains) and integrate with StoreUpdated/Footer logs when actions succeed/fail.
-  - Search/Jump panel lets users type `k 42`, `layer typing`, `macro &HRM_left_index`, etc., and moves focus accordingly. Palette/search interactions must be testable via Textual pilot: open palette, run `Add Layer`, verify store mutation/log entries.
+
+**Delivered (2025‑11‑12)**
+
+- **HoldTap Studio** – Store parity with macros (`list/add/update/rename/delete/find_hold_tap_references`) enforces `&`-prefixed unique names, validates timing fields ≥ 0, and dedupes `holdTriggerKeyPositions` within 0‑79. HoldTapTab mirrors MacroTab UX, posts footer notifications per `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`, and pilot `tests/tui/integration/test_hold_tap_tab.py` exercises create → bind → rename → delete/undo.
+- **Combo Studio** – CRUD guards unique names, trigger chords, and `LayerRef` scopes; rename rewrites references across layers/macros/hold taps/listeners. ComboTab supplies chord picker, layer scope chips, timeout field, and conflict badges. Tests: `tests/tui/unit/test_combos.py` and `tests/tui/integration/test_combo_tab.py`.
+- **Listener Studio** – Store exposes listener CRUD/reference APIs with unique `code` validation, layer ref checks, and forced delete cleanup. ListenerTab lists listeners with ref counts, JSON-backed editors for processors/nodes/layers, and blocks delete while references exist. Events emit `StoreUpdated`/footer toasts as catalogued in `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`. Tests: `tests/tui/unit/test_listeners.py` + `tests/tui/integration/test_listener_tab.py`.
+
+**Next Workstreams**
+
+1. **Features Tab: Cursor/Mouse Bundles & Provenance**
+   - Acceptance criteria:
+     - BuilderBridge can preview/apply cursor + mouse bundles with diff summaries identical to CLI output; provenance badges auto-update LayerSidebar/KeyCanvas.
+     - Bundle application honors the key-copy contract documented in `docs/STORE_API_COPY_KEY.md` so pick-up/drop and HRM copy flows stay deterministic.
+     - Footer notifications for preview/apply/clear use severities defined in `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`.
+   - Tests: expand builder bridge unit fixtures for cursor/mouse stacks; add a Textual pilot that toggles bundles, inspects provenance badges, and asserts footer messaging.
+
+2. **Command Palette & Search/Jump**
+   - Acceptance criteria:
+     - Ctrl/Cmd+K palette exposes layer ops, studio focus, bundle toggles, validation/regen/save, undo/redo, and “Jump to …” helpers with `enabled()` predicates that reflect store state.
+     - Palette/Search actions dispatch through the store (undoable) and emit footer toasts per the severity catalog.
+   - Tests: pilot flow that (a) adds a layer via palette, (b) jumps to a macro/listener via search, and (c) issues undo/redo commands, asserting store diffs + footer output.
+
+3. **Validation / Regen / Save Flow**
+   - Acceptance criteria:
+     - Debounced schema + semantic validation feed inline errors and footer counts; Validate shell command wraps `uv run glove80 validate` with streaming logs; Regen Preview runs CLI dry-run, shows section diffs, and applies accepted sections; Save/Save-As honor artifact guarantees and optionally auto-validate.
+     - Footer messages during validate/regen/save follow `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`.
+   - Tests: CLI runner unit tests (mocked subprocess), pilot covering validation failure messaging, regen diff acceptance workflow, and Save/Save-As with dirty flag resets.
+
+4. **Polish & Accessibility**
+   - Acceptance criteria:
+     - Theme switcher (light/dark/high-contrast/ASCII), font scaling, focus outlines, Advanced/Metadata tabs, and command log inspector ship together.
+     - All keyboard copy/drop interactions continue to satisfy `docs/STORE_API_COPY_KEY.md`, and every notification uses the footer severity catalog.
+   - Tests: snapshot suite for each theme, pilot verifying focus traversal/screen-reader labels, and integration tests for metadata/config parameter editing.
 
 ## 8. Validation & Regeneration Flow
 

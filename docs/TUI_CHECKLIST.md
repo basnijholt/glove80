@@ -2,7 +2,7 @@
 
 Single source of truth for implementing `TUI_DESIGN.md`. Each section groups explicit and implicit requirements plus measurable acceptance criteria. Revisit this checklist before coding and update it whenever the design doc evolves.
 
-_Progress snapshot (2025-11-12): Milestones 1–3 are live (Layer Sidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro Studio + HRM preview/apply are shipped with unit + pilot coverage; HoldTap/Combo/Listener studios, regen/saving flows, and palette/search remain outstanding._
+_Progress snapshot (2025-11-12): Milestones 1–3 are live (Layer Sidebar, KeyCanvas navigation/copy, validated Key Inspector). Macro, HoldTap, Combo, and Listener studios plus HRM preview/apply are shipped with unit + pilot coverage. Remaining surfaces: extend Features to cursor/mouse bundles + provenance UX, deliver palette/search, complete validation/regen/save, and run the final polish/accessibility pass._
 
 ## Source-of-Truth Guarantees
 
@@ -105,16 +105,16 @@ _Progress snapshot (2025-11-12): Milestones 1–3 are live (Layer Sidebar, Key
     - Store exposes `list/add/update/rename/delete/find` APIs with same snapshot/undo behavior as macros; rename rewrites references; delete blocked while referenced unless forced cleanup.
     - Timings (`tappingTermMs`, `quickTapMs`, `requirePriorIdleMs`) validated ≥ 0; `holdTriggerKeyPositions[]` limited to 0–79 and deduped.
     - Inspector tab mirrors MacroTab UX (list + detail editor, key picker) with inline validation and footer messaging. Pilot test must create → bind → rename → delete/undo.
-- **Combo studio** (`combos[]`).
-  - Acceptance criteria:
-    - CRUD APIs enforce unique names + trigger chords, key positions within `[0,79]`, and valid `LayerRef` targets; rename rewrites references.
-    - UI provides chord picker on KeyCanvas, layer scope chips, timeout field, and conflict badges when overlaps exist.
-    - Unit + pilot tests cover create/edit/delete, rename propagation, and reference blocking.
-- **Listener studio** (`inputListeners[]`).
-  - Acceptance criteria:
-    - Store supports listener CRUD with unique `code`, validated layer refs, and `find_listener_references` used to block delete while bindings refer to the listener.
-    - ListenerTab lists listeners with type badges, shows processors/nodes, and surfaces reference counts with navigation links.
-    - Modal editor + Textual pilot cover create/edit/delete including error messaging + footer integration.
+- **Combo studio** (`combos[]`) — ✅ 2025‑11‑12.
+  - Acceptance criteria (met):
+    - Store CRUD enforces unique names/triggers, validates `keyPositions` ∈ [0,79], rewrites references on rename, and blocks delete while referenced unless `force=True` cleans up dependents.
+    - ComboTab supplies chord picker, layer scope chips, timeout field, and footer messaging consistent with `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`.
+    - Tests: `tests/tui/unit/test_combos.py`, `tests/tui/integration/test_combo_tab.py`.
+- **Listener studio** (`inputListeners[]`) — ✅ 2025‑11‑12.
+  - Acceptance criteria (met):
+    - Store CRUD validates unique `code`, processor/node structure, and layer refs; delete blocked while `find_listener_references` reports usages; rename rewrites references across layers/macros/hold taps/combos/listeners.
+    - ListenerTab lists listeners with ref counts, JSON-backed editors, delete guard, and footer messaging per `docs/UX_SPEC_FOOTER_NOTIFICATIONS.md`.
+    - Tests: `tests/tui/unit/test_listeners.py`, `tests/tui/integration/test_listener_tab.py`.
 - **Command Palette & Search**.
   - Acceptance criteria:
     - Ctrl/Cmd+K opens palette backed by a command registry (add/rename/delete layer, jump to Macro/HoldTap/Combo/Listener, toggle bundles, run validation/regeneration, open Search/Jump, undo/redo).
