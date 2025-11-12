@@ -32,3 +32,5 @@ build/
 coverage.xml
 
 third_party/
+
+textual/
