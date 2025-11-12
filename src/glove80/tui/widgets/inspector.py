@@ -311,6 +311,10 @@ class FeaturesTab(Vertical):
             return self.store.layer_names[0]
         return None
 
+    def _set_summary(self, text: str) -> None:
+        self._summary_text = text
+        self.summary.update(text)
+
 
 class MacroTab(Vertical):
     """Macro list and detail editor."""
@@ -519,10 +523,6 @@ class _MacroListItem(ListItem):
         label = f"{name} [{ref_count}]"
         super().__init__(Static(label, classes="macro-item"))
         self.macro = macro
-
-    def _set_summary(self, text: str) -> None:
-        self._summary_text = text
-        self.summary.update(text)
 
 
 # ---------------------------------------------------------------------------
