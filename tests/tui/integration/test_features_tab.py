@@ -18,14 +18,15 @@ def test_features_tab_preview_and_apply() -> None:
             initial_variant="windows",
         )
         async with app.run_test() as pilot:
-            preview_button = pilot.app.screen.query_one("#preview-hrm", Button)
+            preview_button = pilot.app.screen.query_one("#preview-feature-hrm", Button)
             preview_button.press()
             await pilot.pause()
 
-            summary = pilot.app.screen.query_one("#feature-summary", Static)
-            assert "HRM →" in str(summary.render())
+            summary = pilot.app.screen.query_one("#feature-summary-hrm", Static)
+            assert "Home Row Mods" in str(summary.render())
+            assert "Summary:" in str(summary.render())
 
-            apply_button = pilot.app.screen.query_one("#apply-hrm", Button)
+            apply_button = pilot.app.screen.query_one("#apply-feature-hrm", Button)
             apply_button.press()
             await pilot.pause()
             assert "HRM_WinLinx" in pilot.app.store.layer_names

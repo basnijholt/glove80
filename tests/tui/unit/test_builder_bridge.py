@@ -87,3 +87,45 @@ def _hrm_layer_map() -> dict[str, object]:  # pragma: no cover - helper for buil
     from glove80.families.tailorkey.layers.hrm import build_hrm_layers
 
     return build_hrm_layers("windows")
+
+
+def test_preview_cursor_adds_layer_without_mutation(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+    bridge = BuilderBridge(store=store, variant="windows")
+
+    diff = bridge.preview_feature("cursor", target_layer="Base")
+
+    assert "Cursor" not in store.layer_names
+    assert diff.layers_added == ("Cursor",)
+
+
+def test_apply_cursor_is_undoable(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+    bridge = BuilderBridge(store=store, variant="windows")
+
+    bridge.apply_feature("cursor", target_layer="Base")
+    assert "Cursor" in store.layer_names
+
+    store.undo()
+    assert "Cursor" not in store.layer_names
+
+
+def test_apply_mouse_layers_adds_stack(sample_payload: dict[str, object]) -> None:
+    store = LayoutStore.from_payload(sample_payload)
+    bridge = BuilderBridge(store=store, variant="windows")
+
+    diff = bridge.apply_feature("mouse", target_layer="Base")
+
+    expected_layers = {"Mouse", "MouseSlow", "MouseFast", "MouseWarp"}
+    assert expected_layers.issubset(set(store.layer_names))
+    assert diff.listeners_added >= 2
+
+
+def test_preview_cursor_conflict_raises(sample_payload: dict[str, object]) -> None:
+    sample_payload["layer_names"].append("Cursor")
+    sample_payload["layers"].append(sample_payload["layers"][0])
+    store = LayoutStore.from_payload(sample_payload)
+    bridge = BuilderBridge(store=store, variant="windows")
+
+    with pytest.raises(ValueError):
+        bridge.preview_feature("cursor", target_layer="Base")

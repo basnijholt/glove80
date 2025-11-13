@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Literal
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence
 
 from textual import on
 from textual.binding import Binding
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.suggester import Suggester
 from textual.widget import Widget
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static, TabbedContent, TabPane
@@ -21,7 +22,14 @@ from ..state import (
     ComboPayload,
     ListenerPayload,
 )
-from ..services import BuilderBridge, FeatureDiff, ValidationIssue, ValidationResult, ValidationService
+from ..services import (
+    BuilderBridge,
+    FeatureDiff,
+    FeatureInfo,
+    ValidationIssue,
+    ValidationResult,
+    ValidationService,
+)
 
 
 class InspectorPanel(Vertical):
@@ -58,6 +66,22 @@ class InspectorPanel(Vertical):
             with TabPane("Features", id="tab-features"):
                 with VerticalScroll(classes="inspector-scroll"):
                     yield self.features_tab
+
+    # ------------------------------------------------------------------
+    def focus_tab(self, tab_id: str) -> None:
+        try:
+            tabs = self.query_one("#inspector-tabs", TabbedContent)
+            tabs.active = tab_id
+        except Exception:  # pragma: no cover - defensive
+            return
+
+    def focus_macro(self, name: str) -> None:
+        self.focus_tab("tab-macros")
+        self.macro_tab.focus_entry(name)
+
+    def focus_listener(self, code: str) -> None:
+        self.focus_tab("tab-listeners")
+        self.listener_tab.focus_entry(code)
 
 
 class InspectorDrawer(Vertical):
@@ -289,8 +313,10 @@ class KeyInspector(Vertical):
         result = self.validator.validate(value, combined_params)
         self._render_validation(result)
         if not result.is_valid:
+            self._report_validation_failure(len(result.issues))
             return
 
+        self._clear_validation_errors()
         self.store.update_selected_key(value=result.value, params=list(result.params))
         self.post_message(StoreUpdated())
         self._load_from_store()
@@ -315,7 +341,9 @@ class KeyInspector(Vertical):
         result = self.validator.validate(value, list(params))
         self._render_validation(result)
         if not result.is_valid:
+            self._report_validation_failure(len(result.issues))
             return
+        self._clear_validation_errors()
         self.store.update_selected_key(value=result.value, params=list(result.params))
         self.post_message(StoreUpdated())
         self._load_from_store()
@@ -352,101 +380,141 @@ class KeyInspector(Vertical):
             label.update("")
             label.add_class("hidden")
 
+    def _report_validation_failure(self, issue_count: int) -> None:
+        app = getattr(self, "app", None)
+        if app is None:
+            return
+        reporter = getattr(app, "flag_manual_validation_errors", None)
+        if reporter is None:
+            return
+        try:
+            reporter(max(1, issue_count))
+        except Exception:  # pragma: no cover - defensive
+            self.log.debug("Unable to flag validation error", exc_info=True)
 
-class FeaturesTab(Vertical):
-    """Minimal feature toggle surface for HRM bundles."""
+    def _clear_validation_errors(self) -> None:
+        app = getattr(self, "app", None)
+        if app is None:
+            return
+        clearer = getattr(app, "clear_manual_validation_errors", None)
+        if clearer is None:
+            return
+        try:
+            clearer()
+        except Exception:  # pragma: no cover - defensive
+            self.log.debug("Unable to clear validation errors", exc_info=True)
+
+
+@dataclass
+class _FeatureBundleState:
+    info: FeatureInfo
+    summary: Static
+    preview_button: Button
+    apply_button: Button
+    pending_diff: FeatureDiff | None = None
+    last_target: str | None = None
+
+
+class FeaturesTab(VerticalScroll):
+    """Feature catalog with provenance badges and diff previews."""
 
     def __init__(self, *, store: LayoutStore, variant: str) -> None:
         super().__init__(classes="features-tab", id="features-tab")
         self.store = store
         self.bridge = BuilderBridge(store=store, variant=variant)
-        self._pending_request: tuple[str, Literal["before", "after"]] | None = None
-        self._diff: FeatureDiff | None = None
-        self._summary_text = "HRM preview pending."
-        self._has_pending_changes = False
-        self.summary = Static(self._summary_text, id="feature-summary")
-        self.preview_button = Button("Preview HRM", id="preview-hrm")
-        self.apply_button = Button("Apply HRM", id="apply-hrm", disabled=True)
-        self.clear_button = Button("Clear", id="clear-hrm", disabled=True)
-
-    @property
-    def current_summary(self) -> str:
-        return self._summary_text
-
-    @property
-    def has_pending_changes(self) -> bool:
-        return self._has_pending_changes
-
-    def on_mount(self) -> None:
-        # Ensure our handles reference the mounted widgets.
-        self.summary = self.query_one("#feature-summary", Static)
-        self.preview_button = self.query_one("#preview-hrm", Button)
-        self.apply_button = self.query_one("#apply-hrm", Button)
-        self.clear_button = self.query_one("#clear-hrm", Button)
+        self._bundles: dict[str, _FeatureBundleState] = {}
 
     def compose(self):  # type: ignore[override]
-        yield Static("Features", classes="features-heading")
-        yield self.preview_button
-        yield self.summary
-        yield self.apply_button
-        yield self.clear_button
+        yield Static("Feature Bundles", classes="features-heading")
+        for info in self.bridge.list_available_features():
+            yield self._build_feature_card(info)
+
+    def _build_feature_card(self, info: FeatureInfo) -> Widget:
+        summary = Static(
+            self._default_summary(info),
+            id=f"feature-summary-{info.name}",
+            classes="feature-card__summary",
+        )
+        preview = Button("Preview", id=f"preview-feature-{info.name}")
+        apply = Button("Apply", id=f"apply-feature-{info.name}", disabled=True)
+        actions = Horizontal(preview, apply, classes="feature-card__actions")
+        container = Vertical(
+            Static(f"{info.label} [{info.provenance}]", classes="feature-card__label"),
+            Static(info.description, classes="feature-card__description"),
+            summary,
+            actions,
+            classes="feature-card",
+            id=f"feature-card-{info.name}",
+        )
+        self._bundles[info.name] = _FeatureBundleState(
+            info=info,
+            summary=summary,
+            preview_button=preview,
+            apply_button=apply,
+        )
+        return container
 
     @on(Button.Pressed)
-    def _handle_buttons(self, event: Button.Pressed) -> None:
-        if event.button.id == "preview-hrm":
-            self._preview_hrm()
-        elif event.button.id == "apply-hrm":
-            self._apply_hrm()
-        elif event.button.id == "clear-hrm":
-            self._clear_preview()
+    def _handle_feature_buttons(self, event: Button.Pressed) -> None:
+        button_id = event.button.id or ""
+        if button_id.startswith("preview-feature-"):
+            bundle = button_id.removeprefix("preview-feature-")
+            self._preview_bundle(bundle)
+            event.stop()
+        elif button_id.startswith("apply-feature-"):
+            bundle = button_id.removeprefix("apply-feature-")
+            self._apply_bundle(bundle)
+            event.stop()
 
-    def _preview_hrm(self) -> None:
+    @on(StoreUpdated)
+    def _handle_store_update(self, _: StoreUpdated) -> None:
+        for state in self._bundles.values():
+            if state.pending_diff is not None:
+                self._reset_bundle(state)
+
+    def _preview_bundle(self, name: str) -> None:
+        state = self._bundles[name]
         target = self._resolve_target_layer()
         if target is None:
-            self.app.notify("No layers available")
+            self.post_message(FooterMessage("No layers available to anchor the feature"))
             return
         try:
-            diff = self.bridge.preview_home_row_mods(target_layer=target)
+            diff = self.bridge.preview_feature(name, target_layer=target)
         except ValueError as exc:
-            self.app.notify(str(exc))
+            self.post_message(FooterMessage(str(exc)))
             return
-        self._diff = diff
-        self._pending_request = (target, "after")
-        self._set_summary(f"HRM → {target}: {diff.summary()}")
-        has_changes = bool(
-            diff.layers_added or diff.macros_added or diff.hold_taps_added or diff.combos_added or diff.listeners_added
-        )
-        self._has_pending_changes = has_changes
-        self.apply_button.disabled = not has_changes
-        self.clear_button.disabled = False
-        self.post_message(FooterMessage(f"HRM preview · anchor={target} · {diff.summary()}"))
+        state.pending_diff = diff
+        state.last_target = target
+        state.apply_button.disabled = diff.summary() == "No changes"
+        state.summary.update(self._format_diff(diff))
+        self.post_message(FooterMessage(f"Preview ready · {state.info.label} → {target}"))
 
-    def _apply_hrm(self) -> None:
-        if self._pending_request is None:
+    def _apply_bundle(self, name: str) -> None:
+        state = self._bundles[name]
+        if state.pending_diff is None:
+            self.post_message(FooterMessage("Preview the feature before applying"))
             return
-        target, position = self._pending_request
+        target = state.last_target or self._resolve_target_layer()
+        if target is None:
+            self.post_message(FooterMessage("No layers available to anchor the feature"))
+            return
         try:
-            diff = self.bridge.apply_home_row_mods(target_layer=target, position=position)
+            diff = self.bridge.apply_feature(name, target_layer=target)
         except ValueError as exc:
-            self.app.notify(str(exc))
+            self.post_message(FooterMessage(str(exc)))
             return
+        state.pending_diff = None
+        state.last_target = None
+        state.apply_button.disabled = True
+        state.summary.update(self._format_diff(diff))
         self.post_message(StoreUpdated())
-        self._set_summary(f"HRM applied to {target}: {diff.summary()}")
-        self.post_message(FooterMessage(f"HRM applied · anchor={target} · {diff.summary()}"))
-        self.apply_button.disabled = True
-        self.clear_button.disabled = True
-        self._pending_request = None
-        self._diff = None
-        self._has_pending_changes = False
+        self.post_message(FooterMessage(f"Applied {state.info.label} to {target}"))
 
-    def _clear_preview(self) -> None:
-        self._pending_request = None
-        self._diff = None
-        self._set_summary("HRM preview pending.")
-        self.apply_button.disabled = True
-        self.clear_button.disabled = True
-        self.post_message(FooterMessage("HRM preview cleared"))
-        self._has_pending_changes = False
+    def _reset_bundle(self, state: _FeatureBundleState) -> None:
+        state.pending_diff = None
+        state.last_target = None
+        state.apply_button.disabled = True
+        state.summary.update(self._default_summary(state.info))
 
     def _resolve_target_layer(self) -> str | None:
         if self.store.selected_layer_name:
@@ -455,9 +523,25 @@ class FeaturesTab(Vertical):
             return self.store.layer_names[0]
         return None
 
-    def _set_summary(self, text: str) -> None:
-        self._summary_text = text
-        self.summary.update(text)
+    def _default_summary(self, info: FeatureInfo) -> str:
+        return f"{info.label} [{info.provenance}] — Preview pending."
+
+    def _format_diff(self, diff: FeatureDiff) -> str:
+        lines = [
+            f"{diff.label} [{diff.provenance}] → {diff.target_layer}",
+            f"Summary: {diff.summary()}",
+        ]
+        if diff.layers_added:
+            lines.append("Layers: " + ", ".join(diff.layers_added))
+        if diff.macros_added:
+            lines.append("Macros: " + ", ".join(diff.macros_added))
+        if diff.listeners_added:
+            lines.append(f"Listeners: +{diff.listeners_added}")
+        if diff.hold_taps_added:
+            lines.append("Hold-taps: " + ", ".join(diff.hold_taps_added))
+        if not diff.layers_added and not diff.macros_added and not diff.listeners_added and not diff.hold_taps_added:
+            lines.append("No structural changes detected.")
+        return "\n".join(lines)
 
 
 class MacroTab(Vertical):
@@ -637,6 +721,23 @@ class MacroTab(Vertical):
         self._clear_form()
         self._refresh_list()
 
+    def focus_entry(self, name: str) -> None:
+        target = name.strip()
+        if not target:
+            return
+
+        def _apply() -> None:
+            for idx, child in enumerate(self._list.children):
+                if isinstance(child, _MacroListItem) and child.macro_name == target:
+                    self._list.index = idx
+                    try:
+                        child.focus()
+                    except Exception:  # pragma: no cover - defensive
+                        pass
+                    break
+
+        self.call_after_refresh(_apply)
+
     def _build_payload_from_inputs(self) -> Optional[Dict[str, Any]]:
         name = self.name_input.value.strip()
         if not name:
@@ -667,6 +768,7 @@ class _MacroListItem(ListItem):
         label = f"{name} [{ref_count}]"
         super().__init__(Static(label, classes="macro-item"))
         self.macro = macro
+        self.macro_name = name
 
 
 class _HoldTapListItem(ListItem):
@@ -688,6 +790,7 @@ class _ListenerListItem(ListItem):
         label = f"{listener.get('code', '?')} [{ref_count}]"
         super().__init__(Static(label, classes="macro-item"))
         self.listener = listener
+        self.code = str(listener.get("code", ""))
 
 
 class ComboTab(Vertical):
@@ -1047,6 +1150,23 @@ class ListenerTab(Vertical):
         self.post_message(StoreUpdated())
         self.post_message(FooterMessage(f"Deleted listener {code}"))
         self._refresh_list()
+
+    def focus_entry(self, code: str) -> None:
+        target = code.strip()
+        if not target:
+            return
+
+        def _apply() -> None:
+            for idx, child in enumerate(self._list.children):
+                if isinstance(child, _ListenerListItem) and child.code == target:
+                    self._list.index = idx
+                    try:
+                        child.focus()
+                    except Exception:  # pragma: no cover - defensive
+                        pass
+                    break
+
+        self.call_after_refresh(_apply)
 
     def _build_payload_from_inputs(self) -> Optional[Dict[str, Any]]:
         code = self.code_input.value.strip()

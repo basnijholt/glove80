@@ -43,6 +43,7 @@ class KeyCanvas(Widget):
         self._selection = self.store.selection
         self._previous_selection: SelectionState | None = None
         self._caps: dict[int, KeyCap] = {}
+        self._search_highlights: set[int] = set()
 
     # ------------------------------------------------------------------
     def compose(self) -> ComposeResult:
@@ -197,6 +198,13 @@ class KeyCanvas(Widget):
             return
         self.apply_selection(layer_index=event.layer_index, key_index=event.key_index)
 
+    def update_search_highlights(self, *, layer_index: int, indices: Sequence[int]) -> None:
+        if layer_index != self.store.selection.layer_index:
+            self._search_highlights.clear()
+        else:
+            self._search_highlights = set(indices)
+        self._refresh_caps()
+
     def apply_selection(self, *, layer_index: int, key_index: int) -> None:
         if layer_index < 0 or key_index < 0:
             return
@@ -219,6 +227,9 @@ class KeyCanvas(Widget):
             return ""
         return str(cap.tooltip)
 
+    def highlighted_indices_for_test(self) -> tuple[int, ...]:
+        return tuple(sorted(self._search_highlights))
+
     def _refresh_caps(self) -> None:
         slots = self._current_slots()
         for index, cap in self._caps.items():
@@ -229,6 +240,7 @@ class KeyCanvas(Widget):
             tooltip = self._detail_text(slot, index)
             cap.set_content(legend=legend, behavior=behavior, params=params, tooltip=tooltip)
             cap.set_selected(index == self._selection.key_index)
+            cap.set_highlighted(index in self._search_highlights)
 
     def _detail_text(self, slot: dict[str, object] | None, index: int) -> str:
         if not isinstance(slot, dict):
@@ -355,6 +367,9 @@ class KeyCap(Button):
 
     def set_selected(self, selected: bool) -> None:
         self.set_class(selected, "selected")
+
+    def set_highlighted(self, highlighted: bool) -> None:
+        self.set_class(highlighted, "highlighted")
 
     def snapshot_lines(self) -> tuple[str, str, str]:  # pragma: no cover - test helper
         return self._lines

@@ -1,0 +1,11 @@
+Feature Bundles (140x40 excerpt)
+================================
+
+[Home Row Mods]  [TailorKey]
+Summary: Preview pending. Use Preview to insert HRM layers after the selected anchor.
+
+[Cursor Layer]  [TailorKey]
+Summary: Preview pending. Cursor bundle adds the Cursor layer plus macros for select/extend commands.
+
+[Mouse Layers]  [TailorKey]
+Summary: Preview pending. Mouse bundle adds Mouse/MouseSlow/MouseFast/MouseWarp layers and listeners.

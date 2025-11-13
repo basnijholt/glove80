@@ -7,6 +7,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Dict, Iterable, Literal, Mapping, Sequence, Tuple, cast
 
+from glove80.features.cursor_mouse import cursor_components, mouse_components
 from glove80.families.tailorkey.alpha_layouts import TAILORKEY_VARIANTS
 from glove80.families.tailorkey.layers.hrm import build_hrm_layers
 from glove80.layouts.components import LayoutFeatureComponents
@@ -20,10 +21,23 @@ _TAILORKEY_VARIANTS = {name.lower() for name in TAILORKEY_VARIANTS}
 
 
 @dataclass(frozen=True)
+class FeatureInfo:
+    """Metadata describing a catalogued feature bundle."""
+
+    name: str
+    label: str
+    description: str
+    provenance: str
+
+
+@dataclass(frozen=True)
 class FeatureDiff:
     """Lightweight diff summary for feature bundle previews."""
 
     feature: str
+    label: str
+    provenance: str
+    description: str
     target_layer: str
     layers_added: tuple[str, ...]
     macros_added: tuple[str, ...]
@@ -31,6 +45,7 @@ class FeatureDiff:
     combos_added: int
     listeners_added: int
     layer_order: tuple[str, ...]
+    conflicts: tuple[str, ...] = ()
 
     def summary(self) -> str:
         parts: list[str] = []
@@ -47,6 +62,29 @@ class FeatureDiff:
         return " ".join(parts) if parts else "No changes"
 
 
+_FEATURE_CATALOG: tuple[FeatureInfo, ...] = (
+    FeatureInfo(
+        name="hrm",
+        label="Home Row Mods",
+        description="Adds TailorKey home-row mod layers for the active layout.",
+        provenance="TailorKey",
+    ),
+    FeatureInfo(
+        name="cursor",
+        label="Cursor Layer",
+        description="Adds the TailorKey cursor layer and supporting macros.",
+        provenance="TailorKey",
+    ),
+    FeatureInfo(
+        name="mouse",
+        label="Mouse Layers",
+        description="Adds mouse layers plus movement/scroll listeners.",
+        provenance="TailorKey",
+    ),
+)
+_FEATURE_BY_NAME = {info.name: info for info in _FEATURE_CATALOG}
+
+
 class BuilderBridge:
     """Wraps LayoutBuilder feature helpers for use inside the TUI."""
 
@@ -60,22 +98,58 @@ class BuilderBridge:
         self.variant = variant or "windows"
         self._warned_variant_fallback = False
 
-    # ------------------------------------------------------------------
-    # Public API
+    def list_available_features(self) -> tuple[FeatureInfo, ...]:
+        return _FEATURE_CATALOG
+
+    def preview_feature(
+        self,
+        name: str,
+        *,
+        target_layer: str,
+        position: Literal["before", "after"] = "after",
+    ) -> FeatureDiff:
+        info = _FEATURE_BY_NAME[name]
+        payload = self.store.export_payload()
+        components = self._components_for_feature(info)
+        _, diff = self._merge_feature(
+            payload,
+            info,
+            components,
+            target_layer=target_layer,
+            position=position,
+            dry_run=True,
+        )
+        return diff
+
+    def apply_feature(
+        self,
+        name: str,
+        *,
+        target_layer: str,
+        position: Literal["before", "after"] = "after",
+    ) -> FeatureDiff:
+        info = _FEATURE_BY_NAME[name]
+        payload = self.store.export_payload()
+        components = self._components_for_feature(info)
+        mutated, diff = self._merge_feature(
+            payload,
+            info,
+            components,
+            target_layer=target_layer,
+            position=position,
+            dry_run=False,
+        )
+        if diff.summary() != "No changes":
+            self.store.replace_payload(mutated)
+        return diff
+
     def preview_home_row_mods(
         self,
         *,
         target_layer: str,
         position: Literal["before", "after"] = "after",
     ) -> FeatureDiff:
-        payload = self.store.export_payload()
-        _, diff = self._apply_home_row_mods(
-            payload,
-            target_layer=target_layer,
-            position=position,
-            dry_run=True,
-        )
-        return diff
+        return self.preview_feature("hrm", target_layer=target_layer, position=position)
 
     def apply_home_row_mods(
         self,
@@ -83,41 +157,53 @@ class BuilderBridge:
         target_layer: str,
         position: Literal["before", "after"] = "after",
     ) -> FeatureDiff:
-        payload = self.store.export_payload()
-        mutated, diff = self._apply_home_row_mods(
-            payload,
-            target_layer=target_layer,
-            position=position,
-            dry_run=False,
-        )
-        if diff.layers_added or diff.macros_added or diff.hold_taps_added or diff.combos_added or diff.listeners_added:
-            self.store.replace_payload(mutated)
-        return diff
+        return self.apply_feature("hrm", target_layer=target_layer, position=position)
 
-    # ------------------------------------------------------------------
-    # Internals
-    def _apply_home_row_mods(
+    def _merge_feature(
         self,
         payload: Dict[str, object],
+        info: FeatureInfo,
+        components: LayoutFeatureComponents,
         *,
         target_layer: str,
         position: Literal["before", "after"],
         dry_run: bool,
     ) -> tuple[Dict[str, object], FeatureDiff]:
-        components = self._home_row_components()
-        if not components.layers:
-            msg = "Home-row components are unavailable for this variant"
-            raise ValueError(msg)
+        conflicts = self._detect_conflicts(payload, components)
+        if conflicts:
+            formatted = ", ".join(conflicts)
+            raise ValueError(f"Feature '{info.label}' cannot be applied because {formatted} already exist")
 
         layout = deepcopy(payload)
         merge_components(layout, components)
 
-        layer_map = cast(Mapping[str, object], components.layers)
-        component_names = list(layer_map.keys())
-        self._reorder_layers(layout, component_names, target_layer=target_layer, position=position)
+        component_names = list(components.layers.keys())
+        if component_names:
+            self._reorder_layers(
+                layout,
+                component_names,
+                target_layer=target_layer,
+                position=position,
+            )
 
-        diff = self._build_diff(payload, layout, component_names, target_layer=target_layer)
+        diff = self._build_diff(
+            payload,
+            layout,
+            component_names,
+            info=info,
+            target_layer=target_layer,
+        )
         return (payload if dry_run else layout, diff)
+
+    def _components_for_feature(self, info: FeatureInfo) -> LayoutFeatureComponents:
+        if info.name == "hrm":
+            return self._home_row_components()
+        if info.name == "cursor":
+            return cursor_components(self.variant)
+        if info.name == "mouse":
+            return mouse_components(self.variant)
+        msg = f"Unknown feature '{info.name}'"
+        raise ValueError(msg)
 
     def _home_row_components(self) -> LayoutFeatureComponents:
         normalized, fallback = _normalize_tailorkey_variant(self.variant)
@@ -155,12 +241,13 @@ class BuilderBridge:
         layout["layer_names"] = updated_order
         layout["layers"] = [layers_by_name[name] for name in updated_order]
 
-    @staticmethod
     def _build_diff(
+        self,
         original: Mapping[str, object],
         mutated: Mapping[str, object],
         component_names: Sequence[str],
         *,
+        info: FeatureInfo,
         target_layer: str,
     ) -> FeatureDiff:
         orig_macro_names = _names(_sequence_of_mappings(original.get("macros")))
@@ -174,7 +261,10 @@ class BuilderBridge:
         new_listeners = len(_sequence_of_mappings(mutated.get("inputListeners")))
 
         return FeatureDiff(
-            feature="hrm",
+            feature=info.name,
+            label=info.label,
+            provenance=info.provenance,
+            description=info.description,
             target_layer=target_layer,
             layers_added=tuple(
                 name for name in component_names if name not in _string_sequence(original.get("layer_names"))
@@ -185,6 +275,31 @@ class BuilderBridge:
             listeners_added=new_listeners - orig_listeners,
             layer_order=_string_sequence(mutated.get("layer_names")),
         )
+
+    @staticmethod
+    def _detect_conflicts(
+        original: Mapping[str, object],
+        components: LayoutFeatureComponents,
+    ) -> tuple[str, ...]:
+        conflicts: list[str] = []
+
+        existing_layers = set(_string_sequence(original.get("layer_names")))
+        for name in components.layers.keys():
+            if name in existing_layers:
+                conflicts.append(f"layer '{name}'")
+
+        existing_macros = _names(_sequence_of_mappings(original.get("macros")))
+        for macro in components.macros:
+            macro_name = getattr(macro, "name", None)
+            if macro_name and macro_name in existing_macros:
+                conflicts.append(f"macro '{macro_name}'")
+
+        if components.macros_by_name:
+            for macro_name in components.macros_by_name.keys():
+                if macro_name in existing_macros:
+                    conflicts.append(f"macro '{macro_name}'")
+
+        return tuple(conflicts)
 
 
 def _names(items: Iterable[Mapping[str, object]]) -> set[str]:
@@ -213,10 +328,7 @@ def _string_sequence(value: object | None) -> Tuple[str, ...]:
 
 
 def _normalize_tailorkey_variant(candidate: str | None) -> tuple[str, bool]:
-    """Map arbitrary variant names to a TailorKey-safe value.
-
-    Returns (variant, fallback_used?).
-    """
+    """Map arbitrary variant names to a TailorKey-safe value."""
 
     name = (candidate or "windows").strip().lower()
     if name in _TAILORKEY_VARIANTS:
@@ -224,4 +336,4 @@ def _normalize_tailorkey_variant(candidate: str | None) -> tuple[str, bool]:
     return "windows", True
 
 
-__all__ = ["BuilderBridge", "FeatureDiff"]
+__all__ = ["BuilderBridge", "FeatureDiff", "FeatureInfo"]
