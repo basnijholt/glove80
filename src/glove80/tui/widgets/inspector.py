@@ -50,22 +50,17 @@ class InspectorPanel(Vertical):
         yield Static("Inspector", classes="inspector-heading")
         with TabbedContent(initial="tab-key", id="inspector-tabs"):
             with TabPane("Key", id="tab-key"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.key_inspector
+                yield self.key_inspector
             with TabPane("Macros", id="tab-macros"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.macro_tab
+                yield self.macro_tab
             with TabPane("Hold Taps", id="tab-holdtaps"):
                 yield self.hold_tap_tab
             with TabPane("Combos", id="tab-combos"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.combo_tab
+                yield self.combo_tab
             with TabPane("Listeners", id="tab-listeners"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.listener_tab
+                yield self.listener_tab
             with TabPane("Features", id="tab-features"):
-                with VerticalScroll(classes="inspector-scroll"):
-                    yield self.features_tab
+                yield self.features_tab
 
     # ------------------------------------------------------------------
     def focus_tab(self, tab_id: str) -> None:
@@ -206,7 +201,15 @@ class InspectorOverlay(Vertical):
             self._on_visibility_change(self._visible)
 
 
-class KeyInspector(Vertical):
+class ScrollableInspectorTab(VerticalScroll):
+    """Shared base that applies inspector scroll semantics."""
+
+    def __init__(self, *, classes: str | None = None, **kwargs) -> None:
+        merged_classes = " ".join(filter(None, ("inspector-scroll", classes))) or None
+        super().__init__(classes=merged_classes, **kwargs)
+
+
+class KeyInspector(ScrollableInspectorTab):
     """Minimal form that edits a single key binding."""
 
     def __init__(self, *, store: LayoutStore) -> None:
@@ -415,7 +418,7 @@ class _FeatureBundleState:
     last_target: str | None = None
 
 
-class FeaturesTab(VerticalScroll):
+class FeaturesTab(ScrollableInspectorTab):
     """Feature catalog with provenance badges and diff previews."""
 
     def __init__(self, *, store: LayoutStore, variant: str) -> None:
@@ -544,7 +547,7 @@ class FeaturesTab(VerticalScroll):
         return "\n".join(lines)
 
 
-class MacroTab(Vertical):
+class MacroTab(ScrollableInspectorTab):
     """Macro list and detail editor."""
 
     def __init__(self, *, store: LayoutStore) -> None:
@@ -793,7 +796,7 @@ class _ListenerListItem(ListItem):
         self.code = str(listener.get("code", ""))
 
 
-class ComboTab(Vertical):
+class ComboTab(ScrollableInspectorTab):
     """Combo list and detail editor mirroring Macro/HoldTap tabs."""
 
     def __init__(self, *, store: LayoutStore) -> None:
@@ -995,7 +998,7 @@ class ComboTab(Vertical):
         return payload
 
 
-class ListenerTab(Vertical):
+class ListenerTab(ScrollableInspectorTab):
     """Listener list and detail editor."""
 
     def __init__(self, *, store: LayoutStore) -> None:
@@ -1202,7 +1205,7 @@ class ListenerTab(Vertical):
 
 
 # ---------------------------------------------------------------------------
-class HoldTapTab(Vertical):
+class HoldTapTab(ScrollableInspectorTab):
     """Hold-tap list and detail editor."""
 
     def __init__(self, *, store: LayoutStore) -> None:
@@ -1229,31 +1232,30 @@ class HoldTapTab(Vertical):
         self.delete_button = Button("Delete", id="holdtap-delete", disabled=True)
 
     def compose(self):  # type: ignore[override]
-        with VerticalScroll(classes="inspector-scroll"):
-            yield Static("Hold Taps", classes="macro-heading")
-            yield self._list
-            yield Label("Name")
-            yield self.name_input
-            yield Label("Description")
-            yield self.desc_input
-            yield Label("Bindings (JSON array)")
-            yield self.bindings_input
-            yield Label("Flavor")
-            yield self.flavor_input
-            yield Label("Tapping term (ms)")
-            yield self.tapping_input
-            yield Label("Quick tap (ms)")
-            yield self.quick_input
-            yield Label("Require prior idle (ms)")
-            yield self.idle_input
-            yield Label("holdTriggerKeyPositions")
-            yield self.trigger_positions_input
-            yield Label("holdTriggerOnRelease")
-            yield self.trigger_release_input
-            yield self.ref_label
-            yield self.add_button
-            yield self.apply_button
-            yield self.delete_button
+        yield Static("Hold Taps", classes="macro-heading")
+        yield self._list
+        yield Label("Name")
+        yield self.name_input
+        yield Label("Description")
+        yield self.desc_input
+        yield Label("Bindings (JSON array)")
+        yield self.bindings_input
+        yield Label("Flavor")
+        yield self.flavor_input
+        yield Label("Tapping term (ms)")
+        yield self.tapping_input
+        yield Label("Quick tap (ms)")
+        yield self.quick_input
+        yield Label("Require prior idle (ms)")
+        yield self.idle_input
+        yield Label("holdTriggerKeyPositions")
+        yield self.trigger_positions_input
+        yield Label("holdTriggerOnRelease")
+        yield self.trigger_release_input
+        yield self.ref_label
+        yield self.add_button
+        yield self.apply_button
+        yield self.delete_button
 
     def on_mount(self) -> None:
         self._refresh_list()

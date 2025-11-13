@@ -249,6 +249,26 @@ class KeyCanvas(Widget):
         suffix = f" params: {params_text}" if params_text else ""
         return f"Key #{index:02d}: {slot.get('value', '(empty)')}" + suffix
 
+    def _detail_lines_for_slot(
+        self,
+        slots: Sequence[dict[str, object]] | None,
+        index: int,
+        *,
+        prefix: str | None = None,
+    ) -> tuple[str, ...]:
+        slot = self._slot_at(slots or (), index)
+        prefix_text = f"{prefix}: " if prefix else ""
+        header = f"{prefix_text}Key #{index:02d}"
+        if not isinstance(slot, dict):
+            return (f"{header} (empty)",)
+
+        value = slot.get("value", "(empty)") or "(empty)"
+        first_line = f"{header} {value}"
+        params_text = self._format_params_list(slot.get("params"))
+        if params_text:
+            return (first_line, f"    params: {params_text}")
+        return (first_line,)
+
     def _truncate_label(self, label: str) -> str:
         clean = " ".join(label.split()) or "--"
         if len(clean) > self.MAX_LABEL_CHARS:
