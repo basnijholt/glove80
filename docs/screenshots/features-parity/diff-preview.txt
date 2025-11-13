@@ -1,0 +1,16 @@
+Cursor Preview (after pressing Preview)
+======================================
+
+Cursor Layer [TailorKey] → Base
+Summary: +1L +9M
+Layers: Cursor
+Macros: &cur_EXTEND_LINE_v1_TKZ, &cur_EXTEND_WORD_v1_TKZ, &cur_SELECT_LINE_v1_TKZ,
+        &cur_SELECT_NONE_v1_TKZ, &cur_SELECT_WORD_v1_TKZ
+
+Mouse Preview (after pressing Preview)
+======================================
+
+Mouse Layers [TailorKey] → Base
+Summary: +4L +2IL
+Layers: Mouse, MouseSlow, MouseFast, MouseWarp
+Listeners: +2

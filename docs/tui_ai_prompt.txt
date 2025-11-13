@@ -1,0 +1,14 @@
+You are designing a Python Textual TUI for the Glove80 layout toolkit.
+
+Artifacts available:
+1. TUI_DESIGN.md – repo-aware product/architecture brief rooted in src/glove80 (families, LayoutBuilder, feature bundles, CLI workflows).
+2. docs/layout_payload.schema.json – JSON Schema exported from glove80.layouts.schema.LayoutPayload (run scripts/export_layout_schema.py to refresh).
+
+Objectives:
+- Propose the full Textual UI/UX (widgets, screens, workflows) so it can edit any LayoutPayload without breaking parity with glove80.generate outputs.
+- Cover every feature enumerated in TUI_DESIGN.md, including: key clicking/inspection, macro + hold-tap + combo creation, mouse/home-row/cursor feature bundles, custom-defined behaviors/device-tree/config/layout parameter editors, input listener graph edits, layer switching/reordering/renaming/“pick up” interactions, and advanced validation/diff tooling.
+- Show how the TUI consumes the schema for validation + auto-complete, how it round-trips data back through LayoutBuilder/helpers, and how it coordinates regen/dry-run flows with the existing CLI.
+- Detail state management, background workers, command palette bindings, accessibility/theming, and persistence/export options called out in the design doc.
+- Deliverables should include: (a) information architecture, (b) widget tree/layout sketches, (c) data/validation flow diagrams tied to schema paths, (d) step-by-step user workflows for at least keys, macros, hold taps, combos, mouse emulation toggles, custom behaviors/device-tree editing, and layer manipulation, plus (e) a risk/mitigation list.
+
+Use the schema file for precise field names/types and cite the relevant sections of TUI_DESIGN.md when justifying decisions.

@@ -1,0 +1,551 @@
+{
+  "$defs": {
+    "Combo": {
+      "additionalProperties": false,
+      "description": "Combo section entry.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "binding": {
+          "additionalProperties": true,
+          "title": "Binding",
+          "type": "object"
+        },
+        "keyPositions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Keypositions",
+          "type": "array"
+        },
+        "layers": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "$ref": "#/$defs/LayerRef"
+              }
+            ]
+          },
+          "title": "Layers",
+          "type": "array"
+        },
+        "timeoutMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeoutms"
+        }
+      },
+      "required": [
+        "name",
+        "binding",
+        "keyPositions",
+        "layers"
+      ],
+      "title": "Combo",
+      "type": "object"
+    },
+    "HoldTap": {
+      "additionalProperties": false,
+      "description": "Hold-tap behavior entry.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "bindings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Bindings",
+          "type": "array"
+        },
+        "tappingTermMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tappingtermms"
+        },
+        "flavor": {
+          "anyOf": [
+            {
+              "enum": [
+                "balanced",
+                "tap-preferred",
+                "hold-preferred"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Flavor"
+        },
+        "quickTapMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quicktapms"
+        },
+        "requirePriorIdleMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requireprioridlems"
+        },
+        "holdTriggerOnRelease": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Holdtriggeronrelease"
+        },
+        "holdTriggerKeyPositions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Holdtriggerkeypositions"
+        }
+      },
+      "required": [
+        "name",
+        "bindings"
+      ],
+      "title": "HoldTap",
+      "type": "object"
+    },
+    "InputListener": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "inputProcessors": {
+          "items": {
+            "$ref": "#/$defs/InputProcessor"
+          },
+          "title": "Inputprocessors",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/ListenerNode"
+          },
+          "title": "Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "nodes"
+      ],
+      "title": "InputListener",
+      "type": "object"
+    },
+    "InputProcessor": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "params": {
+          "items": {},
+          "title": "Params",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "InputProcessor",
+      "type": "object"
+    },
+    "LayerRef": {
+      "description": "Reference to a layer by name (resolved at layout build time).",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "LayerRef",
+      "type": "object"
+    },
+    "ListenerNode": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "layers": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "$ref": "#/$defs/LayerRef"
+              }
+            ]
+          },
+          "title": "Layers",
+          "type": "array"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "inputProcessors": {
+          "items": {
+            "$ref": "#/$defs/InputProcessor"
+          },
+          "title": "Inputprocessors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "layers"
+      ],
+      "title": "ListenerNode",
+      "type": "object"
+    },
+    "Macro": {
+      "additionalProperties": false,
+      "description": "Macro section entry.\n\nMatches the structure produced by MacroSpec.to_dict() today.\nUnknown keys are forbidden; field aliases match the JSON casing.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "bindings": {
+          "items": {},
+          "title": "Bindings",
+          "type": "array"
+        },
+        "params": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "array"
+        },
+        "waitMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Waitms"
+        },
+        "tapMs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tapms"
+        }
+      },
+      "required": [
+        "name",
+        "bindings"
+      ],
+      "title": "Macro",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Top-level layout payload shape.\n\nSections are fully typed (Macro/HoldTap/Combo/InputListener). We still\nserialize with aliases for byte-identical JSON artifacts.",
+  "properties": {
+    "keyboard": {
+      "title": "Keyboard",
+      "type": "string"
+    },
+    "firmware_api_version": {
+      "title": "Firmware Api Version",
+      "type": "string"
+    },
+    "locale": {
+      "title": "Locale",
+      "type": "string"
+    },
+    "unlisted": {
+      "title": "Unlisted",
+      "type": "boolean"
+    },
+    "custom_defined_behaviors": {
+      "title": "Custom Defined Behaviors",
+      "type": "string"
+    },
+    "custom_devicetree": {
+      "title": "Custom Devicetree",
+      "type": "string"
+    },
+    "config_parameters": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Config Parameters",
+      "type": "array"
+    },
+    "layout_parameters": {
+      "additionalProperties": true,
+      "title": "Layout Parameters",
+      "type": "object"
+    },
+    "creator": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Creator"
+    },
+    "layer_names": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Layer Names",
+      "type": "array"
+    },
+    "macros": {
+      "items": {
+        "$ref": "#/$defs/Macro"
+      },
+      "title": "Macros",
+      "type": "array"
+    },
+    "holdTaps": {
+      "items": {
+        "$ref": "#/$defs/HoldTap"
+      },
+      "title": "Holdtaps",
+      "type": "array"
+    },
+    "combos": {
+      "items": {
+        "$ref": "#/$defs/Combo"
+      },
+      "title": "Combos",
+      "type": "array"
+    },
+    "inputListeners": {
+      "items": {
+        "$ref": "#/$defs/InputListener"
+      },
+      "title": "Inputlisteners",
+      "type": "array"
+    },
+    "layers": {
+      "items": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "title": "Layers",
+      "type": "array"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "uuid": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uuid"
+    },
+    "parent_uuid": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Uuid"
+    },
+    "date": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Date"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tags"
+    }
+  },
+  "required": [
+    "keyboard",
+    "firmware_api_version",
+    "locale",
+    "unlisted",
+    "custom_defined_behaviors",
+    "custom_devicetree",
+    "config_parameters",
+    "layout_parameters",
+    "layer_names",
+    "macros",
+    "holdTaps",
+    "combos",
+    "inputListeners",
+    "layers"
+  ],
+  "title": "LayoutPayload",
+  "type": "object"
+}

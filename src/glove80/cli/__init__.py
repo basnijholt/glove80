@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import sys
 import textwrap
 from string import Template
 
@@ -193,6 +195,43 @@ def scaffold(
     content = _render_scaffold_template(layout=layout, variant=variant, creator=creator)
     destination.write_text(content, encoding="utf-8")
     console.print(f"[green]✨ Wrote starter spec to[/] [cyan]{destination}[/]")
+
+
+@app.command("tui")
+def launch_tui(
+    layout: str | None = typer.Option(None, help="Optional family to pre-select."),
+    variant: str | None = typer.Option(None, help="Optional variant to pre-select."),
+    devtools: bool = typer.Option(False, help="Enable Textual's developer tools."),
+) -> None:
+    """Launch the Textual TUI (Milestone 1 scaffold)."""
+
+    if not sys.stdout.isatty():
+        console.print("[bold red]❌ The TUI requires an interactive terminal (TTY).[/]")
+        raise typer.Exit(code=1)
+
+    term = os.environ.get("TERM", "")
+    if term.lower() in {"", "dumb"}:
+        console.print("[bold red]❌ The current terminal does not support interactive UI rendering.[/]")
+        raise typer.Exit(code=1)
+
+    try:
+        from glove80.tui import run_tui
+    except ModuleNotFoundError as exc:  # pragma: no cover - depends on packaging
+        console.print(
+            "[bold red]❌ Unable to import the Textual TUI modules.[/] "
+            "Ensure optional dependencies are installed (includes 'textual').\n"
+            f"Details: {exc}"
+        )
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # pragma: no cover - defensive guard
+        console.print(f"[bold red]❌ Failed to initialize the TUI: {exc}")
+        raise typer.Exit(code=1) from exc
+
+    try:
+        run_tui(layout=layout, variant=variant, devtools=devtools)
+    except Exception as exc:  # pragma: no cover - surface runtime issues
+        console.print(f"[bold red]❌ TUI exited with an error: {exc}")
+        raise typer.Exit(code=1) from exc
 
 
 __all__ = ["app"]

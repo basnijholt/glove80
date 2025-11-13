@@ -1,0 +1,6 @@
+from typing import Any, Callable, TypeVar
+
+_F = TypeVar("_F", bound=Callable[..., Any])
+
+def on(*args: Any, **kwargs: Any) -> Callable[[_F], _F]: ...
+def work(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...

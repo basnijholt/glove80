@@ -1,0 +1,34 @@
+================================================================================
+                             Glove80 Layout Editor
+Screen: CommandPaletteModal
+Size: 80x24
+================================================================================
+
+Store State:
+  Active Layer: Base
+  Key Index: 0
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│  Command Palette                                                             │
+│  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
+│  ▊  Type a command…                                                       ▎  │
+│  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
+│  Save · Application                                                          │
+│  Save · Application (ctrl+s)                                                 │
+│  Save As · Application (ctrl+shift+s)                                        │
+│  Command Palette · Application (ctrl+k)                                      │
+│  Search · Application (/)                                                    │
+│  Next Match · Application (f3)                                               │
+│  Prev Match · Application (shift+f3)                                         │
+│  Validate · Application (f5)                                                 │
+│  Regen Preview · Application (f6)                                            │
+│  Undo · Application (ctrl+z)                                                 │
+│  Redo · Application (ctrl+shift+z)                                       ▅▅  │
+│  Focus Next · Editor Screen (tab)                                            │
+│  Focus Previous · Editor Screen (shift+tab)                                  │
+│  Copy selected text · Editor Screen (ctrl+c)                                 │
+│  ← · Key Canvas (left)                                                       │
+│  → · Key Canvas (right)                                                      │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
